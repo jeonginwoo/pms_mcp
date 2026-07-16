@@ -1,0 +1,6421 @@
+[
+ {
+  "name": "한국수출입은행 규정관리 재구축",
+  "client": "(주)젠솔소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-03-15",
+  "endDate": "2020-05-31",
+  "contractMm": 2.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "인제대병원 그룹웨어 재구축(.Net) xml",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2019-12-16",
+  "endDate": "2020-01-15",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "동아대학교 그룹웨어 재구축(.Net)",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-03-01",
+  "endDate": "2020-03-31",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "세종대학교 그룹웨어 구축",
+  "client": "(주)비즈웰",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-04-30",
+  "endDate": "2020-05-30",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "제주대학교병원 그룹웨어 재구축(.Net)",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-03-01",
+  "endDate": "2020-05-31",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "가천대길병원 그룹웨어 재구축(Java)",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-05-31",
+  "endDate": "2020-06-30",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 2,
+  "team": "AI기술연구소",
+  "division": "AI기술연구소",
+  "assigneeIds": [
+   2
+  ]
+ },
+ {
+  "name": "전주예수병원",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-06-01",
+  "endDate": "2020-07-01",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "한신공영검색",
+  "client": "한신공영",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-08-01",
+  "endDate": "2020-08-31",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 2,
+  "team": "AI기술연구소",
+  "division": "AI기술연구소",
+  "assigneeIds": [
+   2
+  ]
+ },
+ {
+  "name": "안정성평가연구소",
+  "client": "(주)비즈웰",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-07-06",
+  "endDate": "2020-08-05",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "한국거래중개",
+  "client": "(주)비즈웰",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-07-06",
+  "endDate": "2020-08-05",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "매그너칩 반도체 _키파운더리 사업부 정영정보 (.Net)",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-07-20",
+  "endDate": "2020-09-10",
+  "contractMm": 0.25,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 2,
+  "team": "AI기술연구소",
+  "division": "AI기술연구소",
+  "assigneeIds": [
+   2
+  ]
+ },
+ {
+  "name": "한양대 의료원",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-06-15",
+  "endDate": "2020-07-15",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "야쿠르트 검색 고도화",
+  "client": "새롬정보시스템",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-06-22",
+  "endDate": "2020-09-28",
+  "contractMm": 3.0,
+  "engagement": "ONSITE",
+  "solution": "검색엔진",
+  "managerId": 2,
+  "team": "AI기술연구소",
+  "division": "AI기술연구소",
+  "assigneeIds": [
+   2
+  ]
+ },
+ {
+  "name": "DWP 검색 엔진 구축",
+  "client": "롯데정보통신",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-07-15",
+  "endDate": "2021-01-21",
+  "contractMm": 1.5,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 4,
+  "team": "AI팀",
+  "division": "AI기술연구소",
+  "assigneeIds": [
+   4,
+   13
+  ]
+ },
+ {
+  "name": "아이스크림에듀 검색엔진 구축",
+  "client": "락플레이스",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-07-13",
+  "endDate": "2020-09-30",
+  "contractMm": 2.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "게임빌 그룹웨어 검색 적용",
+  "client": "새롬정보시스템",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-09-01",
+  "endDate": "2020-10-12",
+  "contractMm": 1.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "아트링커 검색 적용",
+  "client": "(주)위즈컨",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-09-28",
+  "endDate": "2020-10-28",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 2,
+  "team": "AI기술연구소",
+  "division": "AI기술연구소",
+  "assigneeIds": [
+   2
+  ]
+ },
+ {
+  "name": "롯데물산 문서중앙화 고도화",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-09-01",
+  "endDate": "2020-10-31",
+  "contractMm": 0.5,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "문서중앙화",
+  "managerId": 2,
+  "team": "AI기술연구소",
+  "division": "AI기술연구소",
+  "assigneeIds": [
+   2
+  ]
+ },
+ {
+  "name": "한국정보화진흥원 사업",
+  "client": "(주)위키데이타",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-09-07",
+  "endDate": "2020-10-07",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 4,
+  "team": "AI팀",
+  "division": "AI기술연구소",
+  "assigneeIds": [
+   4
+  ]
+ },
+ {
+  "name": "국회 예결위 _(API)",
+  "client": "(주)젠솔소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-10-05",
+  "endDate": "2020-12-19",
+  "contractMm": 2.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "우리은행 법무 관리 시스템",
+  "client": "(주)젠솔소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-12-01",
+  "endDate": "2021-02-04",
+  "contractMm": 3.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "동서 그룹웨어 재구축(OEM) - 검색대상 edms, total",
+  "client": "(주)비즈웰",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-10-20",
+  "endDate": "2020-11-19",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "빗썸코리아 그룹웨어 검색엔진 - OEM",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-10-20",
+  "endDate": "2020-11-19",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 2,
+  "team": "AI기술연구소",
+  "division": "AI기술연구소",
+  "assigneeIds": [
+   2
+  ]
+ },
+ {
+  "name": "LB세미콘 문서관리시스템 구축(OEM)",
+  "client": "(주)타이거컴퍼니",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-10-15",
+  "endDate": "2020-12-28",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16
+  ]
+ },
+ {
+  "name": "환경부 온실가스 종합지원 센터(API)_OEM",
+  "client": "(주)위키데이타",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-11-01",
+  "endDate": "2020-12-01",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16
+  ]
+ },
+ {
+  "name": "충북테크노파크 검색엔진",
+  "client": "콜라비",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-12-01",
+  "endDate": "2020-12-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "매그나칩 반도체 그룹웨어 재구축(OEM)",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-01-06",
+  "endDate": "2021-02-05",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "ABL생명 그룹웨어 검색엔진(여의도)",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-09-14",
+  "endDate": "2020-10-14",
+  "contractMm": 0.5,
+  "engagement": "ONSITE",
+  "solution": "검색엔진",
+  "managerId": 2,
+  "team": "AI기술연구소",
+  "division": "AI기술연구소",
+  "assigneeIds": [
+   2
+  ]
+ },
+ {
+  "name": "아이스크림에듀 검색엔진 추가 납품",
+  "client": "아이스크림에듀",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-02-08",
+  "endDate": "2021-03-10",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "SKC 고객데이터 분석플랫폼 Pilot 구축(POC)_세부적",
+  "client": "새롬정보시스템",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-08-27",
+  "endDate": "2021-02-26",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "강남대학교 그룹웨어 재구축(OEM)",
+  "client": "(주) 가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-03-15",
+  "endDate": "2021-06-07",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "이누스 그룹웨어 구축(OEM)",
+  "client": "(주)나온소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-03-17",
+  "endDate": "2021-04-16",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16
+  ]
+ },
+ {
+  "name": "국토부 지도검색 재구축(아이시티웨이/다이퀘스트 윈백)",
+  "client": "락플레이스",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2020-12-01",
+  "endDate": "2021-01-31",
+  "contractMm": 2.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16
+  ]
+ },
+ {
+  "name": "한국우편사업진흥원_영등포구청역",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-02-01",
+  "endDate": "2021-03-03",
+  "contractMm": 0.5,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "서울도시철도그린환경 경영정보시스템_OEM",
+  "client": "(주)비즈웰",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-02-08",
+  "endDate": "2021-05-16",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "휴맥스아이티 검색엔진 모듈",
+  "client": "메가존 클라우드",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-02-15",
+  "endDate": "2021-06-30",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 4,
+  "team": "AI팀",
+  "division": "AI기술연구소",
+  "assigneeIds": [
+   4
+  ]
+ },
+ {
+  "name": "바디텍메드 PMS 내 검색엔진 연동",
+  "client": "로이테크원",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-04-26",
+  "endDate": "2021-06-30",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "범우연합 신그룹웨어 구축(JAVA/OEM)",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-05-26",
+  "endDate": "2021-07-30",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "성도이엔지 문서중앙화 클라우디움 구축",
+  "client": "(주)성도이엔지",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-05-26",
+  "endDate": "2021-07-25",
+  "contractMm": 0.0,
+  "engagement": "REMOTE",
+  "solution": "문서중앙화",
+  "managerId": 4,
+  "team": "AI팀",
+  "division": "AI기술연구소",
+  "assigneeIds": [
+   4
+  ]
+ },
+ {
+  "name": "서울도시가스 표준문서관리시스템 구축",
+  "client": "젠솔소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-05-26",
+  "endDate": "2021-06-25",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16
+  ]
+ },
+ {
+  "name": "동국대학교의료원 검색엔진(일산) - OEM",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-01-27",
+  "endDate": "2021-04-30",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "영풍정밀 전자결재 재구축(OEM)",
+  "client": "(주)나온소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-02-09",
+  "endDate": "2021-04-30",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16
+  ]
+ },
+ {
+  "name": "동작구청 검색엔진",
+  "client": "(주)선도소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-02-17",
+  "endDate": "2021-06-22",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "지엠비코리아 그룹웨어 재구축(OEM)",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-02-17",
+  "endDate": "2021-03-19",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "한국철강 그룹웨어 재구축(OEM)",
+  "client": "(주)비즈웰",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-02-15",
+  "endDate": "2021-03-17",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "경일대학교 그룹웨어 재구축(OEM)",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-03-15",
+  "endDate": "2021-07-30",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "아이스크림에듀 그룹웨어 구축(OEM)",
+  "client": "(주)나온소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-04-01",
+  "endDate": "2021-05-01",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   17
+  ]
+ },
+ {
+  "name": "성도이엔지 메일 검색",
+  "client": "(주)성도이엔지",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-07-07",
+  "endDate": "2021-08-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16
+  ]
+ },
+ {
+  "name": "과학기술인공제회 차세대시스템 구축",
+  "client": "(주)비즈웰",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-02-01",
+  "endDate": "2021-08-31",
+  "contractMm": 0.25,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "롯데그룹 DWP-MOIN 통합 구축",
+  "client": "롯데정보통신(주)",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-04-01",
+  "endDate": "2021-10-05",
+  "contractMm": 5.5,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   17
+  ]
+ },
+ {
+  "name": "한샘 그룹웨어 사업",
+  "client": "(주)나온소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-07-01",
+  "endDate": "2021-07-31",
+  "contractMm": 0.25,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16
+  ]
+ },
+ {
+  "name": "솔루스 첨단소재 전자결재 구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-05-17",
+  "endDate": "2021-06-30",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "에스텍 그룹웨어 구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 95,
+  "startDate": "2021-05-17",
+  "endDate": "2021-06-16",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "경기대학교 그룹웨어 재구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-06-30",
+  "endDate": "2021-10-18",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "네패스 계약관리시스템 구축",
+  "client": "타이거컴퍼니",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-06-07",
+  "endDate": "2021-10-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16
+  ]
+ },
+ {
+  "name": "현대차증권 그룹웨어 재구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-06-01",
+  "endDate": "2021-10-31",
+  "contractMm": 0.5,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16
+  ]
+ },
+ {
+  "name": "계명대학교 동산의료원 그룹웨어 재구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-06-15",
+  "endDate": "2021-07-15",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "백석예술대학교 그룹웨어 구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-06-15",
+  "endDate": "2021-07-15",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16
+  ]
+ },
+ {
+  "name": "홍익대학교 그룹웨어 재구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-09-20",
+  "endDate": "2021-10-20",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "SPC그룹 포탈/그룹웨어 재구축",
+  "client": "(주)나온소프트",
+  "status": "완료",
+  "progress": 90,
+  "startDate": "2021-06-01",
+  "endDate": "2021-12-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   17
+  ]
+ },
+ {
+  "name": "IBK기업은행 온라인 창공 시스템 구축(Ent)",
+  "client": "젠솔소프트",
+  "status": "완료",
+  "progress": 0,
+  "startDate": "2021-05-15",
+  "endDate": "2021-09-20",
+  "contractMm": 1.5,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "(주)에스에프씨 그룹웨어(OEM)",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-05-15",
+  "endDate": "2021-07-06",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "에이스건설 그룹웨어 구축(OEM)",
+  "client": "(주)나온소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-05-21",
+  "endDate": "2021-06-20",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   17
+  ]
+ },
+ {
+  "name": "현대자산운용 그룹웨어 구축",
+  "client": "(주)나온소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-05-26",
+  "endDate": "2021-09-30",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   17
+  ]
+ },
+ {
+  "name": "국방기술진흥연구소 홈페이지 구축",
+  "client": "(주)위키데이타",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-06-01",
+  "endDate": "2021-06-30",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "SKC MAS (마케팅 포탈 시스템)",
+  "client": "새롬정보시스템",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-09-13",
+  "endDate": "2021-12-16",
+  "contractMm": 2.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 8,
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   8
+  ]
+ },
+ {
+  "name": "대동 문서중앙화 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-07-01",
+  "endDate": "2021-10-31",
+  "contractMm": 4.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "문서중앙화",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "예스코 사업부문 홈페이지 리뉴얼",
+  "client": "(주)매그넘빈트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-09-01",
+  "endDate": "2021-11-30",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 8,
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   8
+  ]
+ },
+ {
+  "name": "한국에너지기술평가원 문서중앙화",
+  "client": "인젠트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-10-08",
+  "endDate": "2021-10-31",
+  "contractMm": 0.25,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "문서중앙화",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16
+  ]
+ },
+ {
+  "name": "삼성카드 콜봇 구축",
+  "client": "NHN다이퀘스트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-05-20",
+  "endDate": "2021-10-19",
+  "contractMm": 5.0,
+  "engagement": "ONSITE",
+  "solution": "프로젝트",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "대보그룹 그룹웨어 구축",
+  "client": "(주)나온소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-08-05",
+  "endDate": "2021-12-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   17
+  ]
+ },
+ {
+  "name": "성신양회 문서중앙화",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-12-10",
+  "endDate": "2022-01-09",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "문서중앙화",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "TCK 문서중앙화",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-10-01",
+  "endDate": "2022-01-30",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "문서중앙화",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "대상그룹 ECM 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-10-11",
+  "endDate": "2022-02-25",
+  "contractMm": 1.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "서울바이오허브 연구장비 통합관리시스템 고도화",
+  "client": "콜라비",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-11-08",
+  "endDate": "2021-11-16",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "한림성심대학교 산학협력단 그룹웨어 구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-12-14",
+  "endDate": "2022-01-13",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 8,
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   8
+  ]
+ },
+ {
+  "name": "오산대학교 그룹웨어 구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-12-16",
+  "endDate": "2022-01-15",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 8,
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   8
+  ]
+ },
+ {
+  "name": "울산항만공사 문서중앙화 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-11-19",
+  "endDate": "2021-12-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "문서중앙화",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "쌍용자동차 문서중앙화 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-11-19",
+  "endDate": "2022-01-18",
+  "contractMm": 0.0,
+  "engagement": "REMOTE",
+  "solution": "문서중앙화",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "대구도시공사 문서중앙화 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-12-17",
+  "endDate": "2022-01-14",
+  "contractMm": 0.75,
+  "engagement": "REMOTE",
+  "solution": "문서중앙화",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "KB국민카드 챗봇 고도화",
+  "client": "NHN다이퀘스트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-06-01",
+  "endDate": "2022-02-21",
+  "contractMm": 7.0,
+  "engagement": "ONSITE",
+  "solution": "프로젝트",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "하이브 그룹웨어 구축",
+  "client": "(주)나온소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-03-31",
+  "endDate": "2022-04-30",
+  "contractMm": 0.75,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 17,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   17
+  ]
+ },
+ {
+  "name": "코트라 온라인 전시플랫폼 고도화 검색 연동",
+  "client": "삼성SDS",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-09-15",
+  "endDate": "2022-02-28",
+  "contractMm": 1.5,
+  "engagement": "REMOTE",
+  "solution": "검색모듈",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   17
+  ]
+ },
+ {
+  "name": "한국산업기술평가관리원",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-12-19",
+  "endDate": "2022-03-31",
+  "contractMm": 1.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 30,
+  "team": "AX영업팀",
+  "division": "AX사업기획부",
+  "assigneeIds": [
+   30
+  ]
+ },
+ {
+  "name": "캐시맵 통합 업무시스템 내 검색연동",
+  "client": "캐시맵",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-10-18",
+  "endDate": "2022-03-31",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "신분당선(네오트랜스) 전자결재 재구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-01-17",
+  "endDate": "2022-03-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "프라코 문서중앙화 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-01-17",
+  "endDate": "2022-03-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "문서중앙화",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "BNK부산은행 제안관리시스템 구축",
+  "client": "이노우션코리아",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-03-15",
+  "endDate": "2022-04-28",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 21,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   21
+  ]
+ },
+ {
+  "name": "한화 신문 스크랩 관리",
+  "client": "에닉스원",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-03-15",
+  "endDate": "2022-04-30",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 30,
+  "team": "AX영업팀",
+  "division": "AX사업기획부",
+  "assigneeIds": [
+   30
+  ]
+ },
+ {
+  "name": "STB상생방송 그룹웨어 구축",
+  "client": "(주)나온소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-03-29",
+  "endDate": "2022-06-30",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 21,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   21
+  ]
+ },
+ {
+  "name": "우진산전 그룹웨어 재구축",
+  "client": "(주)나온소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-03-28",
+  "endDate": "2022-06-01",
+  "contractMm": 0.75,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 21,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   21
+  ]
+ },
+ {
+  "name": "롯데정보통신 통합MOIN 전자결재 재구축",
+  "client": "롯데정보통신(주)",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-03-16",
+  "endDate": "2022-06-16",
+  "contractMm": 2.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25,
+   16
+  ]
+ },
+ {
+  "name": "HMM 그룹웨어 재구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-03-28",
+  "endDate": "2022-05-31",
+  "contractMm": 1.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16
+  ]
+ },
+ {
+  "name": "일진그룹 포탈그룹웨어 재구축",
+  "client": "(주)나온소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-03-28",
+  "endDate": "2022-06-30",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "화승코퍼레이션 문서중앙화(클라우디움) SMB",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-06-13",
+  "endDate": "2022-06-30",
+  "contractMm": 0.0,
+  "engagement": "REMOTE",
+  "solution": "문서중앙화",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "고려대학교병원 그룹웨어 재구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-03-24",
+  "endDate": "2022-06-03",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 21,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   21
+  ]
+ },
+ {
+  "name": "OCI그룹 그룹웨어 재구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-04-19",
+  "endDate": "2022-06-30",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 30,
+  "team": "AX영업팀",
+  "division": "AX사업기획부",
+  "assigneeIds": [
+   30
+  ]
+ },
+ {
+  "name": "현대자동차 MI Platform 구축",
+  "client": "(주)씨와이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-12-20",
+  "endDate": "2022-10-03",
+  "contractMm": 5.0,
+  "engagement": "OFFSITE",
+  "solution": "검색엔진",
+  "managerId": 8,
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   8
+  ]
+ },
+ {
+  "name": "금호타이어 문서중앙화 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-03-30",
+  "endDate": "2022-07-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "문서중앙화",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "TCK 검색엔진 추가",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-06-10",
+  "endDate": "2022-06-30",
+  "contractMm": 0.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 30,
+  "team": "AX영업팀",
+  "division": "AX사업기획부",
+  "assigneeIds": [
+   30
+  ]
+ },
+ {
+  "name": "코트라 BuyKorea 홈페이지 내 검색엔진",
+  "client": "삼성SDS",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-06-01",
+  "endDate": "2022-02-28",
+  "contractMm": 4.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   17
+  ]
+ },
+ {
+  "name": "교원그룹 그룹웨어 재구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-12-15",
+  "endDate": "2022-07-15",
+  "contractMm": 2.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13,
+   8
+  ]
+ },
+ {
+  "name": "현대제철 제안관리 고도화",
+  "client": "이노우션코리아",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-05-20",
+  "endDate": "2022-07-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "동원그룹 포탈/그룹웨어 내 검색엔진 적용",
+  "client": "동원엔터프라이즈",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-05-01",
+  "endDate": "2022-07-31",
+  "contractMm": 1.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 17,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   17
+  ]
+ },
+ {
+  "name": "영풍문고 그룹웨어 구축",
+  "client": "(주)나온소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-05-19",
+  "endDate": "2022-07-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 21,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   21
+  ]
+ },
+ {
+  "name": "현대카드/캐피탈/커머설 문서중앙화 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 90,
+  "startDate": "2021-08-13",
+  "endDate": "2022-07-30",
+  "contractMm": 3.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "문서중앙화",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "오상헬스케어 그룹웨어 구축",
+  "client": "(주)타이거컴퍼니",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-05-01",
+  "endDate": "2022-07-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 21,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   21
+  ]
+ },
+ {
+  "name": "SGC 그룹웨어 구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-06-20",
+  "endDate": "2022-08-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 30,
+  "team": "AX영업팀",
+  "division": "AX사업기획부",
+  "assigneeIds": [
+   30
+  ]
+ },
+ {
+  "name": "공항철도 그룹웨어 구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-06-01",
+  "endDate": "2022-09-28",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "에이앤디신용정보 그룹웨어 구축",
+  "client": "비즈웰(주)",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-03-21",
+  "endDate": "2022-07-30",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "KCA손해사정 그룹웨어 구축",
+  "client": "비즈웰(주)",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-06-08",
+  "endDate": "2022-07-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "IBK캐피탈 규정관리시스템 구축",
+  "client": "젠솔소프트(주)",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-07-13",
+  "endDate": "2022-08-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "TKG태광그룹 그룹웨어 재구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-05-16",
+  "endDate": "2022-08-31",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "OCI말레이시아 그룹웨어 구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-07-29",
+  "endDate": "2022-08-26",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 30,
+  "team": "AX영업팀",
+  "division": "AX사업기획부",
+  "assigneeIds": [
+   30
+  ]
+ },
+ {
+  "name": "현대두산인프라코어 전자결재 구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-08-16",
+  "endDate": "2022-09-30",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "강스템바이오텍 문서중앙화 구축(클라우디움)",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-10-04",
+  "endDate": "2022-10-31",
+  "contractMm": 0.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 30,
+  "team": "AX영업팀",
+  "division": "AX사업기획부",
+  "assigneeIds": [
+   30
+  ]
+ },
+ {
+  "name": "현대트렌시스 제안관리 구축",
+  "client": "이노우션코리아",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-10-11",
+  "endDate": "2022-10-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "국가보안기술연구소 문서중앙화+개인정보 추출",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-08-01",
+  "endDate": "2022-09-30",
+  "contractMm": 0.75,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "유니온 그룹웨어 구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-10-04",
+  "endDate": "2022-11-28",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 30,
+  "team": "AX영업팀",
+  "division": "AX사업기획부",
+  "assigneeIds": [
+   30
+  ]
+ },
+ {
+  "name": "대덕전자 지식검색시스템 구축",
+  "client": "대덕전자",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-07-13",
+  "endDate": "2022-11-18",
+  "contractMm": 2.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   21,
+   30
+  ]
+ },
+ {
+  "name": "LS Electric Solution Square 포탈",
+  "client": "LS Electric",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-09-15",
+  "endDate": "2022-11-14",
+  "contractMm": 1.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   26
+  ]
+ },
+ {
+  "name": "한국생산기술연구원 EIP 3.0 구축",
+  "client": "(주)조인트리",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-12-01",
+  "endDate": "2022-12-01",
+  "contractMm": 8.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13,
+   17
+  ]
+ },
+ {
+  "name": "TCK 검색엔진 추가",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2021-12-01",
+  "endDate": "2022-01-30",
+  "contractMm": 0.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "한국원자력안전위원회 내부 업무시스템",
+  "client": "체이스",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-11-02",
+  "endDate": "2022-12-31",
+  "contractMm": 0.25,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 26,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   26
+  ]
+ },
+ {
+  "name": "아난티 쇼핑몰",
+  "client": "종부씨엔에스",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-08-22",
+  "endDate": "2023-01-15",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "현대차증권 리서치 센터 내 검색(MTS+홈페이지)",
+  "client": "현대차증권",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-09-28",
+  "endDate": "2022-12-31",
+  "contractMm": 2.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16
+  ]
+ },
+ {
+  "name": "보건복지부 장애인건강보건관리시스템 구축",
+  "client": "(주)위키데이타",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-11-20",
+  "endDate": "2023-01-19",
+  "contractMm": 0.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "국토부 브이월드 검색 구축",
+  "client": "(주)위키데이타",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-01-05",
+  "endDate": "2023-01-27",
+  "contractMm": 0.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 30,
+  "team": "AX영업팀",
+  "division": "AX사업기획부",
+  "assigneeIds": [
+   30,
+   16
+  ]
+ },
+ {
+  "name": "디와이(DY) 문서중앙화 재구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-01-02",
+  "endDate": "2023-03-03",
+  "contractMm": 0.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 30,
+  "team": "AX영업팀",
+  "division": "AX사업기획부",
+  "assigneeIds": [
+   30
+  ]
+ },
+ {
+  "name": "국가기상위성센터 홈페이지 구축",
+  "client": "뉴컨",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-10-11",
+  "endDate": "2023-01-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "방송통신위원회 전자회의시스템 보안강화 및 고도화 사업",
+  "client": "위드원",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-11-02",
+  "endDate": "2022-12-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 26,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   26
+  ]
+ },
+ {
+  "name": "대봉엘에스 클라우디움(SMB) 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-12-30",
+  "endDate": "2023-02-28",
+  "contractMm": 0.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "유니드 그룹웨어 구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-10-26",
+  "endDate": "2023-01-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 30,
+  "team": "AX영업팀",
+  "division": "AX사업기획부",
+  "assigneeIds": [
+   30
+  ]
+ },
+ {
+  "name": "키파운드리 ECM 구축",
+  "client": "SKCC",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-01-17",
+  "endDate": "2023-03-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 30,
+  "team": "AX영업팀",
+  "division": "AX사업기획부",
+  "assigneeIds": [
+   30
+  ]
+ },
+ {
+  "name": "LS 니꼬동제련 규정관리 구축",
+  "client": "젠솔소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-08-22",
+  "endDate": "2023-02-28",
+  "contractMm": 1.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13,
+   26
+  ]
+ },
+ {
+  "name": "포스코인터네셔널 영업시황 정보 포탈 구축",
+  "client": "비아이메트릭스",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-10-11",
+  "endDate": "2023-02-28",
+  "contractMm": 2.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "매그너칩반도체 문서중앙화 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-10-17",
+  "endDate": "2023-03-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 30,
+  "team": "AX영업팀",
+  "division": "AX사업기획부",
+  "assigneeIds": [
+   30
+  ]
+ },
+ {
+  "name": "LG에너지솔루션 표준문서(규정) 구축",
+  "client": "펜타시스템테크놀로지",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-11-01",
+  "endDate": "2023-03-31",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "과학기술연합대학원대학교(UST) 문서중앙화 재구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-02-22",
+  "endDate": "2023-03-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "생명보험협회 그룹웨어 재구축",
+  "client": "생명보험협회",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-07-04",
+  "endDate": "2022-09-30",
+  "contractMm": 1.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   26
+  ]
+ },
+ {
+  "name": "LG전자 표준문서(규정) 구축",
+  "client": "펜타시스템테크놀로지",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-11-21",
+  "endDate": "2023-04-30",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "나이스평가정보 통합 문서관리시스템 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-10-17",
+  "endDate": "2023-03-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 30,
+  "team": "AX영업팀",
+  "division": "AX사업기획부",
+  "assigneeIds": [
+   30
+  ]
+ },
+ {
+  "name": "한국거래소 스마트워크 IT인프라 구축 사업",
+  "client": "LG CNS",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-10-11",
+  "endDate": "2023-05-30",
+  "contractMm": 6.0,
+  "engagement": "ONSITE",
+  "solution": "검색엔진",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   21
+  ]
+ },
+ {
+  "name": "현대오일뱅크 포탈시스템 재구축",
+  "client": "(주)코비젼",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-11-16",
+  "endDate": "2023-05-31",
+  "contractMm": 4.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 17,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   17,
+   7
+  ]
+ },
+ {
+  "name": "롯데렌탈(그린카) 통합모인 전자결재 구축",
+  "client": "롯데정보통신(주)",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-12-01",
+  "endDate": "2023-05-31",
+  "contractMm": 1.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16
+  ]
+ },
+ {
+  "name": "한국결제네트웍스(구 파이서브코리아) 그룹웨어 구축",
+  "client": "(주)비즈웰",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-01-30",
+  "endDate": "2023-03-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "롯데정보통신 통합모인 전자결재 고도화",
+  "client": "롯데정보통신(주)",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-03-01",
+  "endDate": "2023-05-31",
+  "contractMm": 1.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16
+  ]
+ },
+ {
+  "name": "현대오일뱅크 검색 대상 확대",
+  "client": "현대오일뱅크",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-03-15",
+  "endDate": "2023-05-31",
+  "contractMm": 4.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 17,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   17,
+   7
+  ]
+ },
+ {
+  "name": "문서중앙화 검색구축",
+  "client": "대봉엘에스",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-03-15",
+  "endDate": "2023-05-14",
+  "contractMm": 0.0,
+  "engagement": "REMOTE",
+  "solution": "문서중앙화",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "인선이엔티 그룹웨어 내 검색엔진 구축",
+  "client": "(주)나온소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-05-22",
+  "endDate": "2023-08-22",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 17,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   17
+  ]
+ },
+ {
+  "name": "스페이스뱅크 경제정책플랫품 구축",
+  "client": "스페이스뱅크",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-02-23",
+  "endDate": "2023-07-31",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "소니코리아 그룹웨어 전자결재 시스템 구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-03-21",
+  "endDate": "2023-07-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "에큐온케피탈 그룹웨어 구축",
+  "client": "(주)나온소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-03-17",
+  "endDate": "2023-07-30",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 26,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   26
+  ]
+ },
+ {
+  "name": "에이프로 그룹웨어 구축",
+  "client": "(주)나온소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-03-23",
+  "endDate": "2023-07-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "해군 빅데이터기반 작전 상황 관리 및 분석체계 구축(형상변경)",
+  "client": "두두아이티",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-06-01",
+  "endDate": "2023-07-30",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "넥센 그룹웨어 재구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-03-15",
+  "endDate": "2023-04-14",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "과학기술인공제회 DR 구축",
+  "client": "(주)비즈웰",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-08-01",
+  "endDate": "2023-08-28",
+  "contractMm": 0.1,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "SK케미칼/바이오사이언스 AIP 검색 연동",
+  "client": "SK케미칼/바이오사이언스",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-06-01",
+  "endDate": "2023-07-31",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 26,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   26
+  ]
+ },
+ {
+  "name": "대덕전자/와이솔 그룹웨어 업그레이드",
+  "client": "대덕전자/와이솔",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-04-16",
+  "endDate": "2023-08-26",
+  "contractMm": 2.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   17
+  ]
+ },
+ {
+  "name": "지식검색시스템 구축",
+  "client": "한미글로벌",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-05-22",
+  "endDate": "2023-08-31",
+  "contractMm": 1.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 21,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   21
+  ]
+ },
+ {
+  "name": "인도네시아 프라따마그룹 그룹웨어 구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-09-08",
+  "endDate": "2023-10-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 17,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   17,
+   13
+  ]
+ },
+ {
+  "name": "에스텍파마 문서중앙화",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-07-08",
+  "endDate": "2023-09-20",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 26,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   26
+  ]
+ },
+ {
+  "name": "HLB ECM 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-10-01",
+  "endDate": "2023-10-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 26,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   26
+  ]
+ },
+ {
+  "name": "OCI 검색엔진 추가 구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-08-25",
+  "endDate": "2023-09-10",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "동우화인켐 ECM구축 사업",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-08-10",
+  "endDate": "2023-10-15",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 26,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   26
+  ]
+ },
+ {
+  "name": "서울시의회 의안비용추계정보시스템 기능 개선 및 고도화 사업",
+  "client": "(주)위키데이타",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-09-01",
+  "endDate": "2023-10-30",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 17,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   17
+  ]
+ },
+ {
+  "name": "미디어윌홀딩스 그룹웨어 구축",
+  "client": "(주)나온소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-07-04",
+  "endDate": "2023-10-30",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 21,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   21
+  ]
+ },
+ {
+  "name": "스마일게이트홀딩스 통합검색 개선",
+  "client": "스마일게이트홀딩스",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-06-21",
+  "endDate": "2023-10-20",
+  "contractMm": 9.0,
+  "engagement": "ONSITE",
+  "solution": "검색엔진",
+  "managerId": 40,
+  "team": "MS개발팀",
+  "division": "MS사업부",
+  "assigneeIds": [
+   40
+  ]
+ },
+ {
+  "name": "보령 그룹웨어 재구축",
+  "client": "(주)이베이스넷",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-03-23",
+  "endDate": "2023-10-31",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "한국증권금융 우리사주시스템 구축",
+  "client": "젠솔소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-08-11",
+  "endDate": "2023-11-30",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 21,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   21
+  ]
+ },
+ {
+  "name": "한국에너지공단 내일사랑(그룹웨어) 구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-06-16",
+  "endDate": "2023-11-06",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 21,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   21
+  ]
+ },
+ {
+  "name": "보령 통합 문서중앙화 BR-ECM 솔루션 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-05-01",
+  "endDate": "2023-10-31",
+  "contractMm": 3.0,
+  "engagement": "REMOTE",
+  "solution": "문서중앙화",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "중앙백신연구소 문서중앙화 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-08-15",
+  "endDate": "2023-11-15",
+  "contractMm": 0.75,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 26,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   26
+  ]
+ },
+ {
+  "name": "건일제약 문서중앙화 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-08-16",
+  "endDate": "2023-11-15",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 26,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   26
+  ]
+ },
+ {
+  "name": "해군 빅데이터기반 작전 상황 관리 및 분석체계 구축",
+  "client": "두두아이티",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-10-05",
+  "endDate": "2023-12-31",
+  "contractMm": 2.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "서울시여성가족재단 경력단절여성등의 경제활동촉진사업 통합시스템 구축",
+  "client": "네오그라프",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-10-18",
+  "endDate": "2023-11-28",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "한국거래소 중소기업회계지원플랫폼 구축",
+  "client": "(주)위키데이타",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-09-01",
+  "endDate": "2023-12-31",
+  "contractMm": 1.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 21,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   21
+  ]
+ },
+ {
+  "name": "신한금융그룹 New 그룹웨어 구축",
+  "client": "신한DS/나온소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2022-06-20",
+  "endDate": "2023-08-25",
+  "contractMm": 18.0,
+  "engagement": "ONSITE",
+  "solution": "검색엔진",
+  "managerId": 8,
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   8
+  ]
+ },
+ {
+  "name": "한국토지신탁 그룹웨어 개발 용역",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-08-16",
+  "endDate": "2023-12-04",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 21,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   21
+  ]
+ },
+ {
+  "name": "LG전자 nPDM R&D 검색구축",
+  "client": "LG CNS",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-08-21",
+  "endDate": "2023-11-28",
+  "contractMm": 7.0,
+  "engagement": "ONSITE",
+  "solution": "검색엔진",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16
+  ]
+ },
+ {
+  "name": "정림건축 종합건축사사무소 검색엔진 구축",
+  "client": "메타넷티플랫폼",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-10-16",
+  "endDate": "2024-11-15",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 21,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   21
+  ]
+ },
+ {
+  "name": "SBJ(신한은행 일본법인)은행 ECM구축 사업",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-07-21",
+  "endDate": "2023-11-15",
+  "contractMm": 1.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 26,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   26
+  ]
+ },
+ {
+  "name": "LG에너지솔루션 ECM 내 검색엔진 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-03-01",
+  "endDate": "2024-03-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 8,
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   8
+  ]
+ },
+ {
+  "name": "보건복지부 산하 한국사회보장정보원 장애인건강보건관리시스템 구축",
+  "client": "(주)위키데이타",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-03-01",
+  "endDate": "2024-04-30",
+  "contractMm": 0.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "한국산업기술진흥원 문서중앙화 내 검색엔진 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-12-15",
+  "endDate": "2023-12-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 26,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   26
+  ]
+ },
+ {
+  "name": "SK바이오사이언스 전자결재 내 검색",
+  "client": "SK바이오사이언스",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-01-01",
+  "endDate": "2024-01-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 26,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   26
+  ]
+ },
+ {
+  "name": "에스피지 그룹웨어 (재)구축",
+  "client": "(주)나온소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-10-10",
+  "endDate": "2024-01-15",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 21,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   21
+  ]
+ },
+ {
+  "name": "롯데면세점 전자결재 구축 내 검색",
+  "client": "롯데정보통신(주)",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-06-15",
+  "endDate": "2024-02-28",
+  "contractMm": 2.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   26
+  ]
+ },
+ {
+  "name": "한국교통안전공단 클라우드 기반 온나라, 기록관리시스템 구축",
+  "client": "인정보기술",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-11-01",
+  "endDate": "2023-12-31",
+  "contractMm": 2.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "넥센타이어 문서중앙화+표준문서관리",
+  "client": "(주)엑스소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-06-01",
+  "endDate": "2024-01-31",
+  "contractMm": 3.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "문서중앙화",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13,
+   8
+  ]
+ },
+ {
+  "name": "국회 영상플랫폼 위탁 운영 사업 내 검색엔진 구축",
+  "client": "(주)미오소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-12-11",
+  "endDate": "2023-12-31",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "포스코 인터네셔널 그룹웨어 재구축",
+  "client": "(주)코비젼",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-07-24",
+  "endDate": "2024-01-15",
+  "contractMm": 3.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "한림제약 ECM 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-02-26",
+  "endDate": "2024-04-26",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 26,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   26
+  ]
+ },
+ {
+  "name": "통일과나눔 아카이브 홈페이지 검색 구축",
+  "client": "써스포",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-02-12",
+  "endDate": "2024-03-13",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 27,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   27
+  ]
+ },
+ {
+  "name": "저축은행중앙회 그룹웨어 재구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-11-30",
+  "endDate": "2024-03-22",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16
+  ]
+ },
+ {
+  "name": "우리은행 송무시스템 용역",
+  "client": "젠솔소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-11-30",
+  "endDate": "2023-12-30",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "우리은행 준법감시시스템 구축",
+  "client": "젠솔소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-11-30",
+  "endDate": "2023-12-30",
+  "contractMm": 0.5,
+  "engagement": "ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 27,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   27
+  ]
+ },
+ {
+  "name": "국토교통부 전자정부프레임워크 서블릿 API 변경",
+  "client": "ICT WAY",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-12-11",
+  "endDate": "2023-12-31",
+  "contractMm": 0.25,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16
+  ]
+ },
+ {
+  "name": "경복대학교 문서중앙화 구축",
+  "client": "메타넷디엘(주)",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-02-14",
+  "endDate": "2024-04-30",
+  "contractMm": 1.5,
+  "engagement": "REMOTE",
+  "solution": "문서중앙화",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "국가과학기술연구회 출연(연) 포털 사용성 강화 사업(조달)",
+  "client": "(주)위키데이타",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-02-19",
+  "endDate": "2024-04-15",
+  "contractMm": 0.5,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "한국산업기술기획평가관리원 MIS 인프라 물품구매(그룹웨어&ERP)",
+  "client": "(주)위키데이타",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-03-01",
+  "endDate": "2024-03-31",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "전력거래소 문서중앙화 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-04-30",
+  "endDate": "2024-06-22",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16
+  ]
+ },
+ {
+  "name": "롯데정보통신 문서중앙화 윈도우탐색기 구축",
+  "client": "롯데정보통신(주)",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-03-01",
+  "endDate": "2024-04-30",
+  "contractMm": 2.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13,
+   21
+  ]
+ },
+ {
+  "name": "한국증권금융 스마트워크플레이스 조성 사업",
+  "client": "LG CNS",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-12-16",
+  "endDate": "2024-05-31",
+  "contractMm": 10.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   17,
+   4
+  ]
+ },
+ {
+  "name": "OCI 계열사 추가(부광약품)",
+  "client": "가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-12-16",
+  "endDate": "2024-01-15",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "유신 문서중앙화 구축",
+  "client": "사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-12-20",
+  "endDate": "2024-05-31",
+  "contractMm": 2.5,
+  "engagement": "REMOTE",
+  "solution": "문서중앙화",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "ProDocEye 뷰어 솔루션 납품",
+  "client": "한신공영",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-05-27",
+  "endDate": "2024-06-30",
+  "contractMm": 1.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 7,
+  "team": "AX기술연구소",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   7,
+   8
+  ]
+ },
+ {
+  "name": "이수페타시스 ECM 구축 + ProAIP",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-03-16",
+  "endDate": "2024-04-15",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 26,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   26,
+   7
+  ]
+ },
+ {
+  "name": "대한적십자사 그룹웨어 개편",
+  "client": "새롬정보시스템",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-05-10",
+  "endDate": "2024-07-09",
+  "contractMm": 1.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 8,
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   8
+  ]
+ },
+ {
+  "name": "롯데카드 그룹웨어 개편",
+  "client": "(주)나온소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-10-05",
+  "endDate": "2024-05-20",
+  "contractMm": 3.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13
+  ]
+ },
+ {
+  "name": "LG전자 통합약관관리 구축",
+  "client": "펜타시스템테크놀로지",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-10-05",
+  "endDate": "2023-11-04",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "대통령경호처 개인정보보호 시스템",
+  "client": "대통령경호처",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2023-11-08",
+  "endDate": "2024-01-30",
+  "contractMm": 2.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13,
+   17
+  ]
+ },
+ {
+  "name": "코오롱인더스트리 R&BD 통합시스템 구축",
+  "client": "LG CNS",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-04-01",
+  "endDate": "2024-06-28",
+  "contractMm": 1.0,
+  "engagement": "OFFSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   11
+  ]
+ },
+ {
+  "name": "감사원 ECM 검색구축",
+  "client": "사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-04-01",
+  "endDate": "2024-05-31",
+  "contractMm": 0.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "삼익THK 그룹웨어 내 검색엔진 구축",
+  "client": "(주)나온소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2004-05-23",
+  "endDate": "2005-11-14",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 27,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   27
+  ]
+ },
+ {
+  "name": "경기도경제과학진흥원 검색엔진 구축",
+  "client": "(주)누리인포스",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-11-16",
+  "endDate": "2024-12-16",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 17,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   17
+  ]
+ },
+ {
+  "name": "동덕여자대학교 홈페이지 내 검색 구축",
+  "client": "네오그라프",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-06-17",
+  "endDate": "2024-08-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 21,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   21
+  ]
+ },
+ {
+  "name": "LIG넥스원 차세대 그룹웨어 고도화",
+  "client": "LG CNS",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-08-01",
+  "endDate": "2024-09-30",
+  "contractMm": 2.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 7,
+  "team": "AX기술연구소",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   7
+  ]
+ },
+ {
+  "name": "농촌진흥청 내부 업무 포탈 내 검색 구축",
+  "client": "농촌진흥청 / 애니스마트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-08-15",
+  "endDate": "2024-11-30",
+  "contractMm": 1.0,
+  "engagement": "OFFSITE",
+  "solution": "검색엔진",
+  "managerId": 17,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   17
+  ]
+ },
+ {
+  "name": "쌍용 C&E ECM 구축",
+  "client": "GS ITM / (주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-08-26",
+  "endDate": "2024-09-30",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "경동도시가스 차세대 플랫폼 사업 그룹웨어 재구축",
+  "client": "나온소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-08-26",
+  "endDate": "2024-09-25",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 27,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   27
+  ]
+ },
+ {
+  "name": "한국원자력연구원 문서중앙화 구축",
+  "client": "GS ITM / (주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-11-12",
+  "endDate": "2024-12-12",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "예가람저축은행 ECM 구축",
+  "client": "GS ITM / (주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-08-27",
+  "endDate": "2024-11-30",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "고려저축은행 ECM 구축",
+  "client": "GS ITM / (주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-10-31",
+  "endDate": "2024-11-30",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "SK하이스텍 ECM 구축",
+  "client": "GS ITM / (주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-10-31",
+  "endDate": "2024-11-30",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "KB자산운용 ECM+개인정보추출 구축",
+  "client": "GS ITM / (주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-10-31",
+  "endDate": "2024-11-30",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "SECO 그룹웨어 구축",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-10-31",
+  "endDate": "2024-11-30",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 11,
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   11
+  ]
+ },
+ {
+  "name": "LS Electric PMS시스템 내 검색엔진 구축",
+  "client": "자이오넥스",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-10-31",
+  "endDate": "2024-11-30",
+  "contractMm": 1.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 10,
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   10
+  ]
+ },
+ {
+  "name": "한국증권금융 게시판 내 검색 연동",
+  "client": "GS ITMM / (주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-11-25",
+  "endDate": "2025-01-24",
+  "contractMm": 1.5,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   17,
+   28
+  ]
+ },
+ {
+  "name": "롯데제이티비 차세대시스템 내 통합모인 전자결재 구축",
+  "client": "롯데이노베이트(주)",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-03-01",
+  "endDate": "2025-03-31",
+  "contractMm": 0.5,
+  "engagement": "OFFSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 21,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   21
+  ]
+ },
+ {
+  "name": "현대차증권 MTS-마이데이터 앱 통합 플랫폼 구축",
+  "client": "에스코어",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-07-25",
+  "endDate": "2024-09-30",
+  "contractMm": 2.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16
+  ]
+ },
+ {
+  "name": "E1 문서중앙화 고도화",
+  "client": "GS ITM / (주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-11-01",
+  "endDate": "2024-12-31",
+  "contractMm": 2.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "한국거래소 스마트워크를 위한 법규시스템 선진화 사업",
+  "client": "(주)엠텐",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-09-01",
+  "endDate": "2024-10-31",
+  "contractMm": 1.5,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 21,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   21
+  ]
+ },
+ {
+  "name": "BNK투자증권 홈페이지 구축",
+  "client": "GS ITM / 동연에스엔티",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-09-11",
+  "endDate": "2024-12-10",
+  "contractMm": 2.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 17,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   17
+  ]
+ },
+ {
+  "name": "근로복지공단 스마트 산재보험 시스템 구축 - 조달",
+  "client": "조달청",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-12-02",
+  "endDate": "2025-01-31",
+  "contractMm": 0.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "정보통신기획평가원 그룹웨어 구축",
+  "client": "GS ITM / (주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-10-31",
+  "endDate": "2024-11-30",
+  "contractMm": 0.25,
+  "engagement": "OFFSITE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   28
+  ]
+ },
+ {
+  "name": "벽산 문서중앙화 구축",
+  "client": "GS ITM / 사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-12-01",
+  "endDate": "2024-12-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "한국환경산업기술원 가습기피해자 지원 시스템 내 검색",
+  "client": "GS ITM / 젠솔소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-12-01",
+  "endDate": "2024-12-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 11,
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   11
+  ]
+ },
+ {
+  "name": "포스코 인터네셔널 영업시황시스템(식량) 웹 크롤링",
+  "client": "포스코DX",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-11-02",
+  "endDate": "2025-01-31",
+  "contractMm": 3.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 7,
+  "team": "AX기술연구소",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   7
+  ]
+ },
+ {
+  "name": "롯데케미칼 인도네시아 법인(LCL) 2차 IT시스템 구축_통합모인",
+  "client": "롯데이노베이스(주)",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-12-31",
+  "endDate": "2025-03-31",
+  "contractMm": 3.0,
+  "engagement": "OFFSITE",
+  "solution": "검색엔진",
+  "managerId": 8,
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   8,
+   21
+  ]
+ },
+ {
+  "name": "한국전력거래소 개인정보추출 모듈",
+  "client": "GS ITM / 사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-01-01",
+  "endDate": "2025-01-31",
+  "contractMm": 0.25,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색모듈",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "윤성에프엔씨 문서중앙화 구축",
+  "client": "GS ITM / 사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-01-01",
+  "endDate": "2025-01-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "현대자동차 MI 플랫폼 개선",
+  "client": "CY글로벌",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-01-01",
+  "endDate": "2025-01-31",
+  "contractMm": 1.0,
+  "engagement": "OFFSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 7,
+  "team": "AX기술연구소",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   7,
+   8
+  ]
+ },
+ {
+  "name": "안전성평가연구소 차세대 시스템 내 통합검색",
+  "client": "GS ITM / 에이투엠",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-01-29",
+  "endDate": "2025-02-28",
+  "contractMm": 0.5,
+  "engagement": "OFFSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 8,
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   8,
+   18
+  ]
+ },
+ {
+  "name": "안전성평가연구소 PDF 변환 솔루션 납품",
+  "client": "안전성평가연구소",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-10-29",
+  "endDate": "2024-11-28",
+  "contractMm": 0.5,
+  "engagement": "OFFSITE",
+  "solution": "문서뷰어/추출",
+  "managerId": 8,
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   8
+  ]
+ },
+ {
+  "name": "SK피유코어 그룹웨어 구축",
+  "client": "GS ITM / 새롬정보시스템",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-10-29",
+  "endDate": "2024-11-28",
+  "contractMm": 1.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16
+  ]
+ },
+ {
+  "name": "CJ오투어 임직원 복지몰 내 검색엔진 적용",
+  "client": "GS ITM / 엔투솔루션",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-12-01",
+  "endDate": "2024-12-31",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 22,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   22
+  ]
+ },
+ {
+  "name": "유한양행 그룹웨어 구축",
+  "client": "GS ITM / (주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-01-01",
+  "endDate": "2025-01-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   22
+  ]
+ },
+ {
+  "name": "LG전자 세무포탈(NTTM) 시스템 내 검색 연동",
+  "client": "LG전자",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-09-30",
+  "endDate": "2024-12-29",
+  "contractMm": 3.0,
+  "engagement": "REMOTE",
+  "solution": "문서뷰어/추출",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   22
+  ]
+ },
+ {
+  "name": "매일유업 그룹웨어 재구축",
+  "client": "GS ITM / (주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-03-01",
+  "endDate": "2025-03-31",
+  "contractMm": 0.25,
+  "engagement": "OFFSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 10,
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   10
+  ]
+ },
+ {
+  "name": "넥센타이어 그룹웨어 재구축",
+  "client": "새롬정보시스템",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-01-29",
+  "endDate": "2025-02-28",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 8,
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   8,
+   10
+  ]
+ },
+ {
+  "name": "LG생활건강 PLM 검색",
+  "client": "LG CNS",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-11-01",
+  "endDate": "2025-03-31",
+  "contractMm": 2.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   18
+  ]
+ },
+ {
+  "name": "한국방송통신전파진흥원 이음5G 주파수 이용관리시스템 고도화",
+  "client": "GS ITM / 웨이브피아",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-03-17",
+  "endDate": "2025-05-16",
+  "contractMm": 0.0,
+  "engagement": "OFFSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   17
+  ]
+ },
+ {
+  "name": "한국인삼공사 검색엔진 교체",
+  "client": "사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-05-01",
+  "endDate": "2025-05-31",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "세방전지 그룹웨어 구축",
+  "client": "GS ITM / 새롬정보시스템",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-12-16",
+  "endDate": "2025-06-30",
+  "contractMm": 2.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   17
+  ]
+ },
+ {
+  "name": "홈페이지 검색엔진 구축",
+  "client": "GS ITM/동아사이언스",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-04-28",
+  "endDate": "2025-05-28",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 28,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   28
+  ]
+ },
+ {
+  "name": "인탑스 업무시스템 내 검색엔진 적용",
+  "client": "GS ITM / 지디엔시",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2024-12-16",
+  "endDate": "2025-07-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 28,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   28
+  ]
+ },
+ {
+  "name": "후성그룹 ECM 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-05-01",
+  "endDate": "2025-05-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "BNK지주 스마트워크(문서중앙화) 구축(POC) - Prosearch",
+  "client": "엘에스정보기술",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-05-07",
+  "endDate": "2025-08-31",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "AI검색 POC(경영보고지원/용도개발실 영업지원/rPMS)",
+  "client": "SK케미칼",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-04-21",
+  "endDate": "2025-07-20",
+  "contractMm": 3.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   8
+  ]
+ },
+ {
+  "name": "세네갈 대국민 소통 증진을 위한 국회의정활동시스템 현대화 사업 PC 용역",
+  "client": "천명솔루션",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-04-21",
+  "endDate": "2025-05-21",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 28,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   28
+  ]
+ },
+ {
+  "name": "국회 대국민 개편 사업 중 영상 자막 RAG 구축",
+  "client": "플러스랩스",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-01-24",
+  "endDate": "2025-02-23",
+  "contractMm": 0.5,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "Hi-SK Portal 구축 사업",
+  "client": "SK AX",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-02-03",
+  "endDate": "2025-08-31",
+  "contractMm": 16.0,
+  "engagement": "ONSITE",
+  "solution": "검색엔진",
+  "managerId": 21,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   21,
+   22
+  ]
+ },
+ {
+  "name": "교보증권 문서중앙화시스템 구축",
+  "client": "GS ITM / 사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-05-13",
+  "endDate": "2025-06-12",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25,
+   28
+  ]
+ },
+ {
+  "name": "SL 통합검색 고도화",
+  "client": "블랙링크",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-04-16",
+  "endDate": "2025-08-31",
+  "contractMm": 8.0,
+  "engagement": "OFFSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13,
+   18,
+   12
+  ]
+ },
+ {
+  "name": "인지컨트롤스 검색엔진 구축",
+  "client": "GS ITM / 인지컨트롤스",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-06-12",
+  "endDate": "2025-07-12",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 23,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   23
+  ]
+ },
+ {
+  "name": "농민카 내 검색엔진 구축",
+  "client": "GS ITM / 아크몬스터",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-04-21",
+  "endDate": "2025-05-21",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 28,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   28,
+   19
+  ]
+ },
+ {
+  "name": "신한투자증권 규정관리시스템 재구축",
+  "client": "젠솔소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-04-21",
+  "endDate": "2025-05-21",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 17,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   17
+  ]
+ },
+ {
+  "name": "삼성전자 PVI시스템 구축",
+  "client": "삼성SDS",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-10-01",
+  "endDate": "2025-10-31",
+  "contractMm": 1.0,
+  "engagement": "OFFSITE",
+  "solution": "문서뷰어/추출",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   8
+  ]
+ },
+ {
+  "name": "LSE 설치 서비스 포털 구축",
+  "client": "LG CNS",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-07-01",
+  "endDate": "2025-08-31",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   20
+  ]
+ },
+ {
+  "name": "한국화학융합시험연구원 문서중앙화시스템 구축",
+  "client": "GS ITM / 사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-07-01",
+  "endDate": "2025-09-29",
+  "contractMm": 3.0,
+  "engagement": "REMOTE",
+  "solution": "문서중앙화",
+  "managerId": 10,
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   10
+  ]
+ },
+ {
+  "name": "파마리서치 문서중앙화 구축",
+  "client": "파마리서치",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-07-16",
+  "endDate": "2025-10-31",
+  "contractMm": 2.0,
+  "engagement": "REMOTE",
+  "solution": "문서중앙화",
+  "managerId": 7,
+  "team": "AX기술연구소",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   7,
+   27
+  ]
+ },
+ {
+  "name": "SBI저축은행 문서중앙화시스템 구축",
+  "client": "GS ITM / 사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-07-16",
+  "endDate": "2025-08-15",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25,
+   27
+  ]
+ },
+ {
+  "name": "부방그룹 문서중앙화 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-12-06",
+  "endDate": "2026-01-05",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "신한금융그룹 스윙 사용자중심 개선 구축",
+  "client": "신한DS",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-09-15",
+  "endDate": "2025-11-27",
+  "contractMm": 2.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 8,
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   8,
+   20
+  ]
+ },
+ {
+  "name": "한국전기연구원 홈페이지 구축",
+  "client": "네오그라프",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-09-15",
+  "endDate": "2025-10-15",
+  "contractMm": 0.25,
+  "engagement": "OFFSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 23,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   23
+  ]
+ },
+ {
+  "name": "LIG넥스원 문서중앙화 구축",
+  "client": "GS ITM / (주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-07-01",
+  "endDate": "2026-02-27",
+  "contractMm": 5.0,
+  "engagement": "ONSITE",
+  "solution": "문서중앙화",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   18
+  ]
+ },
+ {
+  "name": "ECM 재구축 사업(GW 및 ECM 검색 연동)",
+  "client": "한미글로벌",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-07-01",
+  "endDate": "2025-11-30",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 27,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   27
+  ]
+ },
+ {
+  "name": "NH저축은행 문서중앙화 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 99,
+  "startDate": "2025-07-01",
+  "endDate": "2025-07-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "한국도박문제관리센터 플랫폼 고도화 미리보기(뷰어)",
+  "client": "체이스",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-11-01",
+  "endDate": "2025-12-31",
+  "contractMm": 0.0,
+  "engagement": "REMOTE",
+  "solution": "문서뷰어/추출",
+  "managerId": 8,
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   8
+  ]
+ },
+ {
+  "name": "사이버다임 업무시스템(레드마인, 위키) 내 검색엔진 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-08-31",
+  "endDate": "2025-09-30",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 23,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   23
+  ]
+ },
+ {
+  "name": "정보보안시스템 검색 서버 이전, API 개발",
+  "client": "대통령경호처",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-12-01",
+  "endDate": "2025-12-31",
+  "contractMm": 1.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "한국타이어 문서중앙화 구축",
+  "client": "GS ITM / 사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-12-01",
+  "endDate": "2025-12-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "한국예탁결제원 경영정보시스템 내 E-감사시스템 추가 개발",
+  "client": "LG CNS",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2026-01-29",
+  "endDate": "2026-02-28",
+  "contractMm": 1.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 19,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   19
+  ]
+ },
+ {
+  "name": "한국예탁결제원 경영정보시스템 구축",
+  "client": "LG CNS",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-05-07",
+  "endDate": "2026-02-28",
+  "contractMm": 10.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   17,
+   4
+  ]
+ },
+ {
+  "name": "cJ오투어 검색엔진 이중화",
+  "client": "GS ITM / 엔투소프트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2026-02-01",
+  "endDate": "2026-02-28",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 28,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   28
+  ]
+ },
+ {
+  "name": "서민금융진흥원 ECM 구축 - 조달",
+  "client": "조달청 / 서민금융진흥원",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2026-02-01",
+  "endDate": "2026-03-03",
+  "contractMm": 0.5,
+  "engagement": "OFFSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 28,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   28
+  ]
+ },
+ {
+  "name": "SK머티리얼즈 추가 개발",
+  "client": "BI Plus",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2026-01-11",
+  "endDate": "2026-02-10",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 23,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   23
+  ]
+ },
+ {
+  "name": "SK머티리얼즈 문서중앙화 구축",
+  "client": "GS ITM / (주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2026-01-01",
+  "endDate": "2026-01-31",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 28,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   28
+  ]
+ },
+ {
+  "name": "OCI Tokuyama Semiconductor Materials",
+  "client": "(주)가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2026-01-01",
+  "endDate": "2026-03-02",
+  "contractMm": 0.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 27,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   27
+  ]
+ },
+ {
+  "name": "에이치시티 문서중앙화 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2026-01-01",
+  "endDate": "2026-01-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 18,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   18
+  ]
+ },
+ {
+  "name": "현대해상 문서중앙화 구축",
+  "client": "GS ITM / 사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2026-03-01",
+  "endDate": "2026-03-31",
+  "contractMm": 1.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 27,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   27
+  ]
+ },
+ {
+  "name": "삼성생명 AI 코드 어시스턴트 PoC",
+  "client": "디에프아이비즈",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2026-02-03",
+  "endDate": "2026-03-15",
+  "contractMm": 0.0,
+  "engagement": "ONSITE",
+  "solution": "검색엔진",
+  "managerId": 20,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   20
+  ]
+ },
+ {
+  "name": "대웅그룹 인도네시아 해외법인 ECM 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2026-02-03",
+  "endDate": "2026-03-05",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 28,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   28
+  ]
+ },
+ {
+  "name": "롯데칠성 통합모인 전자결재 검색 증설",
+  "client": "롯데이노베이트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-11-01",
+  "endDate": "2025-12-31",
+  "contractMm": 0.0,
+  "engagement": "OFFSITE",
+  "solution": "검색엔진",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25,
+   19
+  ]
+ },
+ {
+  "name": "롯데칠성 구축형 통합 모인 구축",
+  "client": "롯데이노베이트",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-05-07",
+  "endDate": "2026-02-27",
+  "contractMm": 0.5,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 19,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   19
+  ]
+ },
+ {
+  "name": "대동기어 ECM 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-10-20",
+  "endDate": "2026-01-31",
+  "contractMm": 0.25,
+  "engagement": "OFFSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 28,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   28
+  ]
+ },
+ {
+  "name": "한국섬유개발연구원 문서변환솔루션 구축",
+  "client": "GS ITM / 에이투엠",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2026-03-01",
+  "endDate": "2026-03-31",
+  "contractMm": 0.5,
+  "engagement": "OFFSITE",
+  "solution": "문서뷰어/추출",
+  "managerId": 18,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   18
+  ]
+ },
+ {
+  "name": "한국은행 통합 업무정보관리(ECM) 시스템 도입 PoC 사업",
+  "client": "펜타시스템테크놀로지",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-12-04",
+  "endDate": "2026-04-03",
+  "contractMm": 3.0,
+  "engagement": "ONSITE",
+  "solution": "문서뷰어/추출",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13,
+   22
+  ]
+ },
+ {
+  "name": "한국산업기술진흥원 포탈 내 ECM 검색 API 개발",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-08-01",
+  "endDate": "2025-12-31",
+  "contractMm": 0.25,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 28,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   28
+  ]
+ },
+ {
+  "name": "한국OSG ECM 재구축",
+  "client": "아이앤아이티",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-11-11",
+  "endDate": "2026-03-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(OEM)",
+  "managerId": 24,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   24
+  ]
+ },
+ {
+  "name": "SK온 문서중앙화 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2026-02-22",
+  "endDate": "2026-05-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 26,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   26
+  ]
+ },
+ {
+  "name": "파마리서치 암복호화 서버 내 M365 AIP 모듈 이중화",
+  "client": "파마리서치",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2026-04-23",
+  "endDate": "2026-05-31",
+  "contractMm": 0.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "파마리서치 웍스 AI와 문서중앙화 MCP와 연동(POC)",
+  "client": "파마리서치",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2026-04-21",
+  "endDate": "2026-05-31",
+  "contractMm": 0.0,
+  "engagement": "REMOTE",
+  "solution": "문서중앙화",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "OCI 그룹웨어 내 neosilicontech 검색 인덱스 신규 계열사 추가 개발",
+  "client": "가온아이",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2026-04-30",
+  "endDate": "2026-05-20",
+  "contractMm": 0.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "극동건설 문서중앙화 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2026-03-31",
+  "endDate": "2026-04-30",
+  "contractMm": 0.25,
+  "engagement": "OFFSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "삼성전기 문서중앙화 검색 고도화 사업(POC)",
+  "client": "삼성전기",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2026-04-01",
+  "endDate": "2026-05-15",
+  "contractMm": 0.0,
+  "engagement": "ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 21,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   21,
+   23
+  ]
+ },
+ {
+  "name": "SK하이이엔지 ECM 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-12-02",
+  "endDate": "2026-01-31",
+  "contractMm": 0.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 27,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   27
+  ]
+ },
+ {
+  "name": "한국관광공사 한국관광산업포털 AI챗봇 서비스 구축",
+  "client": "GS ITM / 윤커뮤니케이션즈",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2025-06-04",
+  "endDate": "2026-03-31",
+  "contractMm": 10.0,
+  "engagement": "OFFSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 7,
+  "team": "AX기술연구소",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   7,
+   16,
+   10,
+   21
+  ]
+ },
+ {
+  "name": "한국증권금융 내규시스템 구축",
+  "client": "젠솔소프트",
+  "status": "완료",
+  "progress": 99,
+  "startDate": "2025-06-04",
+  "endDate": "2025-07-04",
+  "contractMm": 0.25,
+  "engagement": "OFFSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 22,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   22
+  ]
+ },
+ {
+  "name": "에코프로 클라우디움 검색엔진 구축",
+  "client": "(주)사이버다임",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2026-04-05",
+  "endDate": "2026-05-05",
+  "contractMm": 0.25,
+  "engagement": "OFFSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 18,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   18
+  ]
+ },
+ {
+  "name": "금융감독원 디지털 혁신(DX) 중장기 사업 - 개인정보추출",
+  "client": "금융감독원",
+  "status": "완료",
+  "progress": 100,
+  "startDate": "2026-06-12",
+  "endDate": "2026-06-26",
+  "contractMm": 0.5,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 17,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   17
+  ]
+ },
+ {
+  "name": "근로복지공단 스마트 산재보험 시스템 구축",
+  "client": "GS ITM/근로복지공단/ 한국이디에스",
+  "status": "진행중",
+  "progress": 99,
+  "startDate": "2026-01-20",
+  "endDate": "2026-07-19",
+  "contractMm": 6.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 18,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   18,
+   19
+  ]
+ },
+ {
+  "name": "수산인더스트리/수산ENS 문서중앙화 사업 미리보기 납품",
+  "client": "인젠트",
+  "status": "완료",
+  "progress": 99,
+  "startDate": "2026-01-26",
+  "endDate": "2026-03-31",
+  "contractMm": 1.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "문서뷰어/추출",
+  "managerId": 24,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   24
+  ]
+ },
+ {
+  "name": "수산인더스트리/수산ENS 문서중앙화 사업 검색 납품",
+  "client": "수산아이엔티",
+  "status": "완료",
+  "progress": 99,
+  "startDate": "2026-01-26",
+  "endDate": "2026-03-31",
+  "contractMm": 3.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 24,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   24
+  ]
+ },
+ {
+  "name": "IBK투자증권 상담 KMS(IPTCC) 고도화",
+  "client": "케이엘큐브",
+  "status": "진행중",
+  "progress": 99,
+  "startDate": "2026-06-10",
+  "endDate": "2026-07-10",
+  "contractMm": 0.5,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 17,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   17
+  ]
+ },
+ {
+  "name": "우리은행 문서중앙화 구축",
+  "client": "(주)사이버다임",
+  "status": "진행중",
+  "progress": 95,
+  "startDate": "2026-02-01",
+  "endDate": "2026-09-30",
+  "contractMm": 2.0,
+  "engagement": "ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13,
+   18
+  ]
+ },
+ {
+  "name": "한국창의과학재단 벡터기반 검색엔진 구축",
+  "client": "안랩클라우드메이트",
+  "status": "완료",
+  "progress": 95,
+  "startDate": "2026-03-16",
+  "endDate": "2026-04-15",
+  "contractMm": 1.0,
+  "engagement": "REMOTE",
+  "solution": "AI 검색",
+  "managerId": 21,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   21
+  ]
+ },
+ {
+  "name": "극동건설 그룹웨어 구축",
+  "client": "이베이스넷(주)",
+  "status": "완료",
+  "progress": 95,
+  "startDate": "2026-01-26",
+  "endDate": "2026-03-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 24,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   24
+  ]
+ },
+ {
+  "name": "성남시청 홈페이지 전면 개편 - AI검색 구현",
+  "client": "윤커뮤니케이션즈",
+  "status": "완료",
+  "progress": 95,
+  "startDate": "2026-01-30",
+  "endDate": "2026-04-30",
+  "contractMm": 3.0,
+  "engagement": "OFFSITE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13,
+   22
+  ]
+ },
+ {
+  "name": "현대차증권 미국주식 주간 거래 구축 프로젝트",
+  "client": "현대차증권",
+  "status": "수주확정",
+  "progress": 0,
+  "startDate": "2026-09-01",
+  "endDate": "2026-11-30",
+  "contractMm": 3.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   28
+  ]
+ },
+ {
+  "name": "한국거래소 경영정보시스템 구축(ERP 및 인사시스템 등 리뉴얼)",
+  "client": "뱅크웨어글로벌",
+  "status": "진행중",
+  "progress": 90,
+  "startDate": "2025-10-13",
+  "endDate": "2026-09-15",
+  "contractMm": 6.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   28
+  ]
+ },
+ {
+  "name": "키르기스스탄 국회 의재정보시스템(KOICA 사업) 내 검색",
+  "client": "천명시스템",
+  "status": "완료",
+  "progress": 80,
+  "startDate": "2025-10-13",
+  "endDate": "2025-11-12",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 28,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   28
+  ]
+ },
+ {
+  "name": "금융감독 디지털 혁신(DX) 중장기 사업 - 스마트워크",
+  "client": "(주)사이버다임",
+  "status": "진행중",
+  "progress": 80,
+  "startDate": "2026-01-15",
+  "endDate": "2026-09-25",
+  "contractMm": 6.0,
+  "engagement": "ONSITE",
+  "solution": "검색엔진",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   17
+  ]
+ },
+ {
+  "name": "LS Electric 홈페이지 내 검색엔진 추가 개발",
+  "client": "LS Electric",
+  "status": "완료",
+  "progress": 70,
+  "startDate": "2026-01-15",
+  "endDate": "2026-02-14",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 25,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   25
+  ]
+ },
+ {
+  "name": "한국타이어 TRAMA(문서중앙화) API 개발",
+  "client": "한국네트웍스",
+  "status": "진행중",
+  "progress": 70,
+  "startDate": "2026-06-18",
+  "endDate": "2026-07-17",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 26,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   26
+  ]
+ },
+ {
+  "name": "한솔그룹 문서중앙화 구축",
+  "client": "인젠트",
+  "status": "수주확정",
+  "progress": 0,
+  "startDate": "2026-10-01",
+  "endDate": "2026-11-30",
+  "contractMm": 2.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 17,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   17
+  ]
+ },
+ {
+  "name": "대상 미생물 정보 종합 플랫폼 구축",
+  "client": "GS ITM /에스티에이엠",
+  "status": "진행중",
+  "progress": 50,
+  "startDate": "2026-05-01",
+  "endDate": "2026-05-30",
+  "contractMm": 0.5,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 18,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   18
+  ]
+ },
+ {
+  "name": "한미글로벌 프로젝트 데이터 AI 검색(POC)",
+  "client": "한미글로벌",
+  "status": "진행중",
+  "progress": 50,
+  "startDate": "2026-06-04",
+  "endDate": "2026-07-15",
+  "contractMm": 0.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 21,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   21
+  ]
+ },
+ {
+  "name": "대법원 차세대 그룹웨어 구축",
+  "client": "핸디소프트",
+  "status": "진행중",
+  "progress": 40,
+  "startDate": "2026-03-16",
+  "endDate": "2027-09-07",
+  "contractMm": 10.0,
+  "engagement": "ONSITE",
+  "solution": "검색엔진",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   21,
+   23
+  ]
+ },
+ {
+  "name": "SK키파운드리 KeySMS 고도화 구축",
+  "client": "SK키파운드리",
+  "status": "진행중",
+  "progress": 20,
+  "startDate": "2026-06-01",
+  "endDate": "2026-06-30",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 21,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   21
+  ]
+ },
+ {
+  "name": "롯데관광 홈페이지 및 모바일 고도화 프로젝트",
+  "client": "윤커뮤니케이션즈",
+  "status": "진행중",
+  "progress": 20,
+  "startDate": "2026-05-08",
+  "endDate": "2026-12-31",
+  "contractMm": 5.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "AI 검색",
+  "managerId": 17,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   17,
+   19
+  ]
+ },
+ {
+  "name": "사이버다임 ECM과 LLM 연계 개발",
+  "client": "사이버다임",
+  "status": "진행중",
+  "progress": 20,
+  "startDate": "2026-04-21",
+  "endDate": "2026-09-30",
+  "contractMm": 2.0,
+  "engagement": "REMOTE",
+  "solution": "AI 검색",
+  "managerId": 7,
+  "team": "AX기술연구소",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   7
+  ]
+ },
+ {
+  "name": "한국거래소 차세대 상장공시시스템 구축",
+  "client": "코오롱베니트",
+  "status": "진행중",
+  "progress": 10,
+  "startDate": "2026-04-01",
+  "endDate": "2026-12-31",
+  "contractMm": 5.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "문서뷰어/추출",
+  "managerId": 16,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   16,
+   8,
+   17
+  ]
+ },
+ {
+  "name": "SL 글로벌 신규 포탈 재구축 - 검색 연동",
+  "client": "블랙링크",
+  "status": "진행중",
+  "progress": 10,
+  "startDate": "2026-03-09",
+  "endDate": "2026-09-08",
+  "contractMm": 2.0,
+  "engagement": "OFFSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 27,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   27
+  ]
+ },
+ {
+  "name": "한신공영 협업시스템 및 AI챗봇 구축",
+  "client": "한신공영",
+  "status": "진행중",
+  "progress": 10,
+  "startDate": "2026-05-11",
+  "endDate": "2026-08-31",
+  "contractMm": 3.0,
+  "engagement": "REMOTE",
+  "solution": "AI 검색",
+  "managerId": 7,
+  "team": "AX기술연구소",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   7
+  ]
+ },
+ {
+  "name": "국가독성과학연구소 AI 검색",
+  "client": "조달청/국가독성과학연구소",
+  "status": "진행중",
+  "progress": 10,
+  "startDate": "2026-05-08",
+  "endDate": "2026-06-06",
+  "contractMm": 1.0,
+  "engagement": "REMOTE",
+  "solution": "AI 검색",
+  "managerId": 20,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   20
+  ]
+ },
+ {
+  "name": "LS Electric 설치시운전포탈 내 검색엔진 추가 개발",
+  "client": "디지털엠엔씨",
+  "status": "진행중",
+  "progress": 10,
+  "startDate": "2026-07-01",
+  "endDate": "2026-07-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 28,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   28
+  ]
+ },
+ {
+  "name": "롯데카드 퇴사자 메일 처리 로직 추가개발",
+  "client": "나온소프트",
+  "status": "진행중",
+  "progress": 10,
+  "startDate": "2026-06-01",
+  "endDate": "2026-06-30",
+  "contractMm": 0.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 26,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   26
+  ]
+ },
+ {
+  "name": "한국과학창의재단 우리 AI 러닝 사이트",
+  "client": "조달청/한국과학창의재단",
+  "status": "진행중",
+  "progress": 5,
+  "startDate": "2026-04-01",
+  "endDate": "2026-12-31",
+  "contractMm": 5.0,
+  "engagement": "OFFSITE",
+  "solution": "AI 검색",
+  "managerId": 24,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   24
+  ]
+ },
+ {
+  "name": "서울시 인재개발원 차세대 교육통합시스템 구축",
+  "client": "제니스아이티",
+  "status": "진행중",
+  "progress": 5,
+  "startDate": "2026-05-01",
+  "endDate": "2026-12-31",
+  "contractMm": 7.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "AI 검색",
+  "managerId": 17,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   17
+  ]
+ },
+ {
+  "name": "삼성화재 AI-지식관리시스템 구축",
+  "client": "케이엘큐브",
+  "status": "수주확정",
+  "progress": 0,
+  "startDate": "2026-10-29",
+  "endDate": "2026-11-28",
+  "contractMm": 1.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 23,
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   23
+  ]
+ },
+ {
+  "name": "경보제약 검색엔진 교체",
+  "client": "GS ITM/(주)사이버다임",
+  "status": "진행중",
+  "progress": 5,
+  "startDate": "2026-07-01",
+  "endDate": "2026-07-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 18,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   18
+  ]
+ },
+ {
+  "name": "대화형 데이터 서비스 플랫폼 구축 및 AI 리서치 에이전트 개발 - 디지털 휴먼 트윈 연계",
+  "client": "컨슈머인사이트",
+  "status": "진행중",
+  "progress": 5,
+  "startDate": "2026-07-01",
+  "endDate": "2026-12-31",
+  "contractMm": 12.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 2,
+  "team": "AI기술연구소",
+  "division": "AI기술연구소",
+  "assigneeIds": [
+   2,
+   29,
+   4,
+   7
+  ]
+ },
+ {
+  "name": "경찰청 2026년도 경찰 수사지원AI(KICS-AI) 고도화 사업",
+  "client": "LG CNS",
+  "status": "진행중",
+  "progress": 5,
+  "startDate": "2026-07-01",
+  "endDate": "2026-12-31",
+  "contractMm": 4.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "AI 검색",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   13,
+   23
+  ]
+ },
+ {
+  "name": "SH서울주택도시개발공사 민원대응 챗봇 및 내부 업무지원 SH-AI포털 구축 사업 AI 챗봇",
+  "client": "한국클라우드",
+  "status": "진행중",
+  "progress": 5,
+  "startDate": "2026-07-01",
+  "endDate": "2027-04-30",
+  "contractMm": 9.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "AI 검색",
+  "managerId": 35,
+  "team": "MOIN개발팀",
+  "division": "MS사업부",
+  "assigneeIds": [
+   35
+  ]
+ },
+ {
+  "name": "SK온 EUE공장 문서검색엔진 구축",
+  "client": "넥스트시큐어",
+  "status": "진행중",
+  "progress": 5,
+  "startDate": "2026-06-24",
+  "endDate": "2026-12-31",
+  "contractMm": 6.0,
+  "engagement": "REMOTE",
+  "solution": "문서뷰어/추출",
+  "managerId": 18,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   18
+  ]
+ },
+ {
+  "name": "한국증권금융 스마트워크 내규 시스템 추가 개발",
+  "client": "한국증권금융",
+  "status": "진행중",
+  "progress": 0,
+  "startDate": "2026-07-01",
+  "endDate": "2026-07-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 28,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   28
+  ]
+ },
+ {
+  "name": "동아사이언스 팝콘플래닛 검색엔진 추가 개발(MA포함)",
+  "client": "동아사이언스",
+  "status": "진행중",
+  "progress": 0,
+  "startDate": "2026-06-01",
+  "endDate": "2027-01-31",
+  "contractMm": 0.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 28,
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   28
+  ]
+ },
+ {
+  "name": "법제처 정부입법통합플랫폼 구축",
+  "client": "인지테크 / 대신정보통신",
+  "status": "진행중",
+  "progress": 0,
+  "startDate": "2026-07-01",
+  "endDate": "2027-05-31",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "한국거래소 필리핀 해외 전자공시시스템 구축",
+  "client": "코오롱베니트",
+  "status": "진행중",
+  "progress": 0,
+  "startDate": "2026-07-01",
+  "endDate": "2026-09-15",
+  "contractMm": 2.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "온그룹 울주군청 울주군립병원 홈페이지 구축(병원정보시스템)",
+  "client": "조달청/울주군청",
+  "status": "진행중",
+  "progress": 0,
+  "startDate": "2026-07-07",
+  "endDate": "2026-08-28",
+  "contractMm": 0.5,
+  "engagement": "OFFSITE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "국가산림품종 통합관리시스템 구축 사업 - 조달 - 검색",
+  "client": "조달청/국립산림품종관리센터",
+  "status": "진행중",
+  "progress": 0,
+  "startDate": "2026-06-01",
+  "endDate": "2026-07-23",
+  "contractMm": 0.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 8,
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   8
+  ]
+ },
+ {
+  "name": "감사원 데이터 이관용 PDF변환 솔루션 구축",
+  "client": "(주)사이버다임",
+  "status": "진행중",
+  "progress": 0,
+  "startDate": "2026-07-04",
+  "endDate": "2026-08-03",
+  "contractMm": 0.25,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 8,
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   8
+  ]
+ },
+ {
+  "name": "치과재료 쇼핑몰 내 검색엔진 구축",
+  "client": "디지털바인즈",
+  "status": "진행중",
+  "progress": 0,
+  "startDate": "2026-05-11",
+  "endDate": "2026-10-30",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 18,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   18
+  ]
+ },
+ {
+  "name": "삼성선물 문서중앙화 구축",
+  "client": "(주)사이버다임",
+  "status": "진행중",
+  "progress": 0,
+  "startDate": "2026-05-11",
+  "endDate": "2026-06-10",
+  "contractMm": 0.25,
+  "engagement": "OFFSITE",
+  "solution": "검색엔진(API)",
+  "managerId": 18,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   18
+  ]
+ },
+ {
+  "name": "한국과학창의재단 사이언스올&사이언스타임즈 AI",
+  "client": "조달청/한국과학창의재단",
+  "status": "수주확정",
+  "progress": 0,
+  "startDate": "2026-07-07",
+  "endDate": "2026-11-30",
+  "contractMm": 0.0,
+  "engagement": "OFFSITE",
+  "solution": "AI 검색",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "IBK기업은행 규정관리시스템 재구축",
+  "client": "젠솔소프트",
+  "status": "수주확정",
+  "progress": 0,
+  "startDate": "2026-08-01",
+  "endDate": "2026-08-31",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "과기부 AI기반 과기정통부 특화 행정서비스(AI-NEXT) 구축_SW",
+  "client": "조달청/과학기술정보통신부",
+  "status": "수주확정",
+  "progress": 0,
+  "startDate": "2026-07-01",
+  "endDate": "2026-12-31",
+  "contractMm": 0.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "과기부 AI기반 과기정통부 특화 행정서비스(AI-NEXT) 구축_용역",
+  "client": "유플러스아이티",
+  "status": "수주확정",
+  "progress": 0,
+  "startDate": "2026-07-01",
+  "endDate": "2026-12-31",
+  "contractMm": 4.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "한국수출입은행 AI 플랫폼(KEXIM AI) 및 그룹웨어 구축",
+  "client": "조달청/한국수출입은행",
+  "status": "수주확정",
+  "progress": 0,
+  "startDate": "2026-07-01",
+  "endDate": "2027-04-30",
+  "contractMm": 4.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "AI 검색",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "OCI Tokuyama Semiconductor Materials SAP시스템 내 Xiper 구축",
+  "client": "펜타시스템테놀로지",
+  "status": "수주확정",
+  "progress": 0,
+  "startDate": "2026-06-01",
+  "endDate": "2026-07-01",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "문서뷰어/추출",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "명화공업 문서중앙화 내 검색엔진 교체",
+  "client": "(주)사이버다임",
+  "status": "수주확정",
+  "progress": 0,
+  "startDate": "2026-08-01",
+  "endDate": "2026-08-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 18,
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "assigneeIds": [
+   18
+  ]
+ },
+ {
+  "name": "국방기술품질원 홈페이지 내 검색엔진 구축",
+  "client": "네오그라프",
+  "status": "수주확정",
+  "progress": 0,
+  "startDate": "2026-08-01",
+  "endDate": "2026-08-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "양산도시철도 차세대 통합경영정보시스템 구축 용역",
+  "client": "이베이스넷",
+  "status": "수주확정",
+  "progress": 0,
+  "startDate": "2026-06-01",
+  "endDate": "2026-07-01",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "노루페인트 영업 포탈 사이트 내 검색엔진 구축",
+  "client": "디아이티",
+  "status": "수주확정",
+  "progress": 0,
+  "startDate": "2026-08-01",
+  "endDate": "2026-08-31",
+  "contractMm": 1.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "삼성전기 문서중앙화 검색 고도화 사업",
+  "client": "삼성전기",
+  "status": "수주확정",
+  "progress": 0,
+  "startDate": "2026-07-01",
+  "endDate": "2026-12-31",
+  "contractMm": 18.0,
+  "engagement": "ONSITE",
+  "solution": "AI 검색",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "HUG주택도시보증공사 안심전세앱 클라우드 이관·유지관리 통합용역",
+  "client": "조달청 / 케이브레인컴퍼니",
+  "status": "수주확정",
+  "progress": 0,
+  "startDate": "2026-07-01",
+  "endDate": "2026-09-29",
+  "contractMm": 3.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "AI 검색",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "국회부산도서관 홈페이지 내 AI 검색 구축",
+  "client": "조달청/부산국회도서관",
+  "status": "수주확정",
+  "progress": 0,
+  "startDate": "2026-07-01",
+  "endDate": "2026-12-31",
+  "contractMm": 1.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "AI 검색",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "부산도시공사 문서중앙화 구축",
+  "client": "조달청/부산도시공사",
+  "status": "수주확정",
+  "progress": 0,
+  "startDate": "2026-07-01",
+  "endDate": "2026-07-31",
+  "contractMm": 1.0,
+  "engagement": "OFFSITE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "한국과학창의재단 AI 융합교육(STEAM) 구축",
+  "client": "조달청/한국과학창의재단",
+  "status": "수주확정",
+  "progress": 0,
+  "startDate": "2026-08-01",
+  "endDate": "2026-09-30",
+  "contractMm": 0.0,
+  "engagement": "OFFSITE",
+  "solution": "AI 검색",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "대신증권 상담 KMS 시스템 구축",
+  "client": "한국클라우드",
+  "status": "수주확정",
+  "progress": 0,
+  "startDate": "2026-08-01",
+  "endDate": "2026-08-31",
+  "contractMm": 1.0,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "대한적십자사 RMS 시스템",
+  "client": "새롬정보시스템",
+  "status": "계약대기",
+  "progress": 0,
+  "startDate": "2026-08-01",
+  "endDate": "2026-08-31",
+  "contractMm": 0.5,
+  "engagement": "OFFSITE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "KB부동산신탁 문서중앙화 내 검색엔진 변경 및 개인정보추출",
+  "client": "사이버다임 KB부동산신탁",
+  "status": "계약대기",
+  "progress": 0,
+  "startDate": "2026-08-01",
+  "endDate": "2026-08-31",
+  "contractMm": 0.5,
+  "engagement": "OFFSITE",
+  "solution": "문서뷰어/추출",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "BNK부산은행 내부통제시스템 통합 구축",
+  "client": "엘에스정보기술 천명소프트",
+  "status": "계약대기",
+  "progress": 0,
+  "startDate": "2026-08-01",
+  "endDate": "2026-09-30",
+  "contractMm": 1.5,
+  "engagement": "PARTIAL_ONSITE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "노루페인트 오토코팅 영업 포탈 구축",
+  "client": "디아이티",
+  "status": "계약대기",
+  "progress": 0,
+  "startDate": "2026-08-01",
+  "endDate": "2026-09-30",
+  "contractMm": 0.0,
+  "engagement": "REMOTE",
+  "solution": "AI 검색",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "국가산림품종 통합관리시스템 구축 사업 - 조달 - 뷰어",
+  "client": "조달청/국립산림품종관리센터",
+  "status": "계약대기",
+  "progress": 0,
+  "startDate": "2026-06-01",
+  "endDate": "2026-07-23",
+  "contractMm": 0.0,
+  "engagement": "REMOTE",
+  "solution": "문서뷰어/추출",
+  "managerId": 8,
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "assigneeIds": [
+   8
+  ]
+ },
+ {
+  "name": "산업은행 규정관리시스템 재구축",
+  "client": "젠솔소프트",
+  "status": "계약대기",
+  "progress": 0,
+  "startDate": "2026-08-01",
+  "endDate": "2026-08-31",
+  "contractMm": 0.5,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "후지필름 표준형 통합모인 구축 검색엔진 연동",
+  "client": "롯데이노베이트",
+  "status": "계약대기",
+  "progress": 0,
+  "startDate": "2026-10-01",
+  "endDate": "2026-12-01",
+  "contractMm": 1.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "일진글로벌 ECM 구축",
+  "client": "아이앤아이티",
+  "status": "계약대기",
+  "progress": 0,
+  "startDate": "2026-08-01",
+  "endDate": "2026-08-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "우즈베키스탄 국회 의재정보시스템(KOICA 사업) 내 검색",
+  "client": "천명솔루션",
+  "status": "계약대기",
+  "progress": 0,
+  "startDate": "2026-08-01",
+  "endDate": "2026-08-31",
+  "contractMm": 0.25,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ },
+ {
+  "name": "풀무원 복지몰 내 통합검색 구축",
+  "client": "풀무원",
+  "status": "계약대기",
+  "progress": 0,
+  "startDate": "2026-08-01",
+  "endDate": "2026-09-30",
+  "contractMm": 0.0,
+  "engagement": "REMOTE",
+  "solution": "검색엔진(API)",
+  "managerId": 13,
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "assigneeIds": []
+ }
+]

@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew:*)",
+      "Bash(gradlew.bat:*)",
+      "Bash(npm run test:*)",
+      "Bash(npm run lint:*)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ],
+    "deny": [
+      "Bash(git push --force:*)",
+      "Bash(rm -rf:*)",
+      "Read(.env*)",
+      "Read(**/.env*)",
+      "Read(**/application-local*.yml)",
+      "Read(**/application-local*.yaml)",
+      "Read(**/application-local*.properties)"
+    ]
+  }
+}

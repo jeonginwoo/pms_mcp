@@ -1,0 +1,26 @@
+# ── 시크릿 (절대 커밋 금지) ──
+.env
+# 예시 파일은 커밋 대상
+!.env.example
+
+# ── OS / 에디터 ──
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+
+# ── 빌드 산출물 (하위 .gitignore와 중복이지만 루트에서도 방어) ──
+build/
+.gradle/
+out/
+node_modules/
+dist/
+.vite/
+
+# ── 로그 · 임시 ──
+*.log
+*.tmp
+
+# ── Claude Code 세션 메타 ──
+.claude/settings.local.json

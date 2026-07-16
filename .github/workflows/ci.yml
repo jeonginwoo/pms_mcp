@@ -1,0 +1,75 @@
+# 하네스 밖 이중 검증 — 로컬 /verify와 별개로 리모트에서 한 번 더 확인한다.
+# 백엔드(gradlew)·프론트 스크립트(lint/test)는 생기는 대로 자동으로 검증 대상에 포함된다.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Gradle 프로젝트 존재 확인
+        id: gradle-check
+        run: |
+          if [ -f gradlew ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "gradlew 없음 — 백엔드 검증 건너뜀 (M0 이전)"
+          fi
+
+      - name: JDK 25 설치
+        if: steps.gradle-check.outputs.exists == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Gradle 빌드 + 테스트 (Modulith/ArchUnit 포함)
+        if: steps.gradle-check.outputs.exists == 'true'
+        run: |
+          chmod +x gradlew
+          ./gradlew build
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Node 설치
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 의존성 설치
+        run: npm ci
+
+      - name: 린트 (스크립트 있을 때만)
+        run: |
+          if npm run | grep -qE '^  lint$'; then
+            npm run lint
+          else
+            echo "lint 스크립트 없음 — 건너뜀"
+          fi
+
+      - name: 테스트 (스크립트 있을 때만)
+        run: |
+          if npm run | grep -qE '^  test$'; then
+            npm run test
+          else
+            echo "test 스크립트 없음 — 건너뜀"
+          fi
+
+      - name: 빌드
+        run: npm run build
