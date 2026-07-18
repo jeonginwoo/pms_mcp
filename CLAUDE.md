@@ -1,6 +1,6 @@
 # PMS AI 어시스턴트 (pms_mcp)
 
-사내 PMS에 자연어 조회 챗봇을 붙이는 프로젝트. 사용자 40명, 1인 개발, 조회 중심.
+사내 PMS에 자연어 조회 챗봇을 붙이는 프로젝트. 사용자 40명, 2인 개발(GitHub 협업), 조회 중심.
 AI 서버(신규 Spring Boot 앱) = MCP 호스트, PMS(기존 Boot 앱) = MCP 서버.
 
 ## 필수 문서 (작업 전 해당 부분을 반드시 읽을 것)
@@ -39,6 +39,8 @@ MCP 전송은 Streamable HTTP만 (SSE 전송은 deprecated — 알림 전달용 
 ./gradlew test           # 단위 + Modulith/ArchUnit 경계 테스트
 ./gradlew bootRun        # 실행
 npm run dev              # 챗 위젯 (frontend/)
+bash scripts/verify.sh   # 전체 검증 — 로그는 build/last-verify.log로 오프로딩 (--quick: 컴파일만)
+bash scripts/ralph.sh 3  # Ralph 루프 — PROGRESS 작업 큐 자율 처리. 작업 브랜치에서, 사람이 지켜볼 때만
 ```
 
 (코드 스캐폴딩 후 실제 명령이 달라지면 이 섹션을 즉시 갱신할 것)
@@ -47,12 +49,20 @@ npm run dev              # 챗 위젯 (frontend/)
 
 @docs/conventions/java-spring.md
 @docs/conventions/react-ts.md
+@docs/conventions/git-workflow.md
 
 ## 작업 방식
 
-1. **세션 시작**: `docs/PROGRESS.md` 읽기 → 다음 작업 확인 → 계획을 먼저 제시하고 승인 후 구현.
+1. **세션 시작**: `docs/PROGRESS.md` 읽기 → 다음 작업 확인 → 코드 작업이면 작업 브랜치 확인/생성(git-workflow.md) → 계획을 먼저 제시하고 승인 후 구현.
 2. **작업 단위**: ROADMAP의 체크리스트 항목 1개. 크면 쪼갠다. 한 세션에 마일스톤을 통째로 하려 하지 않는다.
 3. **검증 없이 완료 선언 금지**: 코드 변경 후 반드시 테스트 실행. MCP 도구는 Inspector/curl 검증 방법을 함께 제시.
 4. **세션 종료**: `docs/PROGRESS.md`에 완료 항목·미해결 이슈·다음 작업을 기록하고 커밋. 커밋 메시지는 마일스톤 작업이면 `M1: 조회 도구 get_utilization 구현` 형식, 마일스톤에 속하지 않으면 `chore:`(하네스·설정) / `docs:`(문서) 접두사.
 5. **불확실하면 묻는다**: 문서와 충돌하는 결정이 필요하면 임의로 진행하지 말고 사용자에게 확인. 결정은 PROGRESS.md의 결정 기록에 남긴다.
 6. Spring AI 2.0 세부 API는 훈련 데이터보다 최신일 수 있다. 빌더/어노테이션 시그니처가 불확실하면 공식 문서를 웹에서 확인 후 작성.
+7. **교훈 축적**: 레포 특유의 함정·반복 실수를 발견하면 아래 '교훈' 섹션에 한 줄 추가한다 (같은 커밋에 포함).
+
+## 교훈 (Lessons Learned)
+
+> 에이전트·사람이 이 레포에서 반복해서 틀리는 지점을 한 줄씩 축적한다. /next 루프 모드와 /wrap-up이 갱신.
+
+- (아직 없음)

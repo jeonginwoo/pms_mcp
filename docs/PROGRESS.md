@@ -3,9 +3,10 @@
 > **모든 세션은 이 파일을 읽는 것으로 시작하고, 이 파일을 갱신하는 것으로 끝난다.**
 > 최신 상태가 항상 맨 위. 오래된 세션 로그는 아래로.
 
-## 현재 상태 (2026-07-16)
+## 현재 상태 (2026-07-18)
 
 - **마일스톤:** M-1 (사전 검증) — 시작 전
+- **협업:** 2인 개발 — GitHub Flow (브랜치 규칙: `docs/conventions/git-workflow.md`)
 - **코드:** 백엔드 없음(새로 시작). 재사용 자산만 확보: `reference/seed/`(사원 44·프로젝트 382 JSON), `frontend/`(React 프로토타입, M1에서 재연동).
 - **다음 작업:** M-1 목업 MCP 서버 구성 (구현 가이드 부록 B)
 - **차단 요소:** 없음
@@ -23,11 +24,21 @@
 | 2026-07-13 | 알림 전달은 **SSE 푸시** (당초 폴링 → 개정) | 프로토타입에서 40명 규모 검증 완료 + 챗 스트리밍과 기반 공유. 기술_선택_근거 9장·가이드 1-A 개정 |
 | 2026-07-13 | LLM 모델: 개발·테스트 단계는 무관, 출시 전 확정 | 테스트 가능하면 충분. 단가·학습 미사용 조항 확인은 출시 게이트 전제로 유지 (PRD 11장 5번) |
 | 2026-07-13 | PRD v1.2 **확정판 승격** | 하네스·eval의 원천으로 실사용 중 — 초안 상태 해소. 구현 가이드 장 번호 참조도 v1.2 기준으로 현행화 |
+| 2026-07-18 | **2인 개발 전환 + GitHub Flow 브랜치 전략** (main 보호·1작업=1브랜치=1PR·squash 머지·모듈 단위 분담) | GitHub 협업 시작. 상세: `docs/conventions/git-workflow.md` (CLAUDE.md import) |
+| 2026-07-18 | **하네스 v2 — 참고 레포(Eunji1217/pms) 융합**: skills 2종(mcp-tool·module-scaffold)·agents 3종(architect·boundary-reviewer·verifier)·Stop 훅·`scripts/verify.sh`(로그 오프로딩)·`scripts/ralph.sh`(작업 큐 자율 루프)·`/sync-docs`·CLAUDE.md 교훈 섹션 | 하네스 엔지니어링 개념노트 비교 검토. 전부 이 레포의 패키지 구조(`internal/`)·구조적 원칙에 맞게 번안. `/plan`은 `/next`의 계획 단계와 중복이라 미채택 |
 | (미결) | `get_project` 분리 여부 | M-1 목업 실험 결과로 결정 (PRD 11장) |
 
 ## 미해결 이슈
 
 - `docs/evals/eval-cases.md`는 초안 — M-1 목업 실험 결과로 입력 문구·기대값 갱신 필요
+- GitHub 저장소 설정 필요(사람 작업): main 브랜치 보호 규칙(PR 필수·CI 필수), squash merge 기본값, 협업자 초대
+
+## 작업 큐 (Ralph 루프용)
+
+> `bash scripts/ralph.sh`가 이 섹션의 `- [ ]`를 새 세션으로 하나씩 소화한다 (`/next --loop`).
+> **계획이 이미 합의된, 커밋 단위로 잘게 쪼갠 작업만** 넣는다. 발견한 후속 일감은 `- [ ]`로 추가만 하고 몰래 실행하지 않는다.
+
+(비어 있음)
 
 ---
 
@@ -42,6 +53,13 @@
 - 미해결: <다음 세션으로 넘기는 것>
 - 다음 작업: <구체적으로>
 ```
+
+### 2026-07-18 — 하네스 v2 (참고 레포 융합) + 2인 협업 브랜치 전략
+- 완료: 참고 레포(Eunji1217/pms)·하네스 개념노트와 비교 후 융합 — `.claude/skills/`(mcp-tool·module-scaffold), `.claude/agents/`(architect·boundary-reviewer·verifier), Stop 훅(`scripts/hooks/stop-verify.sh` — Java 변경+컴파일 깨짐이면 세션 종료 차단), `scripts/verify.sh`(로그를 build/last-verify.log로 오프로딩, gradlew/frontend 부재 가드), `scripts/ralph.sh`(작업 큐 기반 신선한 컨텍스트 루프, main 실행 금지 가드), `/sync-docs` 커맨드, `/next`에 루프 모드+브랜치 단계, `/wrap-up`에 브랜치/PR 단계, CLAUDE.md 교훈 섹션, PROGRESS에 작업 큐 섹션. settings.json에 훅 등록 + `bash scripts/*`·`git branch/switch` 허용 + `*.pem` 읽기 차단
+- 완료(추가): 2인 개발 전환 반영(CLAUDE.md) + GitHub Flow 브랜치 전략 문서 `docs/conventions/git-workflow.md` 신설(CLAUDE.md import 포함)
+- 검증: bash -n 문법 검사 3종 통과, verify.sh 실행(초기화 전 skip 동작 확인), stop-verify.sh 수동 실행(exit 0 확인)
+- 미해결: GitHub 저장소 보호 규칙 설정은 사람 작업 (미해결 이슈에 기록)
+- 다음 작업: M-1 목업 MCP 서버 (구현 가이드 부록 B)
 
 ### 2026-07-16 — 하네스 점검 + Persist 축 복구
 - 완료: 하네스 전체 점검(치명 3·보완 5 발견) → 전부 반영. git init + 리모트 연결 + 초기 커밋/푸시, `.github/workflows/ci.yml` 재작성(gradlew·lint/test 스크립트 존재 시 자동 포함되는 가드 방식), settings.json 권한 정비(gradlew 전체 허용, git add/commit 허용, `**/.env*`·`application-local*` deny), /verify에 프론트 테스트 + Gradle 부재 가드 추가, CLAUDE.md 죽은 경로 정리 + 비마일스톤 커밋 규칙(`chore:`/`docs:`), 하네스_가이드 폴더 구조도 현행화

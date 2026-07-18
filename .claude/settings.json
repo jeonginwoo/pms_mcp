@@ -5,20 +5,33 @@
       "Bash(gradlew.bat:*)",
       "Bash(npm run test:*)",
       "Bash(npm run lint:*)",
+      "Bash(bash scripts/*)",
       "Bash(git status)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git branch:*)",
+      "Bash(git switch:*)"
     ],
     "deny": [
       "Bash(git push --force:*)",
       "Bash(rm -rf:*)",
       "Read(.env*)",
       "Read(**/.env*)",
+      "Read(**/*.pem)",
       "Read(**/application-local*.yml)",
       "Read(**/application-local*.yaml)",
       "Read(**/application-local*.properties)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "bash scripts/hooks/stop-verify.sh" }
+        ]
+      }
     ]
   }
 }
