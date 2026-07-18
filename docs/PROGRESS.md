@@ -26,6 +26,7 @@
 | 2026-07-13 | PRD v1.2 **확정판 승격** | 하네스·eval의 원천으로 실사용 중 — 초안 상태 해소. 구현 가이드 장 번호 참조도 v1.2 기준으로 현행화 |
 | 2026-07-18 | **2인 개발 전환 + GitHub Flow 브랜치 전략** (main 보호·1작업=1브랜치=1PR·squash 머지·모듈 단위 분담) | GitHub 협업 시작. 상세: `docs/conventions/git-workflow.md` (CLAUDE.md import) |
 | 2026-07-18 | **하네스 v2 — 참고 레포(Eunji1217/pms) 융합**: skills 2종(mcp-tool·module-scaffold)·agents 3종(architect·boundary-reviewer·verifier)·Stop 훅·`scripts/verify.sh`(로그 오프로딩)·`scripts/ralph.sh`(작업 큐 자율 루프)·`/sync-docs`·CLAUDE.md 교훈 섹션 | 하네스 엔지니어링 개념노트 비교 검토. 전부 이 레포의 패키지 구조(`internal/`)·구조적 원칙에 맞게 번안. `/plan`은 `/next`의 계획 단계와 중복이라 미채택 |
+| 2026-07-18 | **하네스 지시 파일 영어 메인 전환** — CLAUDE.md·컨벤션 3종·commands 5종·agents 3종·skills 2종·scripts 3종. 한국어 리터럴(에러 메시지 문구·확인 카드 라벨·주석은 한국어 규칙·문서 파일명)은 보존 | LLM 지시문은 영어가 더 안정적. 도메인 원천 문서(PRD·가이드·근거)와 이력 원장(PROGRESS·ROADMAP)은 한국어 유지 — 기록물이지 프롬프트가 아님 |
 | (미결) | `get_project` 분리 여부 | M-1 목업 실험 결과로 결정 (PRD 11장) |
 
 ## 미해결 이슈
@@ -53,6 +54,12 @@
 - 미해결: <다음 세션으로 넘기는 것>
 - 다음 작업: <구체적으로>
 ```
+
+### 2026-07-18 — 하네스 영어 메인 전환
+- 완료: 하네스 지시 파일 전체를 영어로 전환 — CLAUDE.md, docs/conventions/(java-spring·react-ts·git-workflow), .claude/commands/ 5종, .claude/agents/ 3종, .claude/skills/ 2종, scripts/ 3종(주석·출력 메시지). 한국어 리터럴은 보존: MCP 에러 메시지 문구("담당자만 가능"·"해당 데이터 없음"), 확인 카드 라벨([실행]/[취소]), "Javadoc·주석은 한국어" 규칙 자체, 한국어 문서 파일명, 커밋 메시지 예시
+- 제외: PRD·구현 가이드·기술_선택_근거·PROGRESS·ROADMAP·eval-cases — 도메인 원천 문서와 이력 원장은 프롬프트가 아니라 기록물이므로 한국어 유지
+- 검증: bash -n 3종 통과, verify.sh --quick 실행(skip 가드 정상), stop-verify.sh exit 0
+- 다음 작업: M-1 목업 MCP 서버 (구현 가이드 부록 B)
 
 ### 2026-07-18 — 하네스 v2 (참고 레포 융합) + 2인 협업 브랜치 전략
 - 완료: 참고 레포(Eunji1217/pms)·하네스 개념노트와 비교 후 융합 — `.claude/skills/`(mcp-tool·module-scaffold), `.claude/agents/`(architect·boundary-reviewer·verifier), Stop 훅(`scripts/hooks/stop-verify.sh` — Java 변경+컴파일 깨짐이면 세션 종료 차단), `scripts/verify.sh`(로그를 build/last-verify.log로 오프로딩, gradlew/frontend 부재 가드), `scripts/ralph.sh`(작업 큐 기반 신선한 컨텍스트 루프, main 실행 금지 가드), `/sync-docs` 커맨드, `/next`에 루프 모드+브랜치 단계, `/wrap-up`에 브랜치/PR 단계, CLAUDE.md 교훈 섹션, PROGRESS에 작업 큐 섹션. settings.json에 훅 등록 + `bash scripts/*`·`git branch/switch` 허용 + `*.pem` 읽기 차단

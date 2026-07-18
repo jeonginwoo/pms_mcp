@@ -1,31 +1,31 @@
-# Git 협업 워크플로 (2인 + AI 에이전트)
+# Git Collaboration Workflow (2 humans + AI agents)
 
-> 모델: **GitHub Flow** (main + 단기 브랜치). 2인·바이브코딩 규모에 Git Flow(develop/release 브랜치)는 과잉이다.
-> 이 파일은 CLAUDE.md를 통해 매 세션 주입된다 — AI 에이전트도 사람과 같은 규칙을 따른다.
+> Model: **GitHub Flow** (main + short-lived branches). Git Flow (develop/release branches) is overkill for a 2-person, vibe-coding-scale project.
+> This file is injected every session via CLAUDE.md — AI agents follow the same rules as humans.
 
-## 1. 브랜치 규칙
+## 1. Branch rules
 
-- **main은 항상 그린**: main 직접 커밋 금지. 예외 — 문서(`docs:`)·하네스(`chore:`)의 경미한 변경은 main 직접 커밋 허용.
-- **1 작업 = 1 브랜치 = 1 PR**: ROADMAP 체크 항목 1개(크면 쪼갠 단위)가 브랜치 하나. 브랜치 수명은 1~2일을 넘기지 않는다 — 길어지면 작업을 더 쪼갠 것이 아니라는 신호.
-- **명명**: `<type>/<슬러그>`. type은 `feat`/`fix`/`chore`/`docs`, 마일스톤 작업은 슬러그에 마일스톤 포함 — 예: `feat/m1-get-utilization`, `fix/m1-visibility-404`.
-- **시작 절차**: `git switch main && git pull --rebase && git switch -c feat/...`
-- **AI 에이전트(Claude)는 main에서 코드 작업을 하지 않는다.** 세션 시작 시 브랜치를 확인하고, main이면 분기부터 한다. `ralph.sh`도 작업 브랜치에서만 돈다.
+- **main is always green**: no direct commits to main. Exception — minor documentation (`docs:`) and harness (`chore:`) changes may be committed directly.
+- **1 task = 1 branch = 1 PR**: one ROADMAP checklist item (or a split of one) per branch. Branch lifetime must not exceed 1–2 days — a longer-lived branch is a sign the task wasn't split enough.
+- **Naming**: `<type>/<slug>`. Types: `feat`/`fix`/`chore`/`docs`; milestone work includes the milestone in the slug — e.g. `feat/m1-get-utilization`, `fix/m1-visibility-404`.
+- **Starting procedure**: `git switch main && git pull --rebase && git switch -c feat/...`
+- **AI agents (Claude) never do code work on main.** Check the branch at session start; if on main, branch first. `ralph.sh` also runs only on a work branch.
 
-## 2. PR·머지 규칙
+## 2. PR & merge rules
 
-- **머지 방식: squash merge** — 바이브코딩의 자잘한 WIP 커밋을 뭉쳐 main에는 "1 작업 = 1 커밋"만 남긴다. squash 커밋 메시지는 커밋 규칙(`M1: ...` / `chore:` / `docs:`)을 따른다.
-- **머지 조건**: CI(`.github/workflows/ci.yml`) green + **상대방 리뷰 승인 1건**. 문서·하네스만 바꾼 PR은 CI green이면 셀프 머지 허용.
-- PR 올리기 전 `git pull --rebase origin main`으로 최신화. 머지 후 브랜치는 삭제한다.
-- 리뷰 부담을 줄이기 위해 PR 설명에 `boundary-reviewer` 에이전트 판정과 `/verify` 결과를 붙인다.
+- **Merge method: squash merge** — collapse vibe-coding's small WIP commits so main keeps "1 task = 1 commit". The squash commit message follows the commit conventions (`M1: ...` / `chore:` / `docs:`).
+- **Merge conditions**: CI (`.github/workflows/ci.yml`) green + **1 review approval from the other person**. PRs that only touch docs/harness may be self-merged once CI is green.
+- Before opening a PR, sync with `git pull --rebase origin main`. Delete the branch after merging.
+- To reduce review load, attach the `boundary-reviewer` agent verdict and the `/verify` result to the PR description.
 
-## 3. 충돌 예방 (2인 분담)
+## 3. Conflict prevention (dividing work between 2 people)
 
-- **분담 단위 = Modulith 모듈**: 같은 모듈의 `internal/`을 두 사람이 동시에 만지지 않는다. 작업을 잡을 때 서로 다른 모듈을 잡는 것이 기본값.
-- **공유 파일**(CLAUDE.md·컨벤션·모듈 공개 API·PROGRESS.md)을 바꿀 때는 상대에게 먼저 알린다.
-- **PROGRESS.md 충돌 시**: 세션 로그는 각자 항목을 둘 다 보존(append), "현재 상태"는 최신 세션이 이긴다.
+- **Unit of division = Modulith module**: two people never touch the same module's `internal/` at the same time. When picking tasks, defaulting to different modules is the rule.
+- **Shared files** (CLAUDE.md, conventions, module public APIs, PROGRESS.md): tell the other person before changing them.
+- **PROGRESS.md conflicts**: session-log entries are appended and both are preserved; for "current state", the most recent session wins.
 
-## 4. 금지
+## 4. Forbidden
 
-- main에 force push 금지 (settings.json이 에이전트의 `git push --force`를 차단한다).
-- 개인 브랜치 force push는 `--force-with-lease`만, 상대가 그 브랜치를 쓰지 않는 것이 확실할 때만.
-- 리뷰·CI 통과를 위해 테스트를 약화·삭제하는 것 금지 — 실패는 코드를 고쳐서 푼다.
+- No force push to main (settings.json blocks the agent's `git push --force`).
+- Force push to a personal branch only with `--force-with-lease`, and only when you are certain the other person is not using that branch.
+- Never weaken or delete tests to get past review/CI — fix the code instead.

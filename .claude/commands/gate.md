@@ -1,19 +1,19 @@
 ---
-description: 마일스톤 게이트 점검 — eval + 체크리스트 + 사람 승인 기록
+description: Milestone gate check — eval + checklist + recorded human approval
 ---
 
-현재 마일스톤의 게이트 통과 여부를 점검하라. **게이트는 사람이 승인한다 — 스스로 통과를 선언하지 않는다.**
+Check whether the current milestone's gate can be passed. **Gates are approved by a human — never declare a pass yourself.**
 
-1. `docs/ROADMAP.md`에서 현재 마일스톤의 게이트 조건을 확인하고, 체크리스트 전 항목이 완료인지 검사한다. 미완료 항목이 있으면 게이트 점검을 중단하고 보고한다.
-2. 게이트별 필수 검증을 실행한다:
-   - **M-1 게이트**: 목업으로 시나리오 S-1~S-3 흐름 확인 + 도구 시그니처 확정 여부. `docs/evals/eval-cases.md`의 입력·기대값을 목업 결과로 갱신했는지 확인.
-   - **G1 (M1)**: `docs/evals/eval-cases.md` 30케이스 실행 → 결과표 작성 (케이스 ID / 실제 출력 요약 / 합격 여부 / 실패 코드). 치명(F1~F4) 0건 · 합격률 ≥90% 확인.
-   - **G2 (M2)**: G1 조건 + 읽기 운영 2주 경과 확인 + 쓰기 케이스(D-01~03) 재실행, F3 0건.
-3. `./gradlew test` 최종 실행 — 실패 상태로 게이트를 넘지 않는다.
-4. 결과를 표로 정리해 사용자에게 제시하고 **명시적 승인을 요청**한다.
-5. 승인받으면 `docs/PROGRESS.md`에 기록한다:
-   - 결정 기록에 "GN 게이트 통과 승인 (날짜, 합격률, 치명 0건)" 추가
-   - 현재 상태의 마일스톤을 다음 단계로 갱신
-6. 커밋: `git add -A && git commit -m "M<n>: G<n> 게이트 통과"`
+1. Check the gate conditions for the current milestone in `docs/ROADMAP.md` and verify every checklist item is complete. If anything is incomplete, stop the gate check and report.
+2. Run the verification required for the gate:
+   - **M-1 gate**: confirm scenario S-1~S-3 flows against the mock + tool signatures finalized. Confirm `docs/evals/eval-cases.md` inputs/expected values were updated from the mock results.
+   - **G1 (M1)**: run the 30 cases in `docs/evals/eval-cases.md` → produce a result table (case ID / actual output summary / pass / failure code). Confirm zero critical failures (F1~F4) and pass rate ≥90%.
+   - **G2 (M2)**: G1 conditions + 2 weeks of read-only operation elapsed + re-run the write cases (D-01~03), zero F3.
+3. Final `./gradlew test` run — never cross a gate in a failing state.
+4. Present the results to the user as a table and **explicitly request approval**.
+5. Once approved, record it in `docs/PROGRESS.md`:
+   - Add "GN gate passed — approved (date, pass rate, zero critical)" to the decision log
+   - Advance the milestone in the current-state section
+6. Commit: `git add -A && git commit -m "M<n>: G<n> 게이트 통과"`
 
 $ARGUMENTS
