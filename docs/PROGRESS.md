@@ -32,7 +32,7 @@
 ## 미해결 이슈
 
 - `docs/evals/eval-cases.md`는 초안 — M-1 목업 실험 결과로 입력 문구·기대값 갱신 필요
-- GitHub 저장소 설정 필요(사람 작업): main 브랜치 보호 규칙(PR 필수·CI 필수), squash merge 기본값, 협업자 초대
+- git-workflow.md의 "docs/chore는 main 직접 커밋 허용" 예외가 ruleset(모든 push에 PR 필수)과 충돌 — bypass 추가 또는 문서 개정 중 택일 필요
 
 ## 작업 큐 (Ralph 루프용)
 
@@ -54,6 +54,11 @@
 - 미해결: <다음 세션으로 넘기는 것>
 - 다음 작업: <구체적으로>
 ```
+
+### 2026-07-18 — GitHub 저장소 설정 완료 (미해결 이슈 해소)
+- 완료: CI 첫 5회 실행 전부 success 확인(최신 CI #5, 커밋 5dc63e9 포함). main 보호 ruleset `protect-main` 생성(Active, 대상 default branch) — PR 필수(승인 0, 승인 1회는 git-workflow 관례로 운용), 필수 status check `backend`·`frontend`(GitHub Actions), 머지 방식 Squash만 허용, force push·브랜치 삭제 차단. General 설정에서 merge commit·rebase merging 비활성 → squash 전용. 협업자 초대는 사용자가 직접 완료
+- 미해결: git-workflow.md의 docs/chore main 직접 커밋 예외 vs ruleset PR 필수 충돌 (미해결 이슈 참조)
+- 다음 작업: M-1 목업 MCP 서버 (구현 가이드 부록 B)
 
 ### 2026-07-18 — 하네스 영어 메인 전환
 - 완료: 하네스 지시 파일 전체를 영어로 전환 — CLAUDE.md, docs/conventions/(java-spring·react-ts·git-workflow), .claude/commands/ 5종, .claude/agents/ 3종, .claude/skills/ 2종, scripts/ 3종(주석·출력 메시지). 한국어 리터럴은 보존: MCP 에러 메시지 문구("담당자만 가능"·"해당 데이터 없음"), 확인 카드 라벨([실행]/[취소]), "Javadoc·주석은 한국어" 규칙 자체, 한국어 문서 파일명, 커밋 메시지 예시
