@@ -1,0 +1,10 @@
+spring:
+  ai:
+    mcp:
+      server:
+        protocol: STREAMABLE
+        type: SYNC
+        name: pms-mcp-mock
+
+server:
+  port: 8090

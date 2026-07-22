@@ -65,4 +65,4 @@ bash scripts/ralph.sh 3  # Ralph loop — autonomously works the PROGRESS task q
 
 > One line per repo-specific gotcha or repeated mistake, accumulated by humans and agents. Updated by /next loop mode and /wrap-up.
 
-- (none yet)
+- Windows(Git Bash)에서 curl `-d`에 한글 JSON을 인라인으로 넣으면 인코딩이 깨져 서버가 빈 결과를 돌려준다 — `\uXXXX` 이스케이프(ensure_ascii)나 UTF-8 파일 + `--data-binary @file`로 보낼 것 (MCP curl 스모크에서 발견, 서버는 정상이었음)
