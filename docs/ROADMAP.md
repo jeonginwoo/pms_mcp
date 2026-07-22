@@ -5,7 +5,7 @@
 
 ## M-1 — 사전 검증 (코드 작성 전, 지금 바로 가능)
 
-- [ ] `pms-mcp-mock` 목업 MCP 서버 구성 (구현 가이드 부록 B)
+- [x] `pms-mcp-mock` 목업 MCP 서버 구성 (구현 가이드 부록 B) — 2026-07-22, B-0 무인증 단계
 - [ ] Inspector / Claude 데스크탑으로 도구 카탈로그·설명·프롬프트 검증
 - [ ] 미해결 질문 결정: `search_projects` 상세 조회를 `get_project`로 분리할지 (PRD 11장)
 
