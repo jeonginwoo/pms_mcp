@@ -1,0 +1,43 @@
+# PMS 전체 스택 — FE(nginx) + BE(pms_back) + DB(PostgreSQL)
+# 기동: docker compose up --build → http://localhost:3000 (로그인 화면의 연결 배지로 FE-BE-DB 확인)
+# 개발 시엔 db만 띄우고(docker compose up db) bootRun + npm run dev 병행도 가능하다.
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: pms
+      POSTGRES_USER: pms
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pms}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pms-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pms -d pms"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  pms-back:
+    build: ./pms_back
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/pms
+      SPRING_DATASOURCE_USERNAME: pms
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-pms}
+    ports:
+      # TODO(M0): 임베디드 /mcp 어댑터가 생기면 호스트 노출을 제거하거나 127.0.0.1 바인딩으로 좁힐 것
+      #           (nginx의 "/mcp 미노출" 보장이 8080 직접 접근으로 우회되지 않도록)
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - pms-back
+
+volumes:
+  pms-db-data:

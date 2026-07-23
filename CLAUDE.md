@@ -35,12 +35,13 @@ Modules: identity·project·resource·maintenance·notification·common + suppor
 ## Commands
 
 ```bash
-./gradlew build          # full build
-./gradlew test           # unit + Modulith/ArchUnit boundary tests
-./gradlew bootRun        # run
-npm run dev              # chat widget (frontend/)
-bash scripts/verify.sh   # full verification — log offloaded to build/last-verify.log (--quick: compile only)
-bash scripts/ralph.sh 3  # Ralph loop — autonomously works the PROGRESS task queue. Work branch only, with a human watching
+cd pms_back && ./gradlew build    # PMS backend full build (also: pms-mcp-mock/)
+cd pms_back && ./gradlew test     # unit + Modulith/ArchUnit boundary tests + Testcontainers (needs Docker)
+cd pms_back && ./gradlew bootRun  # run backend (needs PostgreSQL — `docker compose up db` first)
+npm run dev                       # frontend dev server (frontend/, proxies /api to 8080)
+docker compose up --build         # full stack: FE(3000, nginx) + BE(8080) + PostgreSQL(5432)
+bash scripts/verify.sh            # full verification — log offloaded to build/last-verify.log (--quick: compile only)
+bash scripts/ralph.sh 3           # Ralph loop — autonomously works the PROGRESS task queue. Work branch only, with a human watching
 ```
 
 (Update this section immediately if the real commands change after scaffolding.)
@@ -66,3 +67,4 @@ bash scripts/ralph.sh 3  # Ralph loop — autonomously works the PROGRESS task q
 > One line per repo-specific gotcha or repeated mistake, accumulated by humans and agents. Updated by /next loop mode and /wrap-up.
 
 - Windows(Git Bash)에서 curl `-d`에 한글 JSON을 인라인으로 넣으면 인코딩이 깨져 서버가 빈 결과를 돌려준다 — `\uXXXX` 이스케이프(ensure_ascii)나 UTF-8 파일 + `--data-binary @file`로 보낼 것 (MCP curl 스모크에서 발견, 서버는 정상이었음)
+- Boot 4.0은 테스트 애노테이션 패키지가 모듈로 이동(`@WebMvcTest`·`@AutoConfigureMockMvc` → `org.springframework.boot.webmvc.test.autoconfigure`)했고 Testcontainers 버전을 BOM으로 관리하지 않는다 — TC 2.0 아티팩트는 `testcontainers-postgresql`·`testcontainers-junit-jupiter`(구 이름은 404), 불확실하면 Maven Central POM/jar를 직접 확인 (pms_back 스캐폴딩에서 발견)

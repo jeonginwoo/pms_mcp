@@ -3,12 +3,12 @@
 > **모든 세션은 이 파일을 읽는 것으로 시작하고, 이 파일을 갱신하는 것으로 끝난다.**
 > 최신 상태가 항상 맨 위. 오래된 세션 로그는 아래로.
 
-## 현재 상태 (2026-07-22)
+## 현재 상태 (2026-07-23)
 
-- **마일스톤:** M-1 (사전 검증) — 1/3 완료 (목업 서버 구성 ✅, 브랜치 `feat/m-1-mock-mcp-server` PR 대기)
-- **협업:** 2인 개발 — GitHub Flow (브랜치 규칙: `docs/conventions/git-workflow.md`)
-- **코드:** `pms-mcp-mock/` 목업 MCP 서버 (Boot 4.0.7 · Spring AI 2.0.0 · Streamable HTTP · 포트 8090, B-0 무인증). 조회 도구 5종 등록·테스트 27개 green. 재사용 자산: `reference/seed/`, `frontend/`.
-- **다음 작업:** M-1 Inspector/Claude 데스크탑 검증 (도구 카탈로그·자연어 실험, 부록 B-1) → `get_project` 분리 결정
+- **마일스톤:** M-1 (사전 검증) — 1/3 완료 (목업 서버 구성 ✅, 브랜치 `feat/m-1-mock-mcp-server` PR 대기) · **PMS 본체 트랙 시작** — pms_back 워킹 스켈레톤 완료 (브랜치 `feat/m0-pms-back-skeleton` PR 대기)
+- **협업:** 2인 개발 — GitHub Flow (브랜치 규칙: `docs/conventions/git-workflow.md`). 분담: MCP 트랙 / PMS 본체 트랙
+- **코드:** `pms-mcp-mock/` 목업 MCP 서버 (Boot 4.0.7 · Spring AI 2.0.0 · Streamable HTTP · 포트 8090, B-0 무인증, 조회 도구 5종·테스트 27개 green) · `pms_back/` PMS 본체 (Boot 4.0.7 · Modulith 2.0.7 · JPA · PostgreSQL · 포트 8080, `/api/health` FE-BE-DB 왕복 확인, 테스트 6개 green) · `docker-compose.yml` 전체 스택(FE 3000 · BE 8080 · DB 5432). 재사용 자산: `reference/seed/`, `frontend/`.
+- **다음 작업:** (MCP 트랙) M-1 Inspector/Claude 데스크탑 검증 → `get_project` 분리 결정 / (PMS 트랙) identity 모듈 착수 전 ROADMAP에 PMS 본체 체크리스트 협의·추가
 - **차단 요소:** 없음
 
 ## 결정 기록 (Decision Log)
@@ -31,13 +31,18 @@
 | 2026-07-22 | 가동률 report는 배정 없는 인원도 **0%로 포함** (빈 목록 아님) | 빈 목록이면 가장 여유 있는 사람이 S-2 "여유 인력 탐색"에서 안 보임 |
 | 2026-07-22 | 목업 B-0: MY_TEAM/DIVISION 기준자를 `DEFAULT_REQUESTER_ID=16`(남도린)으로 고정 | B-0엔 인증이 없음. B-2에서 SecurityContext 클레임으로 교체 |
 | 2026-07-22 | 목업 스택: Boot **4.0.7** + Spring AI 2.0.0 (Initializr 생성, toolchain 25 + foojay) | Initializr 기본값(4.1.0)이 아닌 프로젝트 표준 4.0.x 유지. `@McpTool`은 `org.springframework.ai.mcp.annotation` 패키지(실제 jar에서 확인) |
+| 2026-07-23 | **PMS 본체는 이 레포의 `pms_back/`에 신설** (별도 레포 아님) | frontend 안내 문구·seed README·verify.sh(한 단계 하위 gradlew 탐색)가 모두 이 구조를 전제. 2인 분담: MCP 트랙 / PMS 본체 트랙 |
+| 2026-07-23 | 전체 스택 docker compose 정본화 — postgres:17 + pms_back + frontend(nginx, `/api` 프록시·`/mcp` 미노출) | FE-BE-DB 워킹 스켈레톤을 `docker compose up --build` 한 번으로 검증. 개발 시엔 `up db`만 띄우고 bootRun·npm dev 병행 |
+| 2026-07-23 | Testcontainers **2.0.5** 채택 (Boot 4.0.7의 spring-boot-testcontainers가 참조하는 코어 버전) | Boot 4는 TC 버전을 BOM으로 관리하지 않음. TC 2.0에서 아티팩트 개명(`testcontainers-postgresql` 등) — CLAUDE.md 교훈 참조 |
 | (미결) | `get_project` 분리 여부 | M-1 목업 실험 결과로 결정 (PRD 11장) |
 
 ## 미해결 이슈
 
 - `docs/evals/eval-cases.md`는 초안 — M-1 목업 실험 결과로 입력 문구·기대값 갱신 필요
 - git-workflow.md의 "docs/chore는 main 직접 커밋 허용" 예외가 ruleset(모든 push에 PR 필수)과 충돌 — bypass 추가 또는 문서 개정 중 택일 필요
-- CI(`.github/workflows/ci.yml`)가 루트 `gradlew`만 검사해 `pms-mcp-mock/`은 CI에서 빌드되지 않음 — 로컬 `bash scripts/verify.sh`는 한 단계 하위 gradlew를 인식하므로 커버됨. 목업은 폐기 예정 자산이라 CI 수정은 보류(M0에서 루트 gradlew가 생기면 자연 해소)
+- ~~CI가 루트 `gradlew`만 검사해 하위 폴더가 빌드되지 않음~~ → 2026-07-23 해소: ci.yml을 verify.sh와 같은 "루트+한 단계 하위" 탐색으로 개정 (pms_back·pms-mcp-mock 모두 CI 빌드 대상)
+- ROADMAP이 MCP 마일스톤 중심이라 PMS 본체(identity·project 등 모듈 구축) 체크리스트가 없음 — 2인 협의 후 추가 필요
+- frontend에 vitest 인프라 부재 — HealthBadge 등 컴포넌트 테스트는 챗 위젯(FR-AI-04) 착수 전까지 도입 필요
 
 ## 작업 큐 (Ralph 루프용)
 
@@ -59,6 +64,12 @@
 - 미해결: <다음 세션으로 넘기는 것>
 - 다음 작업: <구체적으로>
 ```
+
+### 2026-07-23 — PMS 본체 워킹 스켈레톤 (pms_back FE-BE-DB + docker compose)
+- 완료: `pms_back/` 신설 (Java 25 · Boot 4.0.7 · Modulith 2.0.7 · JPA · PostgreSQL · Gradle, 패키지 `com.proten.pms`, 포트 8080). TDD 사이클 2회(Red→Green 각 확인): `HealthQueryService` 단위 2 + `HealthController` 슬라이스 2 + Modulith verify 1 + 실 PostgreSQL(Testcontainers) 통합 1 = 테스트 6개 green. `GET /api/health` — DB 왕복(SELECT 1) 판정, 실패 시 503. 프론트: `types/HealthStatus.ts`·`components/HealthBadge.tsx`(TS 신규 파일 규칙) + api.health() → 로그인 화면 부착. Docker: `docker-compose.yml`(db+pms-back+frontend) + Dockerfile 2종 + nginx.conf(`/api` 프록시, `/mcp` 미노출). ci.yml을 하위 gradlew 탐색으로 개정, CLAUDE.md Commands·교훈 갱신
+- 검증: `bash scripts/verify.sh` ALL GREEN · `docker compose up --build` 후 스모크 — 8080 직접·3000 nginx 경유 모두 `{"status":"UP","database":true}` 200 · 브라우저 로그인 화면 배지 "서버·DB 연결됨" 확인
+- 미해결: ROADMAP에 PMS 본체 체크리스트 없음(협의 필요) · frontend vitest 인프라 부재 (미해결 이슈 참조)
+- 다음 작업: PR 생성·리뷰 → (PMS 트랙) ROADMAP 협의 후 identity 모듈 착수
 
 ### 2026-07-22 — M-1 목업 MCP 서버 구성 (B-0)
 - 완료: ROADMAP M-1 첫 항목 — `pms-mcp-mock/` 신설 (Boot 4.0.7 · Spring AI 2.0.0 · `spring-ai-starter-mcp-server-webmvc` · Streamable HTTP · 포트 8090 · 무인증 B-0). 부록 B 구조 그대로: `MockData`(사람 9·프로젝트 7·배정 15·이력 64 — 2026-07 과부하 2명(120%·105%)·50건 절단·주입 문자열 등 심은 케이스), `port/` 4계약+DTO 8종(승격 대상), `mock/` 4구현(폐기 대상), `mcp/` 4클래스=조회 도구 5종(description은 가이드 5-2 문안 그대로)

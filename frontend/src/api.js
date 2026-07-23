@@ -55,6 +55,7 @@ const mapNotif = (n) => ({
 })
 
 export const api = {
+  health: () => request('/api/health'),
   me: () => request('/api/me'),
   people: () => request('/api/people'),
   projects: async () => (await request('/api/projects')).map(mapProject),
