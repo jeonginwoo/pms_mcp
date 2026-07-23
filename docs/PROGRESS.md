@@ -45,6 +45,12 @@
 > **계획이 이미 합의된, 커밋 단위로 잘게 쪼갠 작업만** 넣는다. 발견한 후속 일감은 `- [ ]`로 추가만 하고 몰래 실행하지 않는다.
 
 - [ ] M-1 B-2: 목업에 HS256 테스트 JWT + 역할별(팀원/팀장/본부장/관리자) 가시성 흉내 추가 (부록 B-2 — 2026-07-22 계획 승인 시 후속으로 합의)
+- [ ] P0: common 공통 예외 매핑 — @RestControllerAdvice + ProblemDetail + 매핑표(401/403/404 은닉/409/422) (PR #3 머지 후 착수)
+- [ ] P0: identity 도메인 Division·Team·Grade·Person + 순수 단위 테스트
+- [ ] P0: identity JPA 매핑 + Testcontainers 저장소 테스트 + 시드 적재(44명)
+- [ ] P0: identity 로그인 API(BCrypt·JWT) + 시큐리티 필터 체인
+- [ ] P0: identity 가시성 축(본부장/팀장/팀원 스코프) + 역할 4종 테스트
+- [ ] P0: frontend 실연동 1단계 — 로그인·/api/me·/api/people
 
 ---
 
@@ -59,6 +65,12 @@
 - 미해결: <다음 세션으로 넘기는 것>
 - 다음 작업: <구체적으로>
 ```
+
+### 2026-07-23 — ROADMAP PMS 본체 트랙(P0~P3) 추가
+- 완료: ROADMAP에 PMS 본체 트랙 P0(identity)~P3(notification·audit) 체크리스트와 게이트 GP0~GP3 명문화. 두 트랙 접점 명시 — M0은 P0의 JWT 발급 선행, M1 실데이터 전환은 P2 완료(목업 port 4계약 승격) 전제. 작업 큐에 P0 커밋 단위 6건 등록
+- 검증: 문서 변경만 — 해당 없음
+- 미해결: PR #3(pms_back 스켈레톤)과 이 브랜치가 모두 PROGRESS.md를 수정 — 늦게 머지되는 쪽에서 충돌 시 세션 로그 양쪽 보존(git-workflow §3)으로 해소
+- 다음 작업: PR #3 머지 후 작업 큐 P0 첫 항목(common 예외 매핑)부터
 
 ### 2026-07-22 — M-1 목업 MCP 서버 구성 (B-0)
 - 완료: ROADMAP M-1 첫 항목 — `pms-mcp-mock/` 신설 (Boot 4.0.7 · Spring AI 2.0.0 · `spring-ai-starter-mcp-server-webmvc` · Streamable HTTP · 포트 8090 · 무인증 B-0). 부록 B 구조 그대로: `MockData`(사람 9·프로젝트 7·배정 15·이력 64 — 2026-07 과부하 2명(120%·105%)·50건 절단·주입 문자열 등 심은 케이스), `port/` 4계약+DTO 8종(승격 대상), `mock/` 4구현(폐기 대상), `mcp/` 4클래스=조회 도구 5종(description은 가이드 5-2 문안 그대로)
