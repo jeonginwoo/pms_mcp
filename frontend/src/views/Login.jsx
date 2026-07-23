@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useStore } from '../store.jsx'
 import { DEMO_ACCOUNTS, DEMO_PASSWORD } from '../constants.js'
+import HealthBadge from '../components/HealthBadge.tsx'
 
 /** 로그인 — 이메일 + 비밀번호. 데모 계정 카드는 클릭 시 바로 로그인 (프로토타입 사양) */
 export default function Login({ theme, onToggleTheme }) {
@@ -54,6 +55,8 @@ export default function Login({ theme, onToggleTheme }) {
             </button>
           </div>
         </div>
+
+        <HealthBadge intervalMs={10000} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '20px 0 12px' }}>
           <span style={{ flex: 1, height: 1, background: 'var(--border)' }} />

@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: pms-back
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/pms}
+    username: ${SPRING_DATASOURCE_USERNAME:pms}
+    password: ${SPRING_DATASOURCE_PASSWORD:pms}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+
+server:
+  port: 8080
