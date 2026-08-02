@@ -35,5 +35,5 @@
 
 - **ralph 루프**: 계획 합의된 기계적 작업 큐가 생기면
 - ~~**conventions 분리**~~: 2026-08-02 완료 — 구 conventions 3종을 `docs/conventions/`로 이관(v3 정합화), 스코프 CLAUDE.md에서 참조
-- **CI + 원격 저장소**: 2인 협업 전환(2026-08-02)으로 트리거 발생 — 원격 개설(사람 작업) 시 즉시 추가. 경량 2인 워크플로로 — 구 프로젝트의 과한 ruleset 반복 금지
+- ~~**CI + 원격 저장소**~~: 2026-08-02 완료 — 원격(origin) 연결 + 최소 CI(`.github/workflows/ci.yml`, verify.sh 실행·실패 시 로그 아티팩트). Gradle 캐시는 M0, `npm ci`는 M1에 추가. 경량 2인 워크플로 — 구 프로젝트의 과한 ruleset 반복 금지
 - **eval 자동 실행 스크립트**: M1 G1 게이트 준비 시

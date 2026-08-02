@@ -1,0 +1,32 @@
+# Minimal CI: runs the same guarded verification as local sessions.
+# verify.sh skips stages whose toolchain doesn't exist yet, so this stays
+# green through the pre-code stage and picks up backend/tests at M0.
+# Growth points: Gradle cache at M0, `npm ci` for frontend tests at M1.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: verify
+        run: bash scripts/verify.sh
+
+      - name: upload verify log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: last-verify-log
+          path: build/last-verify.log
