@@ -1,12 +1,23 @@
 #!/usr/bin/env bash
-# Guarded full verification: runs only the stages whose tools exist, so the
+# Guarded scoped verification: runs only the stages whose tools exist, so the
 # harness works at every growth stage of the project (pre-code → M3).
 # Full logs are offloaded to build/last-verify.log — the console prints only
 # PASS/FAIL per step. On FAIL read only the failing part (grep/tail).
-# Usage: bash scripts/verify.sh [--quick]   (--quick: compile only)
+# Usage: bash scripts/verify.sh [host|pms] [--quick]
+#   no scope = verify everything that exists; host/pms = that app only
+#   --quick  = compile only
 set -u
 
-QUICK="${1:-}"
+SCOPE="all"
+QUICK=""
+for arg in "$@"; do
+  case "$arg" in
+    host|pms) SCOPE="$arg" ;;
+    --quick)  QUICK="--quick" ;;
+    *) echo "unknown arg: $arg (usage: verify.sh [host|pms] [--quick])" >&2; exit 1 ;;
+  esac
+done
+
 LOG="build/last-verify.log"
 mkdir -p build
 : > "$LOG"
@@ -26,23 +37,35 @@ step() {
   fi
 }
 
-# Backend — appears at M0
-if [ -f gradlew ]; then
-  step "backend compile" ./gradlew --console=plain -q compileJava compileTestJava
-  if [ "$QUICK" != "--quick" ]; then
-    step "backend tests" ./gradlew --console=plain -q test
-  fi
-fi
+gradle_in() {
+  local dir="$1"; shift
+  ( cd "$dir" && ./gradlew --console=plain -q "$@" )
+}
 
-# Frontend — reconnects at M1 (skipped until node_modules exists)
-if [ "$QUICK" != "--quick" ] && [ -f frontend/package.json ] && [ -d frontend/node_modules ]; then
+# Backend apps — appear at M0 (host/ and pms/, each its own Gradle project)
+backend() {
+  local dir="$1"
+  if [ -f "$dir/gradlew" ]; then
+    step "$dir compile" gradle_in "$dir" compileJava compileTestJava
+    if [ "$QUICK" != "--quick" ]; then
+      step "$dir tests" gradle_in "$dir" test
+    fi
+  fi
+}
+
+[ "$SCOPE" != "pms" ]  && backend host
+[ "$SCOPE" != "host" ] && backend pms
+
+# Frontend (pms scope) — reconnects at M1 (skipped until node_modules exists)
+if [ "$SCOPE" != "host" ] && [ "$QUICK" != "--quick" ] \
+   && [ -f frontend/package.json ] && [ -d frontend/node_modules ]; then
   if grep -q '"test"' frontend/package.json; then
     step "frontend tests" npm --prefix frontend test
   fi
 fi
 
 if [ "$ran" -eq 0 ]; then
-  echo "SKIP  nothing to verify yet (pre-code stage)"
+  echo "SKIP  nothing to verify yet (scope: $SCOPE, pre-code stage)"
 fi
 
 exit $fail

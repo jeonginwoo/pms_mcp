@@ -1,14 +1,31 @@
 # PMS AI Assistant (pms_mcp_v3 — fresh start 2026-07-31)
 
-Natural-language query chatbot for the in-house PMS (~40 users, solo dev for now).
+Natural-language query chatbot for the in-house PMS (~40 users, two-dev team
+since 2026-08-02 — see Ownership below).
 AI host (new Spring Boot app) = MCP host; PMS (rebuilt Boot app) = MCP server.
 The previous repo `C:\Projects\pms_mcp` is **read-only reference** — its decisions
 were carried into `docs/PROGRESS.md`; do not treat its documents as current.
 
 ## Session start
 
-Read `docs/PROGRESS.md` first — current state, next task, decision log.
+Read `docs/PROGRESS.md` (shared state + decision log) first, then the track file
+for the area this session works on — `docs/PROGRESS-host.md` or
+`docs/PROGRESS-pms.md`; ask which track if it isn't obvious.
 `docs/ROADMAP.md` holds the plan (P → M-1 → M3) and gates. Never skip a gate.
+
+## Ownership & layout (two-dev split, 2026-08-02)
+
+- `host/` — AI host Boot app (agent loop, LLM, MCP client). **Owner: MCP dev.**
+  Rules: `host/CLAUDE.md`.
+- `pms/` — rebuilt PMS Boot app. **Owner: PMS dev**, except the embedded `/mcp`
+  adapter module inside it, which the MCP dev owns (principle 2 makes it live
+  here). Rules: `pms/CLAUDE.md`.
+- `frontend/` — React prototype, reconnects at M1. Owner: PMS dev.
+- `docs/`, `reference/seed/`, this file — shared. Changes to the cross-boundary
+  contract (MCP tool catalog, application service API) always go through the
+  shared decision log in `docs/PROGRESS.md`, agreed by both devs.
+- This file holds only what both sides share; side-specific rules live in the
+  scoped CLAUDE.md files.
 
 ## Structural principles (invariants — never write code that violates them)
 
@@ -37,7 +54,9 @@ Base LLM for dev/eval: claude-sonnet-5 (re-confirm at G3 with pricing + no-train
 ## Commands
 
 ```bash
-bash scripts/verify.sh   # guarded verification — runs only stages whose tools exist
+bash scripts/verify.sh [host|pms] [--quick]
+                         # guarded verification — runs only stages whose tools exist.
+                         # no scope = everything; host/pms = that app only
                          # (--quick: compile only) full log → build/last-verify.log;
                          # on FAIL read only the failing part (grep/tail)
 ```
