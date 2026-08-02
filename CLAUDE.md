@@ -21,9 +21,12 @@ for the area this session works on — `docs/PROGRESS-host.md` or
   adapter module inside it, which the MCP dev owns (principle 2 makes it live
   here). Rules: `pms/CLAUDE.md`.
 - `frontend/` — React prototype, reconnects at M1. Owner: PMS dev.
-- `docs/`, `reference/seed/`, this file — shared. Changes to the cross-boundary
-  contract (MCP tool catalog, application service API) always go through the
-  shared decision log in `docs/PROGRESS.md`, agreed by both devs.
+- `docs/`, `reference/seed/`, this file — shared, with two exceptions:
+  `docs/PRD-host.md` (MCP dev) and `docs/PRD-pms.md` (PMS dev). Shared
+  definitions live in `docs/PRD.md` (sole source — see its §2 for the document
+  system). Changes to the cross-boundary contract (MCP tool catalog,
+  application service API, shared definitions) always go through the shared
+  decision log in `docs/PROGRESS.md`, agreed by both devs.
 - This file holds only what both sides share; side-specific rules live in the
   scoped CLAUDE.md files.
 - Git collaboration follows `docs/conventions/git-workflow.md` (GitHub Flow,
