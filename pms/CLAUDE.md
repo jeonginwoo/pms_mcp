@@ -25,6 +25,9 @@ Root `CLAUDE.md` invariants apply on top of this file.
 
 ## Workflow
 
+- Conventions: `docs/conventions/java-spring.md` (backend) ·
+  `docs/conventions/react-ts.md` (frontend/) ·
+  `docs/conventions/git-workflow.md` (branches/PRs).
 - Verify: `bash scripts/verify.sh pms`
 - Session records: `docs/PROGRESS-pms.md` (cross-boundary decisions go to the
   shared decision log in `docs/PROGRESS.md`).

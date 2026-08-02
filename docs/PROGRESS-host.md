@@ -20,6 +20,6 @@
 ```
 
 ### 2026-08-02 — 2인 분업 전환: 하네스 디렉터리 스코프 분리
-- 완료: host/·pms/ CLAUDE.md 신설, 루트 CLAUDE.md에 Ownership & layout 추가, verify.sh 스코프 인자(host|pms), Stop 훅 터치 영역별 검증, PROGRESS 트랙 분리, ROADMAP P단계에 유저 시나리오 항목 추가
-- 미해결: 원격 저장소 개설(사람 작업) — 개설 시 CI 증설 예약 발동
+- 완료: host/·pms/ CLAUDE.md 신설, 루트 CLAUDE.md에 Ownership & layout 추가, verify.sh 스코프 인자(host|pms), Stop 훅 터치 영역별 검증, PROGRESS 트랙 분리, ROADMAP P단계에 유저 시나리오 항목 추가. 원격(origin) 연결 + 푸시, 구 conventions 3종 이관(v3 정합화)
+- 미해결: CI(`.github/workflows/ci.yml`) 도입 — 원격 개설로 예약 발동, 도입 전까지 PR에 verify 결과 첨부
 - 다음 작업: P단계 ① PRD v2.0 작성

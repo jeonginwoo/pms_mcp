@@ -18,6 +18,7 @@
 | 날짜 | 결정 | 근거 |
 |------|------|------|
 | 2026-08-02 | **2인 분업 전환**: MCP 담당 = host 앱 + pms 내 `/mcp` 어댑터, PMS 담당 = 도메인·서비스·프론트. 모노리포 유지, 하네스는 디렉터리 스코프로 분리(host/·pms/ CLAUDE.md, verify 스코프 인자, PROGRESS 트랙 분리) | 원칙 2(임베디드 `/mcp`) 때문에 MCP 담당도 PMS 코드베이스 안에서 작업 — 리포 분리 시 어댑터 소유권·계약 문서 공유가 애매. 두 개발자 모두 Claude Code 사용. 협업 경계 = MCP 도구 카탈로그 + 애플리케이션 서비스 API, 변경은 이 결정 기록 경유 |
+| 2026-08-02 | **구 conventions 3종 이관** (`docs/conventions/` — java-spring·react-ts·git-workflow). v3 정합화: ralph·`/verify`·boundary-reviewer·단일 PROGRESS 참조를 현행(verify.sh 스코프·reviewer·트랙 파일)으로 수정, CI 전제는 "CI 도입 전 verify 결과 첨부"로. 전량 주입 대신 스코프 CLAUDE.md에서 참조. Modulith 모듈 목록은 구 설계 승계 표기 — M0 스캐폴드에서 확정 | 2인 협업 + 원격 개설로 git 워크플로 규칙의 고통 시점 도래(증설 예약 발동). 코드 컨벤션은 M0 전 동료 온보딩 자료로 함께 이관 |
 | 2026-07-31 | **새 폴더(pms_mcp_v3)에서 완전 재시작.** 기존 pms_mcp는 읽기 전용 참고 | 구 저장소의 중복 문서 부채(가이드 고유 가치 ~40%)·2인용 ruleset과 절연. 결정과 재사용 자산만 승계 |
 | 2026-07-31 | 스택: **Boot 4.1 + Modulith 2.1** + Spring AI 2.0.0 | Boot 4.0은 2026-12 OSS EOL. Spring AI 2.0.0이 양쪽 지원, 신규 시작이라 상향 비용 없음 |
 | 2026-07-31 | **MCP stateless 지향 설계** (구조 원칙 7) — 구현은 2025-11-25 스펙, 세션·Sampling·Roots·Logging 비의존 | 2026-07-28 스펙 대개정 출시 확인(stateless화, 12개월 유예). Java SDK 신 스펙 지원은 모니터링 항목 |

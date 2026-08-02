@@ -26,6 +26,9 @@ for the area this session works on — `docs/PROGRESS-host.md` or
   shared decision log in `docs/PROGRESS.md`, agreed by both devs.
 - This file holds only what both sides share; side-specific rules live in the
   scoped CLAUDE.md files.
+- Git collaboration follows `docs/conventions/git-workflow.md` (GitHub Flow,
+  squash merge, no code work on main). Coding conventions are referenced from
+  the scoped CLAUDE.md files.
 
 ## Structural principles (invariants — never write code that violates them)
 
