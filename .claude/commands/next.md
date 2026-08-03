@@ -4,6 +4,10 @@ description: Start a session — restore state, plan before work
 
 Start a work session.
 
+0. Sync first: `git pull --rebase` (with a clean tree) **before reading any
+   state files** — the other dev may have pushed since the last session
+   (`docs/conventions/git-workflow.md` §1). If the tree is dirty, surface that
+   to the user instead of pulling over it.
 1. Read `docs/PROGRESS.md` (shared state + decision log), then the track file
    for this session's area — `docs/PROGRESS-host.md` or `docs/PROGRESS-pms.md`.
    Ask which track if it isn't obvious from the request.

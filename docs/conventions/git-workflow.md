@@ -6,8 +6,14 @@
 
 ## 1. Branch rules
 
+- **Session start = sync**: run `git pull --rebase` before reading state files
+  (PROGRESS/ROADMAP) or planning — the other dev may have pushed since your
+  last session. Planning against a stale main surfaces as a rejected push at
+  the worst possible time (observed 2026-08-03). `/next` enforces this.
 - **main is always green**: no direct commits to main. Exception — minor
   documentation (`docs:`) and harness (`chore:`) changes may be committed directly.
+  When pushing such direct commits, if the push is rejected: `git pull --rebase`,
+  re-check the incoming commits touched no shared files of yours, then push.
 - **1 task = 1 branch = 1 PR**: one ROADMAP checklist item (or a split of one)
   per branch. Branch lifetime must not exceed 1–2 days — a longer-lived branch
   is a sign the task wasn't split enough.
@@ -24,9 +30,8 @@
 - **Merge method: squash merge** — collapse small WIP commits so main keeps
   "1 task = 1 commit". The squash commit message follows the commit conventions
   (`M1: ...` / `chore:` / `docs:`).
-- **Merge conditions**: CI green + **1 review approval from the other person**.
-  Until CI lands (`.github/workflows/ci.yml` — reserved, added now that the
-  remote exists), attach a green `bash scripts/verify.sh` run to the PR instead.
+- **Merge conditions**: CI green (`.github/workflows/ci.yml`, since 2026-08-02)
+  + **1 review approval from the other person**.
   PRs that only touch docs/harness may be self-merged once green.
 - Before opening a PR, sync with `git pull --rebase origin main`. Delete the
   branch after merging.

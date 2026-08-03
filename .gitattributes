@@ -1,0 +1,5 @@
+# 두 대의 Windows 개발 머신 + 리눅스 CI 사이의 CRLF/LF 유령 diff 방지 —
+# 저장소에는 항상 LF로 정규화해 저장한다 (2026-08-03, git-workflow 개선)
+* text=auto
+*.sh text eol=lf
+*.bat text eol=crlf
