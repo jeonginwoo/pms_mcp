@@ -3,7 +3,7 @@
 | 항목 | 내용 |
 |------|------|
 | 문서 | PMS 본체 구현명세 (코딩 에이전트용) · **소유: pms 트랙** |
-| 버전 / 상태 | v2.0 · **초안** (게이트 P에서 사람 승인 시 확정) |
+| 버전 / 상태 | v2.1 · **초안** (게이트 P에서 사람 승인 시 확정) |
 | 작성일 | 2026-08-02 — 구 "PMS — AI 구현용 PRD" v1.0(2026-06-21, 전사본 `reference/PMS_구현용_PRD_v1.0.md`) 현행화 이관 |
 | 범위 | 프로텐 전사 1차 |
 | 규모 | 약 40명(시드 기준 44명) · 2인 개발(MCP 담당 + PMS 담당) |
@@ -28,6 +28,16 @@
 ### v2.0 보완 (2026-08-02 — `frontend/` 프로토타입 대조 검토, PROGRESS 결정 기록)
 
 프로토타입(구 백엔드 실연동본)의 검증된 동작을 명세로 승격: 웹 진행률 2단계(US-A2) · 상태 전이 서버 강제(US-A5) · 사용자 CRUD(US-E2) · 마감 임박 알림 AC(US-F2) · 감사 조회(G1-3) · 내 계정(EPIC H) · chat BFF·SSE 쿼리 토큰(§7) · email 로그인·화면 3종(부록 A) · 계정 적재 규칙 확정(부록 B). **배정은 기간 모델 유지** — 프로토타입의 월별 upsert API는 재연동 시 본 계약으로 조정. **권한 모델은 2026-08-03 확정**(합집합 판정 + 프로젝트 역할 PM/PL/참여자 3단 — 상위 `PRD.md` §4). HQ 가동률 집계 제외만 잔여(12장).
+
+### v2.1 정합성 리뷰 반영 (2026-08-03 — 권한 모델 재작성 직후 잔여 검토)
+
+- ADMIN 태그 표기 통일 — §6 도입부 공통 규칙 1문장, 개별 태그에서 `· ADMIN` 제거(상위 PRD §4-1 "표에 ADMIN 열을 두지 않는다" 정합)
+- US-A5에 [PM·PL] 태그 + 정보 수정 권한 AC(A5-3) 신설 — 문서 전체에서 빠져 있던 `PUT /projects/{id}` 권한 검증
+- US-A6 구멍 보강: A6-3 해제 의미 정의 · A6-7 신설(`/roles`의 PM 지정 차단·2번째 PL 차단) · 자동 생성 배정 기본값(기간·monthlyMM=0)
+- 배정 수정 AC(B1-4) + `AssignmentUpdated` 이벤트 신설 — §7의 `PUT /assignments/{id}` 대응
+- AuditLog action 정리 — STATE_CHANGE는 §5 상태 전이 전용, 역할 변경·팀 이동은 UPDATE(A6-1·E1-1)
+- 에러 표 422 행에 PM_REQUIRED·MULTIPLE_PM·MULTIPLE_PL·INVALID_ROLE 추가
+- EPIC H 보강: `GET /api/me/account` AC 대응(H1-1) · email 중복 `409 DUPLICATE_EMAIL`(H1-2)
 
 ---
 
@@ -111,7 +121,7 @@
 
 ## 6. 기능 요구사항 — 유저스토리 + 수용기준(AC)
 
-각 Given·When·Then = 테스트 1개. AC 없는 코드 금지. (v1.0에서 내용 변경 없음 — C1-2 직급 표기만 시드 정합 보정)
+각 Given·When·Then = 테스트 1개. AC 없는 코드 금지. **역할 태그 규칙**: `[PM·PL·참여자]`는 프로젝트 역할(상위 PRD §4-2), `[orgRole: …]`은 조직 권한(§4-3). **ADMIN은 §4-1 치환(모든 프로젝트에서 PM 간주)으로 모든 PM 태그에 자동 포함되므로 태그에 별도 표기하지 않는다.**
 
 ### EPIC A · 프로젝트
 
@@ -124,7 +134,7 @@
 - A1-6 Given `role=PM`이 2행 이상인 입력 When 생성 Then `422 MULTIPLE_PM` — 프로젝트당 `role=PM` 정확히 1행 불변식
 - A1-7 Given `role=PL`이 2행 이상인 입력 When 생성 Then `422 MULTIPLE_PL` — 스키마는 복수 PL을 수용하나 API가 당분간 1명으로 제약(12장 · 제약 해제 시 이 AC만 삭제)
 
-**US-A2 참여자로서 본인 배정 프로젝트 진행률을 갱신한다** [PM·PL·참여자 · ADMIN] — 웹·MCP(`update_progress`) **동일 서비스·동일 2단계 프로토콜** (2026-08-02 프로토타입 동작 승격)
+**US-A2 참여자로서 본인 배정 프로젝트 진행률을 갱신한다** [PM·PL·참여자] — 웹·MCP(`update_progress`) **동일 서비스·동일 2단계 프로토콜** (2026-08-02 프로토타입 동작 승격)
 - A2-1 Given 본인 배정(role 무관 — PM·PL·PARTICIPANT 동일) When `PUT /progress {progress:90, version, confirmed:false}` Then `200` + 변경 요약 반환, DB 미변경. `Project.progress`는 단일 값이므로 부분("본인 몫") 수정 개념은 없다
 - A2-2 Given 요약 확인 후 When `confirmed:true` 재호출 Then `200` 커밋 + AuditLog UPDATE
 - A2-3 Given progress=100·confirmed=true When 저장 Then 완료 자동전이 + `ProjectCompleted` + STATE_CHANGE
@@ -138,30 +148,33 @@
 - A3-2 Given 범위 밖 id When 상세조회 Then `404` (은닉)
 - A3-3 Given 타 팀 프로젝트에 배정된 사용자 When 그 프로젝트 상세조회 Then `200` + 해당 프로젝트의 배정 레코드(타 팀 인원 포함) 노출. 단 그 인원의 **다른 프로젝트·개인 전체 가동률은 조직 가시성 규칙을 그대로 따른다**(프로젝트 컨텍스트 한정)
 
-**US-A4 PM으로서 프로젝트를 소프트 삭제한다** [PM] — ADMIN은 §4-1 치환으로 포함
+**US-A4 PM으로서 프로젝트를 소프트 삭제한다** [PM]
 - A4-1 When `DELETE /projects/{id}` Then `204`, deleted=true, 목록·중복검사 제외, AuditLog DELETE
 - A4-2 Given PL 또는 참여자 토큰 When 삭제 Then `403`
 
-**US-A5 프로젝트 상태는 정의된 전이만 허용된다** — 프로토타입 수정 폼의 status 자유 편집 대비 서버 강제 (2026-08-02)
+**US-A5 프로젝트 정보 수정은 PM·PL만, 상태는 정의된 전이만 허용된다** [PM·PL] — 프로토타입 수정 폼의 status 자유 편집 대비 서버 강제 (2026-08-02)
 - A5-1 Given 순방향 전이(§5) When `PUT /projects/{id}` (status 포함) Then `200` + AuditLog STATE_CHANGE
 - A5-2 Given 역방향·건너뛰기 전이 When 저장 Then `409 INVALID_TRANSITION`, 아무것도 안 바뀜
+- A5-3 Given 참여자 토큰 When `PUT /projects/{id}` (정보 수정) Then `403` — 정보 수정 권한(상위 PRD §4-2 PM·PL)은 이 AC가 검증한다. 진행률은 별도 경로(US-A2)라 참여자도 가능
 
-**US-A6 프로젝트 역할을 지정·교체한다** [PM] — ADMIN은 상위 PRD §4-1 치환으로 PM에 포함 (2026-08-03 권한 모델 확정에 따른 신설)
-- A6-1 Given 현 PM 또는 ADMIN When `PUT /projects/{id}/pm {personId, version}` Then `200`, `ProjectAssignment.role` PM 이동 + `Project.managerId` 동기화, AuditLog STATE_CHANGE
+**US-A6 프로젝트 역할을 지정·교체한다** [PM] (2026-08-03 권한 모델 확정에 따른 신설)
+- A6-1 Given 현 PM When `PUT /projects/{id}/pm {personId, version}` Then `200`, `ProjectAssignment.role` PM 이동 + `Project.managerId` 동기화, AuditLog UPDATE — STATE_CHANGE는 §5 상태 전이 전용
 - A6-2 Given PL·참여자 토큰 When PM 교체 Then `403`
-- A6-3 Given PM When `PUT /projects/{id}/roles {personId, role}` Then `200`, AuditLog UPDATE. PL·참여자 토큰은 `403`
-- A6-6 Given 대상이 해당 프로젝트에 미배정 When `role=PL` 지정 Then 배정을 함께 생성 — PM·PL은 항상 배정 인원(상위 PRD §4-2)
-- A6-4 Given 교체 대상이 해당 프로젝트에 미배정 When PM 교체 Then 배정을 함께 생성(PM은 항상 배정 인원). 직전 PM은 `role=PARTICIPANT`로 강등(배정은 유지)
+- A6-3 Given PM When `PUT /projects/{id}/roles {personId, role}` (role ∈ {PL, PARTICIPANT}) Then `200`, AuditLog UPDATE. PL·참여자 토큰은 `403`. **해제 = `role=PARTICIPANT`로 변경**(배정은 유지 — 배정 자체의 종료는 US-B2)
+- A6-6 Given 대상이 해당 프로젝트에 미배정 When `role=PL` 지정 Then 배정을 함께 생성 — PM·PL은 항상 배정 인원(상위 PRD §4-2). **자동 생성 배정의 기본값: 기간 = 지정일~프로젝트 종료일 · monthlyMM = 0** (M/M 입력은 PM이 배정 패널에서 별도 수행)
+- A6-4 Given 교체 대상이 해당 프로젝트에 미배정 When PM 교체 Then 배정을 함께 생성(기본값은 A6-6과 동일). 직전 PM은 `role=PARTICIPANT`로 강등(배정은 유지)
 - A6-5 Given 임의 시점 When 조회 Then 프로젝트당 `role=PM` 정확히 1행 · `Project.managerId`와 일치 (불변식 — 경계 테스트 대상)
+- A6-7 Given `role=PM` When `/roles` 경유 지정 Then `422 INVALID_ROLE` — PM 변경은 `/pm` 전용(A6-5 불변식 우회 차단). Given 이미 PL 존재 When 두 번째 PL 지정 Then `422 MULTIPLE_PL` — A1-7과 동일 제약, 해제 시 함께 삭제
 
 ### EPIC B · 인력 배정
 
-**US-B1 PM으로서 인력을 배정한다** [PM · ADMIN]
+**US-B1 PM으로서 인력을 배정한다** [PM]
 - B1-1 When `POST /projects/{id}/assignments` Then `201` + `MemberAssignedToProject`
 - B1-2 Given 종료 안된 동일 personId 존재 When 재배정 Then `409 DUPLICATE_ASSIGNMENT` (키=projectId+personId+status≠종료)
 - B1-3 When 커밋 후 Then resource가 해당 월 가동률 재계산
+- B1-4 When `PUT /assignments/{id}` (기간·monthlyMM 수정, `version` 포함) Then `200` + `AssignmentUpdated` → 영향 월 가동률 재계산. PL·참여자 토큰은 `403`(M/M 입력은 PM — 상위 PRD §4-2) — §7의 `PUT /assignments/{id}` 대응 AC
 
-**US-B2 배정 종료 시 이후 월 가동률에서 빠진다** [PM · ADMIN]
+**US-B2 배정 종료 시 이후 월 가동률에서 빠진다** [PM]
 - B2-1 When `DELETE /assignments/{id}` Then status=종료, `AssignmentClosed`, 종료월 이후 제외
 
 ### EPIC C · 가동률
@@ -174,18 +187,18 @@
 
 ### EPIC D · 유지보수
 
-**US-D1 완료 프로젝트를 유지보수로 이관한다** [PM · ADMIN]
+**US-D1 완료 프로젝트를 유지보수로 이관한다** [PM]
 - D1-1 Given status=완료 When `POST /handover` Then Maintenance+초기Log+상태전이 **한 트랜잭션**, 커밋 후 `MaintenanceHandedOver`
 - D1-2 Given status≠완료 When 이관 Then `409 NOT_COMPLETED`, 아무것도 안 바뀜(원자성)
 
-**US-D2 유지보수 이력을 등록/조회한다** [등록: PM · ADMIN / 조회: 가시성 범위]
+**US-D2 유지보수 이력을 등록/조회한다** [등록: PM / 조회: 가시성 범위]
 - D2-1 When `POST /maintenances/{id}/logs` Then `201`, append-only
 - D2-2 Given 기존 로그 When 수정/삭제 Then 불가(API 없음), 보정은 새 로그로만
 
 ### EPIC E · 조직 · 사용자 관리
 
 **US-E1 사람의 소속 팀을 이동한다** [orgRole: ADMIN]
-- E1-1 When `PUT /people/{id}/team` Then teamId 변경, 가시성 즉시 반영, AuditLog STATE_CHANGE
+- E1-1 When `PUT /people/{id}/team` Then teamId 변경, 가시성 즉시 반영, AuditLog UPDATE — STATE_CHANGE는 §5 상태 전이 전용(v2.1 정리)
 - E1-2 Given 진행 중 배정 보유 When 이동 Then 허용+경고. 과거 집계는 현재 소속 기준(시점 미보존)
 
 **US-E2 ADMIN으로서 사용자를 등록·수정·삭제한다** [ADMIN] (2026-08-02 채택 — 프로토타입 기구현)
@@ -217,8 +230,8 @@
 ### EPIC H · 내 계정 (2026-08-02 채택 — 프로토타입 기구현)
 
 **US-H1 로그인 사용자로서 내 계정을 관리한다**
-- H1-1 When `GET /api/me` Then 본인 personId·이름·팀·부문·orgRole — MCP `whoami` 도구(PRD-host FR-AI-16)와 동일 서비스
-- H1-2 When `PUT /api/me/profile {name, email, phone}` Then `200` + AuditLog UPDATE
+- H1-1 When `GET /api/me` Then 본인 personId·이름·팀·부문·orgRole — MCP `whoami` 도구(PRD-host FR-AI-16)와 동일 서비스. `GET /api/me/account`는 계정 상세(email·phone·notifPrefs — 프로토타입 내 계정 모달 대응)
+- H1-2 When `PUT /api/me/profile {name, email, phone}` Then `200` + AuditLog UPDATE. email은 로그인 ID — 타 사용자와 중복 시 `409 DUPLICATE_EMAIL`
 - H1-3 Given 현재 비밀번호 일치·새 비밀번호 8자 이상 When `PUT /api/me/password {current, newPassword}` Then `200`(해시 저장) / 불일치·형식 오류 Then `400`
 - H1-4 When `PUT /api/me/notif-prefs {progress, project, org, weekly}` Then `200` — 알림 적재·푸시 시 수신자 설정 필터로 적용(F1-5)
 
@@ -239,7 +252,7 @@
 | NOT_FOUND | 404 | 없음/가시성 밖 |
 | DUPLICATE_* / NOT_COMPLETED / INVALID_TRANSITION | 409 | 중복·상태 위반·전이 위반 |
 | STALE_VERSION | 409 | 동시 수정 충돌 |
-| REF_NOT_FOUND | 422 | 참조 대상 없음 |
+| REF_NOT_FOUND / PM_REQUIRED / MULTIPLE_PM / MULTIPLE_PL / INVALID_ROLE | 422 | 참조 대상 없음 · 역할 구성 위반 (A1-4·A1-6·A1-7·A6-7) |
 
 ```
 GET/POST    /api/projects              GET/PUT/DELETE /api/projects/{id}
@@ -266,6 +279,7 @@ POST /api/chat    POST /api/chat/feedback        # chat BFF — AI 호스트 프
 | 이벤트 | 발행자 | 구독자 | 효과 |
 |--------|--------|--------|------|
 | `MemberAssignedToProject` | project | resource, notification | 가동률 재계산, 알림 |
+| `AssignmentUpdated` | project | resource | 기간·M/M 변경 영향 월 재계산 (B1-4) |
 | `AssignmentClosed` | project | resource | 종료월 이후 제외 |
 | `OverbookingDetected` | resource | notification | 팀장 알림 |
 | `ProjectCompleted` | project | notification | 완료/이관 안내 |
@@ -311,9 +325,9 @@ POST /api/chat    POST /api/chat/feedback        # chat BFF — AI 호스트 프
 | `/projects` | 프로젝트 목록 | 상태·제품군(solution) 필터 · 이름 검색 · 페이지네이션 · (생성 권한자) 등록 버튼 | 가시성 범위 |
 | `/projects/new` | 프로젝트 등록 | 입력 항목 폼 + 참여자별 role(**PM/PL/참여자**) 선택, PM 1명 필수 · 422/409 오류 표시 | orgRole: TEAM_LEAD·DIVISION_HEAD·ADMIN |
 | `/projects/:id` | 프로젝트 상세 | 기본정보 · 상태 뱃지 · 진행률(권한 시 수정) · 배정 목록(**역할 뱃지 PM/PL/참여자**) · lastEditedBy/At · (PM) PM 교체·PL 지정 UI · (완료 시) 이관 버튼 | 가시성 범위 |
-| 〃 배정 패널 | 인력 배정 | 배정 추가(사람 검색→기간·월별 M/M) · 종료 처리 · 409 표시 — 프로토타입의 월별 upsert UI는 기간 모델 API(§7)로 재연동 시 조정(2026-08-02 기간 모델 확정) | PM · ADMIN |
+| 〃 배정 패널 | 인력 배정 | 배정 추가(사람 검색→기간·월별 M/M) · 종료 처리 · 409 표시 — 프로토타입의 월별 upsert UI는 기간 모델 API(§7)로 재연동 시 조정(2026-08-02 기간 모델 확정) | PM(§6 태그 규칙 — ADMIN 치환 포함) |
 | `/utilization` | 가동률 대시보드 | 월 선택 · 팀 필터 · 기본/보정 표 · 과부하(보정>100%) 강조 · 과부하만 보기 | 가시성 범위 |
-| `/maintenance/:id` | 유지보수 상세 | 계약 정보(원프로젝트 링크) · 이력 목록(type 필터) · (PM·ADMIN) 이력 추가 | 가시성 범위 |
+| `/maintenance/:id` | 유지보수 상세 | 계약 정보(원프로젝트 링크) · 이력 목록(type 필터) · (PM) 이력 추가 | 가시성 범위 |
 | 공통 헤더 | 알림 뱃지 | 미읽음 수 — **SSE 즉시 갱신**(⑥, 프로토타입의 구독 로직 재사용), 재연결 시 미읽음 재조회 · 클릭 시 목록·읽음 처리 | 로그인 사용자 |
 
 **공통 UI 규칙**: 모든 목록은 로딩/빈/에러 3상태 · `409 STALE_VERSION` 수신 시 "OO님이 먼저 수정했습니다. 최신 내용을 불러올까요?" → 확인 시 재조회(reload-and-retry) · 권한 없는 버튼은 렌더링하지 않되 서버 403 처리는 항상 존재.
