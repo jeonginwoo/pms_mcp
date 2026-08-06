@@ -10,7 +10,7 @@
 
 ## 현재 상태 (2026-08-06)
 
-- **다음 작업:** 2026-08-06 공용 변경 4건(완료 전이 재설계·billable·프로젝트별 권한 커스텀·**유지보수 재설계**)에 대한 **MCP 담당 확인** → 게이트 P 승인(PRD-pms v2.4 포함 일괄) → PMS-M0 스캐폴드. 시드 적재 잔여(월별 M/M·billable 팀 목록·유지보수 시트→JSON 변환+engineerId 매핑)는 PMS-M1 전 결정. 유저_시나리오에 유지보수 여정(계약 목록·이슈 처리) 추가 검토 + HTML 렌더링(게이트 P 리뷰 보조) 예정
+- **다음 작업:** **게이트 P 승인**(사람 — PRD-pms v2.4 포함 일괄. 공용 변경 4건은 2026-08-06 MCP 담당 확인 완료 — 결정 기록) → PMS-M0 스캐폴드. 게이트 P 리뷰 포인트: D4-3 유지보수 전사 조회·`MaintenanceIssueRegistered` 알림(세션 중 기본값 선택분). 시드 적재 잔여(월별 M/M·billable 팀 목록·유지보수 시트→JSON 변환+engineerId 매핑)는 PMS-M1 전 결정. 유저_시나리오에 유지보수 여정(계약 목록·이슈 처리) 추가 검토 + HTML 렌더링(게이트 P 리뷰 보조) 예정
 - **차단 요소:** 없음 (게이트 P 대기. 권한 모델 MCP 확인은 2026-08-03 완료)
 
 ## 세션 로그
@@ -23,6 +23,11 @@
 - 미해결: <다음 세션으로 넘기는 것>
 - 다음 작업: <구체적으로>
 ```
+
+### 2026-08-06 — 공용 변경 4건 MCP 담당 확인 완료 (동석 리뷰)
+- 완료: 완료/재개·billable·권한 커스텀·유지보수 재설계 4건 **확인 완료** — 공용 결정 기록 등재(host 관점 영향 4건 명시: `update_progress` 거동 변화·billable 모집단·커스텀 403 거절 전달·`list_maintenance_logs` projectId 단순화 불가+`?phase=`). 상위 PRD·PRD-pms·PROGRESS의 "확인 대기" 플래그 일괄 해소. verify.sh pms SKIP(코드 이전 단계) 정상
+- 미해결: 게이트 P 승인(사람 — 리뷰 포인트: D4-3 전사 조회·이슈 알림), 시드 적재 잔여 3건, host 측 문서(PRD-host·eval) 반영은 host 트랙 소유
+- 다음 작업: 게이트 P 승인 → PMS-M0 스캐폴드
 
 ### 2026-08-06 — 유지보수 재설계(계약/사이트/이슈 3층 + phase 탭) → PRD-pms v2.4
 - 완료: **유지보수 도메인 재설계**(공용 결정 기록 — MCP 확인 대기): 실무 자료 실측(2026 유지보수 시트 + 구 이슈 게시판 — 계약:고객사 1:N(가온아이 1계약 ~45사이트)·OEM 계약은 원천 프로젝트 부재·열린 이슈 23건 중 할당 1건) 근거로 완료 프로젝트 1:1 파생 모델 폐기 → `MaintenanceContract`(연 단위, sourceProjectId nullable — 이관+직접 등록 입구 2개) / `MaintenanceSite`(1:N, **담당 엔지니어 정본=사이트 engineerId** — 사용자 확정) / `MaintenanceContact`(연락처 정규화) / `MaintenanceIssue`(구 게시판 대체 — type 3종·상태 4단·기본 배정=사이트 담당·append-only 코멘트로 구 MaintenanceLog 불변식 계승). EPIC D 재작성(US-D1 이관 시 계약 필수값·D2 직접 등록 orgRole·D3 이슈 전사·D4 전사 조회) · §7 유지보수 API 재편 + `?phase=` · §8 `MaintenanceIssueRegistered` 이벤트 · 부록 A 화면 3종(계약 목록/상세·이슈 목록 — 담당자 컬럼 상시 노출·미배정/내 담당 필터) · 부록 B 시드=시트 실데이터(마스킹 없음 — 사용자 확정). **phase 탭** = category 컬럼 없이 status 파생(영업/솔루션, 서버 단일 정의). **미채택 결정**: sales/SalesInfo·정기점검 모델링·만료 임박 알림(고통 확인 후 추가). 상위 PRD §4-2 표 "이관/이력"→"이관"·§4-3 계약 등록 행 추가. 구 미해결 "프로젝트:Maintenance 1:1 vs 1:N" 해소(projectId 단순화 불가 — `list_maintenance_logs` 접점, MCP 확인 대기). verify.sh pms SKIP(코드 이전 단계) 정상
