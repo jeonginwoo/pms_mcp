@@ -20,7 +20,9 @@ for the area this session works on — `docs/PROGRESS-host.md` or
 - `pms/` — rebuilt PMS Boot app. **Owner: PMS dev**, except the embedded `/mcp`
   adapter module inside it, which the MCP dev owns (principle 2 makes it live
   here). Rules: `pms/CLAUDE.md`.
-- `frontend/` — React prototype, reconnects at M1. Owner: PMS dev.
+- `frontend/` — React prototype (old design, reference). Owner: PMS dev.
+- `prototype/` — mock-data screen prototype for gate-P planning review (React/TS,
+  no backend — see its README). **Not a spec**; PRD wins on conflict. Owner: PMS dev.
 - `docs/`, `reference/seed/`, this file — shared, with two exceptions:
   `docs/PRD-host.md` (MCP dev) and `docs/PRD-pms.md` (PMS dev). Shared
   definitions live in `docs/PRD.md` (sole source — see its §2 for the document
