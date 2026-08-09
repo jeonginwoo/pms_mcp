@@ -4,6 +4,9 @@ description: Start a session — restore state, plan before work
 
 Start a work session.
 
+(Track already known? Use `/next-pms` or `/next-mcp` instead — they fix the
+track and skip the "which track" question, then follow this same procedure.)
+
 0. Sync first: `git pull --rebase` (with a clean tree) **before reading any
    state files** — the other dev may have pushed since the last session
    (`docs/conventions/git-workflow.md` §1). If the tree is dirty, surface that

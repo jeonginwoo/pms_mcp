@@ -74,7 +74,8 @@ bash scripts/verify.sh [host|pms] [--quick]
 ## Way of working
 
 1. Session cycle: `/next` (restore state → plan) → user approval → implement (tests
-   first) → verify → `/wrap-up` (record → commit).
+   first) → verify → `/wrap-up` (record → commit). Track-fixed variants
+   `/next-pms` / `/next-mcp` skip the "which track" question.
 2. Unit of work: one ROADMAP checklist item. Split it if it is big.
 3. Never claim a task done unless `bash scripts/verify.sh` passes.
 4. Decisions that change or contradict documents go to the PROGRESS decision log,
