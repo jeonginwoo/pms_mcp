@@ -3,7 +3,7 @@
 | 항목 | 내용 |
 |------|------|
 | 문서 | PMS 본체 구현명세 (코딩 에이전트용) · **소유: pms 트랙** |
-| 버전 / 상태 | v2.3 · **초안** (게이트 P에서 사람 승인 시 확정) |
+| 버전 / 상태 | v2.4 · **초안** (게이트 P에서 사람 승인 시 확정) |
 | 작성일 | 2026-08-02 — 구 "PMS — AI 구현용 PRD" v1.0(2026-06-21, 전사본 `reference/PMS_구현용_PRD_v1.0.md`) 현행화 이관 |
 | 범위 | 프로텐 전사 1차 |
 | 규모 | 약 40명(시드 기준 44명) · 2인 개발(MCP 담당 + PMS 담당) |
@@ -48,8 +48,15 @@
 
 ### v2.3 반영 (2026-08-06 — 프로젝트별 권한 커스텀 + 프로젝트별 감사 이력 뷰)
 
-- **프로젝트별 권한 커스텀 신설** (PROGRESS 결정 기록 · **MCP 담당 확인 대기**): 상위 PRD §4-2 표는 **기본값**이 되고, PM이 프로젝트 설정에서 역할별 기능 토글로 조정한다(전역 권한 관리 탭 없음 — 프로젝트 스코프 UI). **US-A8 신설** · `GET/PUT /api/projects/{id}/permissions` · `ProjectPermissionOverride` 엔티티(기본값과 다른 셀만 저장) · 고정 셀 위반 `422 IMMUTABLE_PERMISSION` · 부록 A 상세 화면에 권한 패널 추가. 조정 범위·고정 셀·완료·재개 묶음 규칙은 상위 PRD §4-2가 원본. 기본값에서 거동 무변경 — 기존 AC·시나리오·eval 영향 없음
+- **프로젝트별 권한 커스텀 신설** (PROGRESS 결정 기록 · MCP 담당 확인 완료 2026-08-06): 상위 PRD §4-2 표는 **기본값**이 되고, PM이 프로젝트 설정에서 역할별 기능 토글로 조정한다(전역 권한 관리 탭 없음 — 프로젝트 스코프 UI). **US-A8 신설** · `GET/PUT /api/projects/{id}/permissions` · `ProjectPermissionOverride` 엔티티(기본값과 다른 셀만 저장) · 고정 셀 위반 `422 IMMUTABLE_PERMISSION` · 부록 A 상세 화면에 권한 패널 추가. 조정 범위·고정 셀·완료·재개 묶음 규칙은 상위 PRD §4-2가 원본. 기본값에서 거동 무변경 — 기존 AC·시나리오·eval 영향 없음
 - **프로젝트별 감사 이력 뷰 신설** (pms 내부 — MCP 확인 불요): 저장은 AuditLog **단일 원본 유지**(이중 기록 없음 — G1-1·G1-2 불변식 보존), `AuditLog.projectId`(nullable) 참조 컬럼 + `GET /api/projects/{id}/audit`(**가시성 범위 전체** — 참여자 포함) + 부록 A 이력 탭. **US-G2 신설**. 통합로그(`GET /api/audit` — G1-3)는 ADMIN 전용 그대로 — 프로젝트 이력과 통합로그는 같은 행의 권한 다른 두 조회 뷰. 용량은 비쟁점(후한 추정 연 7.3만 행·수십~150MB — 보존 정책은 고통 시 재론)
+
+### v2.4 반영 (2026-08-06 — 유지보수 재설계: 계약/사이트/이슈 3층 + phase 탭)
+
+- **유지보수 도메인 재설계** (PROGRESS 결정 기록 · MCP 담당 확인 완료 2026-08-06): 완료 프로젝트 1:1 파생 모델(`Maintenance`·`MaintenanceLog`) → **계약/사이트/이슈 3층**. 실측 근거 — 유지보수 계약은 연 단위이고 계약:고객사 1:N(가온아이 1계약 ~45사이트), OEM 채널 계약은 원천 프로젝트가 없다. 프로젝트:계약 **1:1**(이관 경로, nullable) + **직접 등록 입구 병존**. **담당 엔지니어 정본 = 사이트 단위**(이슈 기본 배정 원천 — "누가 뭘 담당하는지" 구조화). 이슈는 구 게시판 대체 — type{장애,문의,요청}·상태{접수,처리중,고객확인대기,완료}·append-only 코멘트. EPIC D 재작성(US-D1~D4) · §7 API 재편 · 부록 A 화면 3종 · 부록 B 시드 확정
+- **phase 탭**: category 컬럼을 만들지 않고 **status 파생 그룹**(영업={계약대기,수주확정} · 솔루션={진행중,완료})으로 탭 구별 — `GET /api/projects?phase=` + 응답 파생 필드, 서버 단일 정의. 유지보수 탭은 프로젝트가 아닌 계약 목록
+- **미채택(안 하기로 하는 결정)**: sales 모듈·SalesInfo 확장 엔티티(영업 탭은 필터 뷰만 — 필요 시 확장 테이블 신설로 무마이그레이션 추가 가능) · 정기점검 모델링(계약 정보 필드만 — "특이사항 없으면 기록 안 함" 실무) · 계약 만료 임박 알림(고통 확인 후 추가)
+- 구 미해결 "프로젝트:Maintenance 1:1 vs 1:N" 해소 — `list_maintenance_logs`는 projectId로 단순화 불가(프로젝트 없는 계약 존재), 계약/이슈 id 유지 (MCP 확인 완료 2026-08-06)
 
 ---
 
@@ -81,9 +88,9 @@
 
 **성공 지표**: 프로텐 전 직원(시드 44명)이 시트 대신 사용 · "한 줄기" 데모 성공 · 가동률 예시(A0.5+B0.7, coeff1.2 → 기본120/보정100) 검증.
 
-**In Scope**: 프로젝트 CRUD · 인력 배정 · 월별합산/직급보정 가동률 · 오버부킹 감지 · 유지보수 이관·이력 · 두 축 권한 · 감사로그 · 인앱 알림 · `/mcp` 어댑터 접점(어댑터 자체는 MCP 담당 소유).
+**In Scope**: 프로젝트 CRUD · 인력 배정 · 월별합산/직급보정 가동률 · 오버부킹 감지 · **유지보수 계약·사이트·이슈 관리(이관 + 직접 등록 — v2.4)** · 두 축 권한 · 감사로그 · 인앱 알림 · `/mcp` 어댑터 접점(어댑터 자체는 MCP 담당 소유).
 
-**Out of Scope (구현 금지)**: 태스크/칸반 · sales 모듈 · 파일 업로드 · 메일/Slack 알림 · SSO · 소속 시점이력 · orgRole 커스텀 추가/편집 · **프로젝트 역할(커스텀 역할) 추가/삭제 — 3단 고정** · MSA. (구 "프로젝트별 권한예외 · 4역할 세분화" 금지는 2026-08-03 권한 모델 확정으로 해제 — 프로젝트 역할 PM/PL/참여자와 **프로젝트별 권한 커스텀(US-A8, 2026-08-06)**은 In Scope. 커스텀은 고정 3역할의 기능 토글까지만 — 역할 신설은 여전히 금지) (v1.0의 "MS본부(2차)"는 삭제 — 전사 범위 전환으로 시드에 MS사업부 포함)
+**Out of Scope (구현 금지)**: 태스크/칸반(프로젝트 작업 관리 — **유지보수 이슈 관리(EPIC D)는 별개로 In Scope**, v2.4 경계 명시) · sales 모듈(영업 탭은 status 파생 필터 뷰로만 — v2.4) · 파일 업로드 · 메일/Slack 알림 · SSO · 소속 시점이력 · orgRole 커스텀 추가/편집 · **프로젝트 역할(커스텀 역할) 추가/삭제 — 3단 고정** · MSA. (구 "프로젝트별 권한예외 · 4역할 세분화" 금지는 2026-08-03 권한 모델 확정으로 해제 — 프로젝트 역할 PM/PL/참여자와 **프로젝트별 권한 커스텀(US-A8, 2026-08-06)**은 In Scope. 커스텀은 고정 3역할의 기능 토글까지만 — 역할 신설은 여전히 금지) (v1.0의 "MS본부(2차)"는 삭제 — 전사 범위 전환으로 시드에 MS사업부 포함)
 
 ## 2. 사용자 · 권한 모델
 
@@ -94,7 +101,7 @@
 - orgRole 값(ADMIN/DIVISION_HEAD/TEAM_LEAD/MEMBER)은 시드 `people.json`과 정합 유지
 - **확정(2026-08-03)**: 판정은 **합집합** — `canDo = orgPerm(orgRole) OR projectPerm(프로젝트 역할)`. orgRole을 선행 게이트로 쓰지 않는다. 프로젝트 역할은 **PM / PL / 참여자** 3단이며 프로젝트마다 개별 판정한다(구 "관리자/담당자" 대체). orgRole은 가시성 + 프로젝트 밖 행위(생성·조직 관리)만 담당. 프로토타입 기능 플래그 5종 미채택, 부문장 `editProgress:false` 폐기. 상세 표는 상위 `PRD.md` §4가 유일 원본 — 본 문서는 참조만 한다 (PROGRESS 결정 기록 2026-08-03)
 - 가동률 집계 모집단은 `Person.billable`로 판정 — **2026-08-06 확정**(상위 PRD §3이 원본, 구 "HQ 제외 여부" 미결 해소). 적재 시 false 지정 팀 목록은 부록 B
-- **프로젝트별 권한 커스텀 (2026-08-06 — MCP 담당 확인 대기)**: 상위 PRD §4-2 표는 기본값, `projectPerm` 판정은 프로젝트별 매트릭스(기본값 + override) 참조. 조정 범위·고정 셀 규칙은 상위 §4-2가 유일 원본 — 본 문서는 구현(US-A8·§4 엔티티·§7 API)만 가진다
+- **프로젝트별 권한 커스텀 (2026-08-06 — MCP 담당 확인 완료)**: 상위 PRD §4-2 표는 기본값, `projectPerm` 판정은 프로젝트별 매트릭스(기본값 + override) 참조. 조정 범위·고정 셀 규칙은 상위 §4-2가 유일 원본 — 본 문서는 구현(US-A8·§4 엔티티·§7 API)만 가진다
 
 ## 3. 시스템 구성 (요약)
 
@@ -118,7 +125,12 @@
   - **`ProjectAssignment.role`이 프로젝트 역할의 정본**(2026-08-03). `Project.managerId`는 대표 PM 파생 읽기 필드로 유지 — 시드 정합·조회 편의. 불변식: 프로젝트당 `role=PM` 정확히 1행, `managerId`와 일치. 값은 `PARTICIPANT`를 쓴다 — orgRole의 `MEMBER`와 이름이 겹치면 안 된다. `role=PL`은 복수 행 물리적으로 허용하되 API에서 당분간 1명으로 제약(제약 해제 시 스키마·접점 변경 없음)
   - `ProjectPermissionOverride`(projectId·role{PL,PARTICIPANT}·action{EDIT_INFO,ASSIGN,PROGRESS,COMPLETE_REOPEN}·allowed) — **기본값(상위 PRD §4-2 표)과 다른 셀만 저장**, 행 부재 = 기본값. PM 열·조회·삭제·이관은 저장 대상이 아니다(고정 — 상위 §4-2). 완료 처리·재개는 `COMPLETE_REOPEN` 단일 action(묶음 규칙). 낙관적 락은 `Project.version` 공용 (2026-08-06 — US-A8)
 - **resource**: `Capacity`(personId·month·availableMM). 가동률은 배정 합산으로 계산(저장 엔티티 아님).
-- **maintenance**: `Maintenance`(sourceProjectId·maintainerId·기간·sla·status) · `MaintenanceLog`(date·type·processorId·status·note, append-only)
+- **maintenance** (2026-08-06 재설계 — 계약/사이트/이슈 3층):
+  - `MaintenanceContract`(sourceProjectId — **nullable**, 이관 생성 시 1:1·OEM 직접 등록은 null · 계약사 · 계약명 · 상태{예정,신규,유지,종료} · 계약일 · 시작/종료일 · 계약금액 · 월간금액 · 영업대표 personId · 정기점검(정보 텍스트 — 일정 엔진·자동 이슈 없음) · 비고 · version)
+  - `MaintenanceSite`(contractId · 고객사명 · 솔루션/버전 · 대상{인프라,솔루션} · 서버스펙 · **engineerId — 담당 엔지니어의 정본(사이트 단위)**) — 계약:사이트 **1:N** (실측: 가온아이 1계약 ~45사이트)
+  - `MaintenanceContact`(siteId · 구분{계약사,고객사} · 이름 · 직급 · 전화 · 이메일) — 구 시트 "담당자 정보" 텍스트 블롭의 정규화
+  - `MaintenanceIssue`(siteId · type{장애,문의,요청} · 제목 · 상태{접수,처리중,고객확인대기,완료} · assigneeId — **기본값 = 사이트 engineerId** · 접수일 · 완료일 · version) · `IssueComment`(issueId · 작성자 personId · 내용, **append-only** — 구 `MaintenanceLog` 불변식 계승)
+  - 프로젝트:계약 = **1:1**(이관 경로) · 프로젝트 없는 계약 존재(직접 등록 — US-D2). MCP `list_maintenance_logs` 접점 영향은 PROGRESS 결정 기록 참조(확인 완료 2026-08-06)
 - **notification**: `Notification`(recipientId·type·refType·refId·message·read·createdAt)
 - **common**: `AuditLog`(entityType·entityId·action·actorId·source{WEB,MCP}·before·after·**projectId(nullable)**, append-only) · `CommonCode`
   - `projectId`는 프로젝트 스코프 이벤트(프로젝트 CRUD·상태 전이·진행률·배정·역할·권한 커스텀)에만 채운다 — 배정·역할처럼 entityId가 프로젝트가 아닌 행을 프로젝트별로 필터하기 위한 참조 컬럼(US-G2, 2026-08-06). 조직·계정 변경(E1·E2·H1)은 null. **저장은 이 테이블 하나뿐** — 프로젝트별 로그를 이중 기록하지 않는다(통합로그와 프로젝트 이력은 같은 행의 두 조회 뷰)
@@ -134,6 +146,7 @@
 - **역방향 전이 금지**(불변식). 유일한 예외 = **재개**(완료→진행중, `POST /reopen` — US-A7). `PUT /projects/{id}`로는 어떤 역방향도 불가(A5-2 유지) — 완료·재개·이관은 전용 경로로만. 유지보수중에서는 재개 불가.
 - 모든 전이 AuditLog `STATE_CHANGE`.
 - 시드 status 분포는 4단계(완료 319·진행중 34·수주확정 19·계약대기 10) — "유지보수중"은 운영 중 이관으로만 생성.
+- **phase(탭) = status 파생 그룹** (2026-08-06): 영업={계약대기,수주확정} · 솔루션={진행중,완료}. 저장 컬럼이 아니라 서버 단일 정의의 파생값(원본 이중화 금지) — 목록 `?phase=` 필터 + 단건 응답 파생 필드(§7). 유지보수 탭은 프로젝트가 아닌 `MaintenanceContract` 목록(§4)이 원천 — status=유지보수중 프로젝트의 화면 노출은 연결된 계약이 담당한다.
 
 ## 6. 기능 요구사항 — 유저스토리 + 수용기준(AC)
 
@@ -219,15 +232,29 @@
 - C1-4 Given 배정 변경 Then 커밋 후 2초 내 가동률 조회 API에 반영 — 이벤트 재계산 완료 기준, 통합 테스트로 검증
 - C1-5 Given `billable=false` 인원 When 팀·부문·전사 집계 또는 `overbooked` 목록 조회 Then 모집단에서 제외 — 개인 지정 조회(personId)는 billable 무관 (상위 PRD §3 · 2026-08-06)
 
-### EPIC D · 유지보수
+### EPIC D · 유지보수 (2026-08-06 재설계 — 계약/사이트/이슈. 권한·가시성 규칙은 상위 PRD §4-2·§4-3 참조)
 
 **US-D1 완료 프로젝트를 유지보수로 이관한다** [PM]
-- D1-1 Given status=완료 When `POST /handover` Then Maintenance+초기Log+상태전이 **한 트랜잭션**, 커밋 후 `MaintenanceHandedOver`
+- D1-1 Given status=완료·계약 필수 정보(계약명·기간·금액·사이트 1개 이상, 각 사이트 **engineerId**) When `POST /handover` Then `201` — Contract+Site 생성+상태전이(완료→유지보수중) **한 트랜잭션**, 커밋 후 `MaintenanceHandedOver`. 필수값을 이관 시점에 받으므로 "유지보수중인데 계약 정보 없는 프로젝트"는 원천적으로 못 생긴다
 - D1-2 Given status≠완료 When 이관 Then `409 NOT_COMPLETED`, 아무것도 안 바뀜(원자성)
+- D1-3 Given 계약 필수 정보 누락 When 이관 Then `400 VALIDATION_ERROR`, 아무것도 안 바뀜 — 상태 전이도 미발생
 
-**US-D2 유지보수 이력을 등록/조회한다** [등록: PM / 조회: 가시성 범위]
-- D2-1 When `POST /maintenances/{id}/logs` Then `201`, append-only
-- D2-2 Given 기존 로그 When 수정/삭제 Then 불가(API 없음), 보정은 새 로그로만
+**US-D2 유지보수 계약을 직접 등록·수정한다** [orgRole: TEAM_LEAD·DIVISION_HEAD·ADMIN] (v2.4 신설 — OEM 채널 계약은 원천 프로젝트가 없다)
+- D2-1 When `POST /api/maintenance/contracts` (sourceProjectId 없이) Then `201` + AuditLog CREATE — 이관과 직접 등록, 입구 2개
+- D2-2 When `PUT /api/maintenance/contracts/{id}` (`version` 포함) Then `200` + AuditLog UPDATE. **삭제 API 없음** — 계약 종료는 상태{종료}로 (연 단위 갱신 이력 보존)
+- D2-3 Given orgRole=MEMBER When 계약·사이트·연락처 등록/수정 Then `403` — 계약은 프로젝트 밖 행위라 orgRole이 판정한다(상위 PRD §4-3, 프로젝트 생성과 동일 열거)
+- D2-4 When `POST /contracts/{id}/sites` · `PUT /sites/{id}` (engineerId·연락처 포함) Then 계약과 동일 권한 + AuditLog
+
+**US-D3 유지보수 이슈를 등록·처리한다** [로그인 사용자 전체] (v2.4 신설 — 구 이슈 게시판 대체)
+- D3-1 When `POST /api/maintenance/issues {siteId, type, 제목}` Then `201` · **assigneeId 기본값 = 해당 사이트 engineerId** · 담당자에게 알림(`MaintenanceIssueRegistered` — §8)
+- D3-2 When `PATCH /api/maintenance/issues/{id}` (상태·담당 재배정, `version`) Then `200` + AuditLog — 상태 흐름 접수→처리중→고객확인대기(선택)→완료, 완료 시 완료일 기록. 역방향은 재개(완료→처리중)만 허용
+- D3-3 When `POST /issues/{id}/comments` Then `201` **append-only** — 수정·삭제 API 없음, 보정은 새 코멘트로만(구 MaintenanceLog 불변식 계승)
+- D3-4 When `GET /api/maintenance/issues?status=&assigneeId=&siteId=&contractId=` Then page 봉투 — **미배정(assigneeId=null) 필터 포함**, "내 담당 열린 이슈"가 조회 한 번에 나와야 한다
+
+**US-D4 유지보수를 조회한다** [로그인 사용자 전체]
+- D4-1 When `GET /api/maintenance/contracts?status=&계약사=&종료일=` Then page 봉투 — 유지보수 탭의 원천(시트 대체)
+- D4-2 When `GET /api/maintenance/contracts/{id}` Then 계약 + 사이트 목록(engineerId) + 연락처 + 이슈 요약 · 원 프로젝트 링크(sourceProjectId nullable)
+- D4-3 유지보수 조회는 **전사(로그인 사용자 전체)** — 조직 가시성 미적용·404 은닉 없음. 시트·게시판 현행 계승: 계약·이슈는 팀 경계 없는 회사 공용 자산 (게이트 P에서 확인)
 
 ### EPIC E · 조직 · 사용자 관리
 
@@ -301,6 +328,7 @@
 
 ```
 GET/POST    /api/projects              GET/PUT/DELETE /api/projects/{id}
+            # 목록 ?phase=SALES|SOLUTION (status 파생 필터 — §5) · 단건 응답에 파생 필드 phase 포함 (v2.4)
 PUT         /api/projects/{id}/progress        # 2단계: confirmed=false 요약 → true 커밋 (US-A2)
 PUT         /api/projects/{id}/pm                  # PM 교체 (US-A6 A6-1)
 PUT         /api/projects/{id}/roles               # 프로젝트 역할 지정·해제 {personId, role} (US-A6 A6-3)
@@ -310,8 +338,11 @@ POST        /api/projects/{id}/complete            # 완료 처리 {version} —
 POST        /api/projects/{id}/reopen              # 재개 {version} — 완료→진행중, progress=90 (US-A7)
 GET/POST    /api/projects/{id}/assignments     PUT/DELETE /api/assignments/{id}
 GET         /api/utilization?month=&personId=&teamId=&overbooked=
-POST        /api/projects/{id}/handover
-GET/POST    /api/maintenances/{id}/logs        # 프로토타입의 /api/maintenance/{id}는 재연동 시 이 경로로 통일 (2026-08-02)
+POST        /api/projects/{id}/handover        # 계약 필수 정보 포함 — Contract+Site 생성 (US-D1, v2.4)
+GET/POST    /api/maintenance/contracts         GET/PUT /api/maintenance/contracts/{id}    # US-D2·D4
+GET/POST    /api/maintenance/contracts/{id}/sites    PUT /api/maintenance/sites/{id}      # 사이트·담당 엔지니어 (D2-4)
+GET/POST    /api/maintenance/issues            PATCH /api/maintenance/issues/{id}         # US-D3 — 구 /maintenances/{id}/logs 대체 (MCP list_maintenance_logs 접점: 확인 완료 2026-08-06)
+POST        /api/maintenance/issues/{id}/comments    # append-only (D3-3)
 GET/POST    /api/people    PUT/DELETE /api/people/{id}    PUT /api/people/{id}/team
 GET /api/teams    GET /api/grades    GET /api/audit (ADMIN)
 GET /api/me    GET /api/me/account    PUT /api/me/profile    PUT /api/me/password    PUT /api/me/notif-prefs
@@ -333,7 +364,8 @@ POST /api/chat    POST /api/chat/feedback        # chat BFF — AI 호스트 프
 | `OverbookingDetected` | resource | notification | 팀장 알림 |
 | `ProjectCompleted` | project | notification | 완료/이관 안내 (발행 시점: `/complete` 커밋 후 — US-A7) |
 | `ProjectReopened` | project | notification | 완료 지연 알림 회수 (F3-3) |
-| `MaintenanceHandedOver` | maintenance | notification | 초기 이력·알림 |
+| `MaintenanceHandedOver` | maintenance | notification | 이관 완료 알림 (D1-1 — 계약·사이트 생성은 동기·원자적, 알림만 fan-out) |
+| `MaintenanceIssueRegistered` | maintenance | notification | 이슈 담당자(assigneeId)에게 알림 (D3-1 — "누가 뭘 담당하는지" 고통의 직접 해소) |
 
 발행=트랜잭션 커밋 후(`AFTER_COMMIT`) · 신뢰성=Modulith Event Publication Registry 재시도 · 재계산 멱등.
 
@@ -372,12 +404,14 @@ POST /api/chat    POST /api/chat/feedback        # chat BFF — AI 호스트 프
 | `/` | 홈 대시보드 | 내 프로젝트·가동률 요약·최근 알림 (프로토타입 구성 승격) | 로그인 사용자 |
 | `/people` | 인력 | 인원 목록(팀 필터·검색) · 상세(참여 프로젝트·가동률) | 가시성 범위 |
 | `/settings` | 설정 | (ADMIN) 감사로그 조회(G1-3)·사용자 관리(US-E2). 조직 트리·직급·권한 편집 탭은 백엔드 엔티티 없음 — 프로토타입처럼 로컬 데모 표기 유지(채택 여부 2차 검토) | ADMIN |
-| `/projects` | 프로젝트 목록 | 상태·제품군(solution) 필터 · 이름 검색 · 페이지네이션 · (생성 권한자) 등록 버튼 | 가시성 범위 |
+| `/projects` | 프로젝트 목록 | **phase 탭(영업/솔루션 — status 파생, v2.4)** · 상태·제품군(solution) 필터 · 이름 검색 · 페이지네이션 · (생성 권한자) 등록 버튼 · 완료 건은 "이관 대기" 뱃지(솔루션 탭 잔류) | 가시성 범위 |
 | `/projects/new` | 프로젝트 등록 | 입력 항목 폼 + 참여자별 role(**PM/PL/참여자**) 선택, PM 1명 필수 · 422/409 오류 표시 | orgRole: TEAM_LEAD·DIVISION_HEAD·ADMIN |
 | `/projects/:id` | 프로젝트 상세 | 기본정보 · 상태 뱃지 · 진행률(권한 시 수정) · 배정 목록(**역할 뱃지 PM/PL/참여자**) · lastEditedBy/At · (PM) PM 교체·PL 지정 UI · (배정 인원, 100% 시) **완료 처리 버튼** · (배정 인원, 완료 시) **재개 버튼**(US-A7) · (PM, 완료 시) 이관 버튼 · (PM) **권한 패널**(역할×기능 토글 매트릭스 — US-A8. 고정 셀은 잠금 표시, 기본값과 다른 셀은 커스텀 뱃지, **기본값 복원** 버튼. 완료·재개는 한 토글) · **이력 탭**(프로젝트 스코프 변경 이력 — US-G2, 가시성 범위 전체. lastEditedBy/At의 상세판) | 가시성 범위 |
 | 〃 배정 패널 | 인력 배정 | 배정 추가(사람 검색→기간·월별 M/M) · 종료 처리 · 409 표시 — 프로토타입의 월별 upsert UI는 기간 모델 API(§7)로 재연동 시 조정(2026-08-02 기간 모델 확정) | PM(§6 태그 규칙 — ADMIN 치환 포함) |
 | `/utilization` | 가동률 대시보드 | 월 선택 · 팀 필터 · 기본/보정 표 · 과부하(보정>100%) 강조 · 과부하만 보기 | 가시성 범위 |
-| `/maintenance/:id` | 유지보수 상세 | 계약 정보(원프로젝트 링크) · 이력 목록(type 필터) · (PM) 이력 추가 | 가시성 범위 |
+| `/maintenance` | 유지보수 계약 목록 (탭 원천) | 상태·계약사·종료일 필터 · (등록 권한자) 계약 등록 버튼 — 시트 대체 (v2.4) | 로그인 사용자(전사 — D4-3) |
+| `/maintenance/contracts/:id` | 계약 상세 | 계약 정보(원 프로젝트 링크, 없으면 미표시) · 사이트 목록(솔루션 버전·서버스펙·**담당 엔지니어**) · 연락처 · 이슈 이력 | 로그인 사용자(전사) |
+| `/maintenance/issues` | 이슈 목록 | 상태별 뷰(접수/처리중/대기/완료) · **담당자·고객사 컬럼 상시 노출** · 미배정/내 담당 필터 · 이슈 등록 — 구 게시판 대체 (v2.4) | 로그인 사용자(전사) |
 | 공통 헤더 | 알림 뱃지 | 미읽음 수 — **SSE 즉시 갱신**(⑥, 프로토타입의 구독 로직 재사용), 재연결 시 미읽음 재조회 · 클릭 시 목록·읽음 처리 | 로그인 사용자 |
 
 **공통 UI 규칙**: 모든 목록은 로딩/빈/에러 3상태 · `409 STALE_VERSION` 수신 시 "OO님이 먼저 수정했습니다. 최신 내용을 불러올까요?" → 확인 시 재조회(reload-and-retry) · 권한 없는 버튼은 렌더링하지 않되 서버 403 처리는 항상 존재.
@@ -397,7 +431,7 @@ POST /api/chat    POST /api/chat/feedback        # chat BFF — AI 호스트 프
 - 배정의 **role** — **확정(2026-08-03)**: `managerId` → `role=PM`(382건 전부, 누락 0건), 나머지 `assigneeIds` → `role=PARTICIPANT`. **`role=PL`은 아무도 지정하지 않는다** — 시드에 근거 데이터가 없어 임의 지정 금지. 필요 시 진행중 34건 중 참여자 2명 이상인 9건에 한해 수동 지정
 - `Capacity`(월별 가용 MM) — 기본 1.0 적재로 시작
 - `Person.billable` — **플래그는 확정(2026-08-06, 상위 PRD §3)**: 대표(신현랑)와 프로젝트 미수행 지원조직(영업·기획마케팅·경영관리 등)을 false로 적재. **구체 팀 목록은 월별 M/M 부여 규칙과 함께 확정**(12장, PMS-M1 전 — 시드 실측: 진행중 배정 인원 18/44)
-- 유지보수(`Maintenance`/`MaintenanceLog`) 데이터 — 이관 시연용 완료 프로젝트 1건 지정 + 데모 이력 필요 (12장, PMS-M1 전 결정)
+- 유지보수 데이터 — **확정(2026-08-06)**: "2026년 기술지원 및 유지보수" 시트 실데이터를 그대로 적재(**마스킹 없음** — 연락처는 이 시스템이 관리할 운영 데이터 그 자체이고 사내 리포). 계약 단위 행 그대로(가온아이 1계약 ~45사이트 포함) → Contract/Site/Contact 분해. 시트→JSON 변환·사이트별 engineerId 부여(시드 인물 매핑)는 적재 시 작업(12장). 이관 시연용 완료 프로젝트 1건 지정은 유지(PMS-M1 전)
 
 **검증 케이스**:
 - 가동률 단위테스트는 고정값: 배정 0.5+0.7, 가용 1.0, coeff 1.2(책임) → 기본 120% / 보정 100% (AC C1-2)
@@ -407,14 +441,15 @@ POST /api/chat    POST /api/chat/feedback        # chat BFF — AI 호스트 프
 
 **에이전트는 임의 구현하지 말고 질문할 것**
 - ~~**권한 모델 재기술 (pms 담당 결정)**~~ — 2026-08-03 결정 완료(합집합 판정 + PM/PL/참여자 3단, 상위 `PRD.md` §4 재작성 · PROGRESS 결정 기록). ~~MCP 담당 확인 대기~~ — 2026-08-03 확인 완료(PROGRESS 결정 기록)
-- ~~**가동률 집계 대상(구 "HQ 제외 여부")**~~ — 2026-08-06 해소: `Person.billable` 플래그(상위 PRD §3·C1-5·부록 B). **MCP 담당 확인 대기**(공용 §3 변경)
+- ~~**가동률 집계 대상(구 "HQ 제외 여부")**~~ — 2026-08-06 해소: `Person.billable` 플래그(상위 PRD §3·C1-5·부록 B). ~~MCP 담당 확인 대기~~ — 2026-08-06 확인 완료(결정 기록)
 - ~~**PL 복수 허용 여부**~~ — 2026-08-06 허용 확정(실무 확인: 다부문 프로젝트에 파트별 리드 실존). A1-7·A6-7 `MULTIPLE_PL` 삭제
 - ~~가동률 캐시 테이블~~ — 2026-08-06 미도입 확정(매 조회 계산 — 44명 규모, 성능 고통 시 재론)
 - ~~마감 임박 알림 D-N 값~~ — 2026-08-06 **N=7** 확정(F2-1)
 - ~~JWT 만료·refresh 정책~~ — 2026-08-06 확정: access 1h · refresh 14일 회전(§7)
 - ~~403 에러코드 명칭~~ — 2026-08-06 `FORBIDDEN`으로 개명(프로토타입 미사용 확인 — 에러코드 분기 자체가 없음)
 - ~~설정 화면 편집 탭 백엔드 승격~~ — 2026-08-06 승격 안 함 확정(로컬 데모 유지 — E1·E2가 실운영 수요 커버, 필요 시 재론)
-- 시드 적재 정책 잔여 — 배정 월별 M/M 부여 규칙 · 유지보수 데모 데이터 · **billable=false 팀 목록**(부록 B. 계정 규칙은 2026-08-02, billable 플래그는 2026-08-06 확정)
+- ~~유지보수 데모 데이터~~ — 2026-08-06 해소: 시트 실데이터 적재 확정(부록 B). 함께 구 미해결 "프로젝트:Maintenance 1:1 vs 1:N"도 해소 — 프로젝트:계약 1:1(이관) + 프로젝트 없는 계약 존재 → `list_maintenance_logs`의 projectId 단순화 불가 (~~MCP 담당 확인 대기~~ — 2026-08-06 확인 완료, 유지보수 재설계 결정 기록)
+- 시드 적재 정책 잔여 — 배정 월별 M/M 부여 규칙 · **billable=false 팀 목록** · 유지보수 시트→JSON 변환 + 사이트별 engineerId 매핑(부록 B. 계정 규칙은 2026-08-02, billable 플래그는 2026-08-06 확정)
 - ~~(2차) MCP 챗봇 PAT 검증 지점~~ → v3에서 M0로 승격: `/mcp` 인증 체인(토큰 패스스루·audience)은 루트 ROADMAP M0 + 구현 노트 소유. 이 문서는 접점(애플리케이션 서비스 계약)만 가진다
 
 ---

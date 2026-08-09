@@ -1,0 +1,442 @@
+[
+ {
+  "id": 1,
+  "name": "신현랑",
+  "grade": "대표이사",
+  "email": "mgecul13@proten.co.kr",
+  "team": "프로텐",
+  "division": "프로텐",
+  "orgRole": "ADMIN",
+  "gradeCoeff": 2.0
+ },
+ {
+  "id": 2,
+  "name": "엄다움",
+  "grade": "상무",
+  "email": "yonl@proten.co.kr",
+  "team": "AI기술연구소",
+  "division": "AI기술연구소",
+  "orgRole": "DIVISION_HEAD",
+  "gradeCoeff": 1.7
+ },
+ {
+  "id": 3,
+  "name": "서세움",
+  "grade": "수석",
+  "email": "vtmepd@proten.co.kr",
+  "team": "AI팀",
+  "division": "AI기술연구소",
+  "orgRole": "TEAM_LEAD",
+  "gradeCoeff": 1.5
+ },
+ {
+  "id": 4,
+  "name": "서지람",
+  "grade": "수석",
+  "email": "jcgapd7@proten.co.kr",
+  "team": "AI팀",
+  "division": "AI기술연구소",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 1.5
+ },
+ {
+  "id": 5,
+  "name": "성다아",
+  "grade": "주임",
+  "email": "ossv27@proten.co.kr",
+  "team": "AI팀",
+  "division": "AI기술연구소",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 0.8
+ },
+ {
+  "id": 6,
+  "name": "전윤율",
+  "grade": "주임",
+  "email": "famy37@proten.co.kr",
+  "team": "AI팀",
+  "division": "AI기술연구소",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 0.8
+ },
+ {
+  "id": 7,
+  "name": "손윤린",
+  "grade": "이사",
+  "email": "lrfmaoy17@proten.co.kr",
+  "team": "AX기술연구소",
+  "division": "AX기술연구소",
+  "orgRole": "DIVISION_HEAD",
+  "gradeCoeff": 1.6
+ },
+ {
+  "id": 8,
+  "name": "차유랑",
+  "grade": "책임",
+  "email": "whrje@proten.co.kr",
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "orgRole": "TEAM_LEAD",
+  "gradeCoeff": 1.2
+ },
+ {
+  "id": 9,
+  "name": "류세빈",
+  "grade": "주임",
+  "email": "ewckgj27@proten.co.kr",
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 0.8
+ },
+ {
+  "id": 10,
+  "name": "허유윤",
+  "grade": "주임",
+  "email": "kllet@proten.co.kr",
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 0.8
+ },
+ {
+  "id": 11,
+  "name": "손도린",
+  "grade": "주임",
+  "email": "rnxnxbp91@proten.co.kr",
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 0.8
+ },
+ {
+  "id": 12,
+  "name": "류은솔",
+  "grade": "주임",
+  "email": "ivynbmi42@proten.co.kr",
+  "team": "AX개발팀",
+  "division": "AX기술연구소",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 0.8
+ },
+ {
+  "id": 13,
+  "name": "정태휘",
+  "grade": "이사",
+  "email": "ozuhnww23@proten.co.kr",
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "orgRole": "DIVISION_HEAD",
+  "gradeCoeff": 1.6
+ },
+ {
+  "id": 14,
+  "name": "권태휘",
+  "grade": "책임",
+  "email": "fwonjj35@proten.co.kr",
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 1.2
+ },
+ {
+  "id": 15,
+  "name": "임채움",
+  "grade": "수습",
+  "email": "ykmqnmz@proten.co.kr",
+  "team": "AX솔루션사업부",
+  "division": "AX솔루션사업부",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 0.5
+ },
+ {
+  "id": 16,
+  "name": "남도린",
+  "grade": "수석",
+  "email": "nrnhnnv26@proten.co.kr",
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "orgRole": "TEAM_LEAD",
+  "gradeCoeff": 1.5
+ },
+ {
+  "id": 17,
+  "name": "남민준",
+  "grade": "선임",
+  "email": "nkfqab23@proten.co.kr",
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 1.0
+ },
+ {
+  "id": 18,
+  "name": "전세아",
+  "grade": "주임",
+  "email": "gfxq62@proten.co.kr",
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 0.8
+ },
+ {
+  "id": 19,
+  "name": "조예아",
+  "grade": "주임",
+  "email": "kzvk@proten.co.kr",
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 0.8
+ },
+ {
+  "id": 20,
+  "name": "허하결",
+  "grade": "주임",
+  "email": "nsknipp71@proten.co.kr",
+  "team": "AX솔루션개발1팀",
+  "division": "AX솔루션사업부",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 0.8
+ },
+ {
+  "id": 21,
+  "name": "곽서호",
+  "grade": "선임",
+  "email": "vmugaxc@proten.co.kr",
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "orgRole": "TEAM_LEAD",
+  "gradeCoeff": 1.0
+ },
+ {
+  "id": 22,
+  "name": "홍현빈",
+  "grade": "주임",
+  "email": "gcfp@proten.co.kr",
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 0.8
+ },
+ {
+  "id": 23,
+  "name": "양시온",
+  "grade": "주임",
+  "email": "ezrc74@proten.co.kr",
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 0.8
+ },
+ {
+  "id": 24,
+  "name": "신승연",
+  "grade": "주임",
+  "email": "ryeru@proten.co.kr",
+  "team": "AX솔루션개발2팀",
+  "division": "AX솔루션사업부",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 0.8
+ },
+ {
+  "id": 25,
+  "name": "박건랑",
+  "grade": "선임",
+  "email": "perdvtu55@proten.co.kr",
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "orgRole": "TEAM_LEAD",
+  "gradeCoeff": 1.0
+ },
+ {
+  "id": 26,
+  "name": "노도온",
+  "grade": "선임",
+  "email": "mtld53@proten.co.kr",
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 1.0
+ },
+ {
+  "id": 27,
+  "name": "한은율",
+  "grade": "주임",
+  "email": "ycgxwz49@proten.co.kr",
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 0.8
+ },
+ {
+  "id": 28,
+  "name": "송수람",
+  "grade": "주임",
+  "email": "yfprepu39@proten.co.kr",
+  "team": "CS사업팀",
+  "division": "AX솔루션사업부",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 0.8
+ },
+ {
+  "id": 29,
+  "name": "송현솔",
+  "grade": "이사",
+  "email": "cqbjkcs@proten.co.kr",
+  "team": "AX사업기획부",
+  "division": "AX사업기획부",
+  "orgRole": "DIVISION_HEAD",
+  "gradeCoeff": 1.6
+ },
+ {
+  "id": 30,
+  "name": "윤승안",
+  "grade": "선임",
+  "email": "npit@proten.co.kr",
+  "team": "AX영업팀",
+  "division": "AX사업기획부",
+  "orgRole": "TEAM_LEAD",
+  "gradeCoeff": 1.0
+ },
+ {
+  "id": 31,
+  "name": "박민움",
+  "grade": "주임",
+  "email": "mvel8@proten.co.kr",
+  "team": "AX영업팀",
+  "division": "AX사업기획부",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 0.8
+ },
+ {
+  "id": 32,
+  "name": "허은아",
+  "grade": "수석",
+  "email": "ntpyp@proten.co.kr",
+  "team": "AX기획마케팅팀",
+  "division": "AX사업기획부",
+  "orgRole": "TEAM_LEAD",
+  "gradeCoeff": 1.5
+ },
+ {
+  "id": 33,
+  "name": "문시린",
+  "grade": "선임",
+  "email": "akah92@proten.co.kr",
+  "team": "AX기획마케팅팀",
+  "division": "AX사업기획부",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 1.0
+ },
+ {
+  "id": 34,
+  "name": "정서솔",
+  "grade": "주임",
+  "email": "qejjcra@proten.co.kr",
+  "team": "AX기획마케팅팀",
+  "division": "AX사업기획부",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 0.8
+ },
+ {
+  "id": 35,
+  "name": "윤건휘",
+  "grade": "상무",
+  "email": "dbmwmy5@proten.co.kr",
+  "team": "MOIN개발팀",
+  "division": "MS사업부",
+  "orgRole": "TEAM_LEAD",
+  "gradeCoeff": 1.7
+ },
+ {
+  "id": 36,
+  "name": "서은랑",
+  "grade": "이사",
+  "email": "rnemvxd@proten.co.kr",
+  "team": "MOIN개발팀",
+  "division": "MS사업부",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 1.6
+ },
+ {
+  "id": 37,
+  "name": "전서아",
+  "grade": "수석",
+  "email": "kmvg@proten.co.kr",
+  "team": "MOIN개발팀",
+  "division": "MS사업부",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 1.5
+ },
+ {
+  "id": 38,
+  "name": "성하온",
+  "grade": "이사",
+  "email": "nbdbikr@proten.co.kr",
+  "team": "MS솔루션팀",
+  "division": "MS사업부",
+  "orgRole": "TEAM_LEAD",
+  "gradeCoeff": 1.6
+ },
+ {
+  "id": 39,
+  "name": "임재후",
+  "grade": "책임",
+  "email": "ddjrxzg@proten.co.kr",
+  "team": "MS솔루션팀",
+  "division": "MS사업부",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 1.2
+ },
+ {
+  "id": 40,
+  "name": "임하영",
+  "grade": "수석",
+  "email": "xbtqq@proten.co.kr",
+  "team": "MS개발팀",
+  "division": "MS사업부",
+  "orgRole": "TEAM_LEAD",
+  "gradeCoeff": 1.5
+ },
+ {
+  "id": 41,
+  "name": "엄주준",
+  "grade": "주임",
+  "email": "bmyhmd13@proten.co.kr",
+  "team": "MS개발팀",
+  "division": "MS사업부",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 0.8
+ },
+ {
+  "id": 42,
+  "name": "유승온",
+  "grade": "부사장",
+  "email": "hhsvog97@proten.co.kr",
+  "team": "관리•마케팅부",
+  "division": "관리•마케팅부",
+  "orgRole": "DIVISION_HEAD",
+  "gradeCoeff": 1.8
+ },
+ {
+  "id": 43,
+  "name": "장윤휘",
+  "grade": "수석",
+  "email": "hzvsqv46@proten.co.kr",
+  "team": "경영관리팀",
+  "division": "관리•마케팅부",
+  "orgRole": "TEAM_LEAD",
+  "gradeCoeff": 1.5
+ },
+ {
+  "id": 44,
+  "name": "엄다람",
+  "grade": "선임",
+  "email": "iiahzla@proten.co.kr",
+  "team": "경영관리팀",
+  "division": "관리•마케팅부",
+  "orgRole": "MEMBER",
+  "gradeCoeff": 1.0
+ }
+]
