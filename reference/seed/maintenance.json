@@ -1,0 +1,3120 @@
+{
+ "contracts": [
+  {
+   "id": 1,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜가온아이",
+   "name": "그룹웨어 유지보수",
+   "status": "유지",
+   "contractDate": "2026-01-01",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 61320000,
+   "monthlyAmount": 5110000,
+   "salesRep": "박재완",
+   "clientRep": "이효섭 이사",
+   "targetInfra": "그룹웨어",
+   "serverSpec": "태광그룹- 1번서버 CPU:2core , jvm Memory:14/32g",
+   "sites": [
+    {
+     "name": "국가생명윤리정책원",
+     "channel": "OEM",
+     "engineerId": 26
+    },
+    {
+     "name": "인제대학교병원",
+     "channel": "OEM",
+     "engineerId": 27
+    },
+    {
+     "name": "가천대길병원",
+     "channel": "OEM",
+     "engineerId": 28
+    },
+    {
+     "name": "제주대학교병원",
+     "channel": "OEM",
+     "engineerId": 26
+    },
+    {
+     "name": "전주예수병원",
+     "channel": "OEM",
+     "engineerId": 27
+    },
+    {
+     "name": "한양대학교의료원",
+     "channel": "OEM",
+     "engineerId": 28
+    },
+    {
+     "name": "동국대학교의료원",
+     "channel": "OEM",
+     "engineerId": 26
+    },
+    {
+     "name": "매그너칩반도체",
+     "channel": "OEM",
+     "engineerId": 27
+    },
+    {
+     "name": "ABL생명",
+     "channel": "OEM",
+     "engineerId": 28
+    },
+    {
+     "name": "한국우편사업진흥원",
+     "channel": "OEM",
+     "engineerId": 26
+    },
+    {
+     "name": "강남대학교",
+     "channel": "OEM",
+     "engineerId": 27
+    },
+    {
+     "name": "경일대학교",
+     "channel": "OEM",
+     "engineerId": 28
+    },
+    {
+     "name": "에스에프씨",
+     "channel": "OEM",
+     "engineerId": 26
+    },
+    {
+     "name": "솔루션첨단소재",
+     "channel": "OEM",
+     "engineerId": 27
+    },
+    {
+     "name": "지엠비코리아",
+     "channel": "OEM",
+     "engineerId": 28
+    },
+    {
+     "name": "범우연합",
+     "channel": "OEM",
+     "engineerId": 26
+    },
+    {
+     "name": "현대차증권",
+     "channel": "OEM",
+     "engineerId": 27
+    },
+    {
+     "name": "경기대학교",
+     "channel": "OEM",
+     "engineerId": 28
+    },
+    {
+     "name": "에스텍",
+     "channel": "OEM",
+     "engineerId": 26
+    },
+    {
+     "name": "백석예술대학교",
+     "channel": "OEM",
+     "engineerId": 27
+    },
+    {
+     "name": "계명대 동산의료원",
+     "channel": "OEM",
+     "engineerId": 28
+    },
+    {
+     "name": "홍익대학교",
+     "channel": "OEM",
+     "engineerId": 26
+    },
+    {
+     "name": "한림성심대학교",
+     "channel": "OEM",
+     "engineerId": 27
+    },
+    {
+     "name": "오산대학교",
+     "channel": "OEM",
+     "engineerId": 28
+    },
+    {
+     "name": "네오트랜시스",
+     "channel": "OEM",
+     "engineerId": 26
+    },
+    {
+     "name": "공항철도",
+     "channel": "OEM",
+     "engineerId": 27
+    },
+    {
+     "name": "OCI그룹",
+     "channel": "OEM",
+     "engineerId": 28
+    },
+    {
+     "name": "SGC그룹",
+     "channel": "OEM",
+     "engineerId": 26
+    },
+    {
+     "name": "OCI말레이시아그룹",
+     "channel": "OEM",
+     "engineerId": 27
+    },
+    {
+     "name": "유니온그룹",
+     "channel": "OEM",
+     "engineerId": 28
+    },
+    {
+     "name": "TKG태광그룹",
+     "channel": "OEM",
+     "engineerId": 26
+    },
+    {
+     "name": "유니드그룹",
+     "channel": "OEM",
+     "engineerId": 27
+    },
+    {
+     "name": "소니코리아",
+     "channel": "OEM",
+     "engineerId": 28
+    },
+    {
+     "name": "한국에너지공단",
+     "channel": "OEM",
+     "engineerId": 26
+    },
+    {
+     "name": "인도네시아 프라따마그룹",
+     "channel": "OEM",
+     "engineerId": 27
+    },
+    {
+     "name": "한국토지신탁",
+     "channel": "OEM",
+     "engineerId": 28
+    },
+    {
+     "name": "SECO",
+     "channel": "OEM",
+     "engineerId": 26
+    },
+    {
+     "name": "정보통신기획평가원",
+     "channel": "OEM",
+     "engineerId": 27
+    },
+    {
+     "name": "HMM",
+     "channel": "ENT",
+     "engineerId": 28
+    },
+    {
+     "name": "교원그룹",
+     "channel": "ENT",
+     "engineerId": 26
+    },
+    {
+     "name": "현대두산인프라코어",
+     "channel": "ENT",
+     "engineerId": 27
+    },
+    {
+     "name": "고려대의료원",
+     "channel": "ENT",
+     "engineerId": 28
+    },
+    {
+     "name": "넥센",
+     "channel": "ENT",
+     "engineerId": 26
+    },
+    {
+     "name": "매일유업",
+     "engineerId": 27
+    },
+    {
+     "name": "저축은행중앙회",
+     "engineerId": 28
+    }
+   ],
+   "contacts": [
+    {
+     "site": "공항철도",
+     "party": "계약사",
+     "contact": "이준혁 사원 02-2140-5773 (wnsgur0718@kaoni.com)"
+    },
+    {
+     "site": "공항철도",
+     "party": "고객사",
+     "contact": "서영은 사원 010-4123-7970 (c240255@arex.or.kr)"
+    },
+    {
+     "site": "TKG태광그룹",
+     "party": "고객사",
+     "contact": "에스에프존 김승윤 차장 010-4849-7117 (ksy@sf-zone.com)"
+    },
+    {
+     "site": "TKG태광그룹",
+     "party": "고객사",
+     "contact": "에스에프존 이희진(원격) 사원 010-8892-9749 (leehj@sf-zone.com)"
+    },
+    {
+     "site": "한국에너지공단",
+     "party": "고객사",
+     "contact": "에스에프존 이희진(원격) 사원 010-8892-9749 (leehj@sf-zone.com)"
+    },
+    {
+     "site": "매그너칩반도체",
+     "party": "계약사",
+     "contact": "043-717-7822"
+    },
+    {
+     "site": "ABL생명",
+     "party": "계약사",
+     "contact": "이광렬 010-6458-2195 (reallee@kaoni.com)"
+    },
+    {
+     "site": "에스에프씨",
+     "party": "계약사",
+     "contact": "심기영 010-9490-9134"
+    },
+    {
+     "site": "한국우편사업진흥원",
+     "party": "계약사",
+     "contact": "오지현 010-4943-1200"
+    },
+    {
+     "site": "한국토지신탁",
+     "party": "계약사",
+     "contact": "장현서 02-2140-5734"
+    },
+    {
+     "site": "범우연합",
+     "party": "계약사",
+     "contact": "오지현 010-4943-1200"
+    },
+    {
+     "site": "가천대길병원",
+     "party": "계약사",
+     "contact": "배영호 (byh23@kaoni.com)"
+    },
+    {
+     "site": "OCI그룹",
+     "party": "계약사",
+     "contact": "고성민 부장 010-4016-1388"
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜비즈웰",
+   "name": "그룹웨어 유지보수",
+   "status": "유지",
+   "contractDate": "2026-01-05",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 6300000,
+   "monthlyAmount": 525000,
+   "salesRep": "김도한",
+   "clientRep": "김형준 이사",
+   "targetInfra": "그룹웨어",
+   "targetSolution": "ProSearch v1.0 OEM",
+   "note": "총 8개 사이트(시트 원문 — 나열은 9개)",
+   "sites": [
+    {
+     "name": "세종대학교",
+     "engineerId": 26
+    },
+    {
+     "name": "한국자금중개",
+     "engineerId": 27
+    },
+    {
+     "name": "동서",
+     "engineerId": 28
+    },
+    {
+     "name": "서울도시철도그린환경",
+     "engineerId": 26
+    },
+    {
+     "name": "한국철강",
+     "engineerId": 27
+    },
+    {
+     "name": "과학기술인공제회",
+     "engineerId": 28
+    },
+    {
+     "name": "KCA손해사정",
+     "engineerId": 26
+    },
+    {
+     "name": "에이앤디신용정보",
+     "engineerId": 27
+    },
+    {
+     "name": "한국결제네트웍스",
+     "engineerId": 28
+    }
+   ],
+   "contacts": [
+    {
+     "site": "한국자금중개",
+     "party": "계약사",
+     "contact": "노광환 070-4616-5045 (hwa36@bizwell.net)"
+    },
+    {
+     "site": "한국자금중개",
+     "party": "고객사",
+     "contact": "박진환 02-3706-8226"
+    },
+    {
+     "site": "에이앤디신용정보",
+     "party": "계약사",
+     "contact": "정일영 과장 070-4616-5026"
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "현대차증권",
+   "name": "리서치 센터 검색",
+   "status": "유지",
+   "contractDate": "2025-12-23",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 7320000,
+   "monthlyAmount": 610000,
+   "salesRep": "김도한",
+   "clientRep": "김성배 매니저",
+   "targetInfra": "검색엔진 3Copy+추천모듈",
+   "targetSolution": "ProSearch v2.0 ENT",
+   "note": "26년 부터 수집기 추가예정",
+   "sites": [
+    {
+     "name": "현대차증권",
+     "engineerId": 26
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜나온소프트",
+   "name": "그룹웨어 구축",
+   "status": "유지",
+   "contractDate": "2026-01-15",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 1320000,
+   "monthlyAmount": 110000,
+   "salesRep": "김도한",
+   "clientRep": "김나영 과장",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v2.0 OEM",
+   "sites": [
+    {
+     "name": "영풍문고",
+     "engineerId": 27
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜나온소프트",
+   "name": "포탈 그룹웨어 구축",
+   "status": "유지",
+   "contractDate": "2026-01-15",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 2160000,
+   "monthlyAmount": 180000,
+   "salesRep": "김도한",
+   "clientRep": "김나영 과장",
+   "targetInfra": "검색엔진 1copy",
+   "targetSolution": "ProSearch v1.0 OEM",
+   "sites": [
+    {
+     "name": "SPC그룹",
+     "engineerId": 28
+    }
+   ],
+   "contacts": [
+    {
+     "party": "계약사",
+     "contact": "박승현 과장 02-6949-2793 (tgrat92@naonsoft.com)"
+    }
+   ]
+  },
+  {
+   "id": 6,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜나온소프트",
+   "name": "포탈 그룹웨어 구축",
+   "status": "유지",
+   "contractDate": "2026-02-06",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 1200000,
+   "monthlyAmount": 100000,
+   "salesRep": "김도한",
+   "clientRep": "김나영 과장",
+   "targetInfra": "검색엔진 1copy",
+   "targetSolution": "ProSearch v1.0 OEM",
+   "sites": [
+    {
+     "name": "대보그룹",
+     "engineerId": 26
+    }
+   ],
+   "contacts": [
+    {
+     "party": "계약사",
+     "contact": "박승현 과장 02-6949-2793 (tgrat92@naonsoft.com)"
+    }
+   ]
+  },
+  {
+   "id": 7,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜나온소프트",
+   "name": "그룹웨어 구축",
+   "status": "유지",
+   "contractDate": "2026-01-15",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 1680000,
+   "monthlyAmount": 140000,
+   "salesRep": "김도한",
+   "clientRep": "김나영 과장",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v1.0 OEM",
+   "sites": [
+    {
+     "name": "우진산전",
+     "engineerId": 27
+    }
+   ]
+  },
+  {
+   "id": 8,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜나온소프트",
+   "name": "그룹웨어 재구축",
+   "status": "유지",
+   "contractDate": "2026-01-15",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 1320000,
+   "monthlyAmount": 110000,
+   "salesRep": "김도한",
+   "clientRep": "김나영 과장",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v2.0 OEM",
+   "sites": [
+    {
+     "name": "한샘그룹",
+     "engineerId": 28
+    }
+   ]
+  },
+  {
+   "id": 9,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜나온소프트",
+   "name": "그룹웨어 구축",
+   "status": "신규",
+   "contractDate": "2026-01-15",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 1320000,
+   "monthlyAmount": 110000,
+   "salesRep": "김도한",
+   "clientRep": "김나영 과장",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v1.0 OEM",
+   "note": "랜섬웨어 감염으로 유지보수 일정 변동",
+   "sites": [
+    {
+     "name": "인선이엔티",
+     "engineerId": 26
+    }
+   ]
+  },
+  {
+   "id": 10,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜나온소프트",
+   "name": "경동도시가스 차세대 플랫폼 사업 그룹웨어 재구축",
+   "status": "예정",
+   "contractDate": "2026-01-15",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 1500000,
+   "monthlyAmount": 125000,
+   "salesRep": "김도한",
+   "clientRep": "박학래상무",
+   "targetInfra": "검색엔진 1copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "OEM",
+   "sites": [
+    {
+     "name": "경동도시가스",
+     "engineerId": 27
+    }
+   ]
+  },
+  {
+   "id": 11,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "아이씨티웨이",
+   "name": "대민용 지도검색 외",
+   "status": "유지",
+   "contractDate": "2026-01-23",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "inspection": "매월 방문",
+   "amount": 13224000,
+   "monthlyAmount": 1102000,
+   "salesRep": "김도한",
+   "clientRep": "이원영 부장",
+   "targetInfra": "검색엔진 5Copy",
+   "targetSolution": "ProSearch v2.0 ENT",
+   "sites": [
+    {
+     "name": "국토교통부",
+     "engineerId": 28
+    }
+   ],
+   "contacts": [
+    {
+     "party": "계약사",
+     "contact": "아이시티웨이 최지성 010-8408-5234 (jschoi@vworld.me)"
+    }
+   ]
+  },
+  {
+   "id": 12,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "롯데이노베이트㈜",
+   "name": "통합 MOIN 내 검색엔진 유지보수",
+   "status": "유지",
+   "contractDate": null,
+   "contractDateNote": "진행중",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 18830400,
+   "monthlyAmount": 1569200,
+   "salesRep": "천용우",
+   "clientRep": "김남규 프로",
+   "targetInfra": "검색엔진 5Copy",
+   "targetSolution": "ProSearch v1.0",
+   "note": "통합 MOIN 내 검색엔진 / 별도 금액으로 책정해서 처리해주기로 함",
+   "sites": [
+    {
+     "name": "DWP",
+     "engineerId": 26
+    }
+   ],
+   "contacts": [
+    {
+     "party": "고객사",
+     "contact": "백종진 수석 010-3404-8508 (jj_baek@lotte.net)"
+    }
+   ]
+  },
+  {
+   "id": 13,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "롯데이노베이트㈜",
+   "name": "MOIN 전자결재시스템 고도화(롯데웰푸드, 롯데렌탈)",
+   "status": "신규",
+   "contractDate": null,
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 1562500,
+   "monthlyAmount": 312500,
+   "salesRep": "박재완",
+   "clientRep": "황인주 책임",
+   "targetInfra": "검색엔진 2Copy",
+   "targetSolution": "ProSearch v2.0 ENT",
+   "note": "통합 MOIN 전자결재 내 검색엔진",
+   "sites": [
+    {
+     "name": "롯데이노베이트",
+     "engineerId": 27
+    }
+   ],
+   "contacts": [
+    {
+     "party": "고객사",
+     "contact": "롯데 황인주 책임 010-4192-1736 (inju.hwang@lotte.net)"
+    }
+   ]
+  },
+  {
+   "id": 14,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "GS EPS",
+   "name": "EDMS 시스템 검색엔진 구축",
+   "status": "유지",
+   "contractDate": "2026-01-06",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 3780000,
+   "monthlyAmount": 315000,
+   "salesRep": "김도한",
+   "clientRep": "이해승 매니저",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v1.0",
+   "note": "납품가(1,800만원)의 15%",
+   "sites": [
+    {
+     "name": "GS EPS",
+     "engineerId": 28
+    }
+   ]
+  },
+  {
+   "id": 15,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "새롬정보시스템",
+   "name": "그룹웨어",
+   "status": "유지",
+   "contractDate": "2026-04-29",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 3096000,
+   "monthlyAmount": 258000,
+   "salesRep": "김도한",
+   "clientRep": "김민규 이사",
+   "targetInfra": "Notes 그룹웨어",
+   "targetSolution": "ProSearch v1.0",
+   "note": "납품가(1,900만원)의 15%, 3% 인상 예정",
+   "sites": [
+    {
+     "name": "SK케미칼",
+     "engineerId": 26
+    }
+   ],
+   "contacts": [
+    {
+     "party": "고객사",
+     "contact": "김영선 매니저 010-3855-9084 (kysno3@partner.sk.com)"
+    }
+   ]
+  },
+  {
+   "id": 16,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "새롬정보시스템",
+   "name": "그룹웨어 구축",
+   "status": "예정",
+   "contractDate": null,
+   "contractDateNote": "진행중",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 2250000,
+   "monthlyAmount": 187500,
+   "salesRep": "김도한",
+   "clientRep": "김민규팀장",
+   "targetInfra": "검색엔진 1copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "Enter",
+   "sites": [
+    {
+     "name": "SK피유코어",
+     "engineerId": 27
+    }
+   ]
+  },
+  {
+   "id": 17,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "문서중앙화 고도화",
+   "status": "유지",
+   "contractDate": "2026-01-07",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 1200000,
+   "monthlyAmount": 100000,
+   "salesRep": "김도한",
+   "clientRep": "백진혁 과장",
+   "targetInfra": "문서중앙화",
+   "targetSolution": "ProSearch v1.0 OEM",
+   "serverSpec": "1번 서버 CPU: 8core , jvm Memorry:30/64g, 400만건(47gb)",
+   "sites": [
+    {
+     "name": "롯데물산",
+     "engineerId": 28
+    }
+   ],
+   "contacts": [
+    {
+     "party": "계약사",
+     "contact": "황예리 010-3460-6089"
+    }
+   ]
+  },
+  {
+   "id": 18,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "문서중앙화시스템",
+   "status": "유지",
+   "contractDate": null,
+   "contractDateNote": "자동연장",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 3480000,
+   "monthlyAmount": 290000,
+   "salesRep": "김도한",
+   "clientRep": "백진혁 과장",
+   "targetInfra": "검색엔진 2Copy(Ent)",
+   "targetSolution": "ProSearch v2.0 ENT",
+   "note": "계산서 일괄 발행",
+   "sites": [
+    {
+     "name": "㈜대동",
+     "engineerId": 26
+    }
+   ],
+   "contacts": [
+    {
+     "party": "계약사",
+     "contact": "사이버다임 노연우 대리 010-4335-3864 (yeonwoo.no@cyberdigm.co.kr)"
+    }
+   ]
+  },
+  {
+   "id": 19,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "문서중앙화시스템 클라우디움",
+   "status": "자동연장",
+   "contractDate": "2026-01-06",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 800000,
+   "monthlyAmount": null,
+   "salesRep": "김도한",
+   "clientRep": "이문기 팀장",
+   "targetInfra": "검색엔진 1copy",
+   "targetSolution": "ProSearch v1.0 OEM",
+   "sites": [
+    {
+     "name": "화승코퍼레이션",
+     "engineerId": 27
+    }
+   ],
+   "contacts": [
+    {
+     "party": "계약사",
+     "contact": "박유진 02-546-4850 (cloudium-tech@cyberdigm.co.kr)"
+    }
+   ]
+  },
+  {
+   "id": 20,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "문서중앙화시스템",
+   "status": "유지",
+   "contractDate": null,
+   "contractDateNote": "진행중",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 1200000,
+   "monthlyAmount": null,
+   "salesRep": "김도한",
+   "clientRep": "복창용 부장",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v2.0 OEM",
+   "sites": [
+    {
+     "name": "프라코",
+     "engineerId": 28
+    }
+   ]
+  },
+  {
+   "id": 21,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "문서중앙화시스템",
+   "status": "유지",
+   "contractDate": "2026-01-27",
+   "startDate": "2026-01-01",
+   "endDate": "2026-06-30",
+   "amount": 1200000,
+   "monthlyAmount": 100000,
+   "salesRep": "김도한",
+   "clientRep": "백진혁 과장",
+   "targetInfra": "검색엔진 1Copy(OEM)",
+   "targetSolution": "ProSearch v2.0 OEM",
+   "serverSpec": "1번서버 CPU:16core , jvm Memory:16/32g",
+   "sites": [
+    {
+     "name": "울산항만공사",
+     "engineerId": 26
+    }
+   ],
+   "contacts": [
+    {
+     "party": "계약사",
+     "contact": "에스이지 길병찬 대리 010-7110-2370 (kbc91@se-g.co.kr)"
+    }
+   ]
+  },
+  {
+   "id": 22,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "문서중앙화시스템",
+   "status": "유지",
+   "contractDate": "2026-03-04",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 1980000,
+   "monthlyAmount": 165000,
+   "salesRep": "김도한",
+   "clientRep": "백진혁 과장",
+   "targetInfra": "검색엔진 1Copy + 개인정보추출",
+   "targetSolution": "ProSearch v2.0 OEM",
+   "sites": [
+    {
+     "name": "대구도시공사",
+     "engineerId": 27
+    }
+   ],
+   "contacts": [
+    {
+     "party": "계약사",
+     "contact": "사이버다임 노연우 대리 010-4335-3864 (yeonwoo.no@cyberdigm.co.kr)"
+    }
+   ]
+  },
+  {
+   "id": 23,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "ECM 구축",
+   "status": "유지",
+   "contractDate": "2026-03-30",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 1200000,
+   "monthlyAmount": 100000,
+   "salesRep": "김도한",
+   "clientRep": "백진혁 과장",
+   "targetInfra": "검색엔진 1copy",
+   "targetSolution": "ProSearch v1.0",
+   "note": "OEM",
+   "sites": [
+    {
+     "name": "LG에너지솔루션",
+     "engineerId": 28
+    }
+   ],
+   "contacts": [
+    {
+     "party": "계약사",
+     "contact": "사이버다임 황예리 사원 02-546-6993 (yeri.hwang@cyberdigm.co.kr)"
+    }
+   ]
+  },
+  {
+   "id": 24,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "아이브릭스 유지보수",
+   "status": "유지",
+   "contractDate": "2026-01-19",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 1200000,
+   "monthlyAmount": 100000,
+   "salesRep": "김도한",
+   "clientRep": "백진혁 과장",
+   "targetInfra": "아이브릭스 제품 유지보수",
+   "targetSolution": "IBricks",
+   "note": "25년부터 연 단위 관리",
+   "sites": [
+    {
+     "name": "경보제약",
+     "engineerId": 26
+    }
+   ]
+  },
+  {
+   "id": 25,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "문서중앙화시스템",
+   "status": "유지",
+   "contractDate": "2025-12-15",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 1200000,
+   "monthlyAmount": 100000,
+   "salesRep": "김도한",
+   "clientRep": "백진혁 과장",
+   "targetInfra": "검색엔진 1Copy(OEM)",
+   "targetSolution": "ProSearch v2.0 OEM",
+   "sites": [
+    {
+     "name": "티씨케이(TCK)",
+     "engineerId": 27
+    }
+   ]
+  },
+  {
+   "id": 26,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "문서중앙화시스템 + 개인정보추출",
+   "status": "유지",
+   "contractDate": "2026-04-01",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 1800000,
+   "monthlyAmount": 150000,
+   "salesRep": "김도한",
+   "clientRep": "김성현 과장",
+   "targetInfra": "검색엔진 1Copy(OEM) + 개인정보추출",
+   "targetSolution": "ProSearch v2.0 OEM",
+   "note": "자동연장 합의",
+   "sites": [
+    {
+     "name": "성신양회",
+     "engineerId": 28
+    }
+   ]
+  },
+  {
+   "id": 27,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "문서중앙화시스템",
+   "status": "유지",
+   "contractDate": "2026-03-24",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 1200000,
+   "monthlyAmount": 100000,
+   "salesRep": "김도한",
+   "clientRep": "김성현 과장",
+   "targetInfra": "검색엔진 1Copy(OEM)",
+   "targetSolution": "ProSearch v2.0 OEM",
+   "sites": [
+    {
+     "name": "쌍용자동차(KG모빌리티)",
+     "engineerId": 26
+    }
+   ]
+  },
+  {
+   "id": 28,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "문서집중화시스템 구축",
+   "status": "신규",
+   "contractDate": "2026-01-21",
+   "startDate": "2026-01-01",
+   "endDate": "2026-10-31",
+   "amount": 1300000,
+   "monthlyAmount": 130000,
+   "salesRep": "김도한",
+   "clientRep": "김성현 과장",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v1.0+Extor",
+   "note": "OEM",
+   "sites": [
+    {
+     "name": "KB자산운용",
+     "engineerId": 27
+    }
+   ]
+  },
+  {
+   "id": 29,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "문서중앙화 구축",
+   "status": "유지",
+   "contractDate": "2026-02-13",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "inspection": "2026-12-31",
+   "amount": 2400000,
+   "monthlyAmount": 200000,
+   "salesRep": "김도한",
+   "clientRep": "송정훈 팀장",
+   "targetInfra": "검색엔진 2Copy",
+   "targetSolution": "ProSearch v1.0 OEM",
+   "sites": [
+    {
+     "name": "금호타이어",
+     "engineerId": 28
+    }
+   ],
+   "contacts": [
+    {
+     "party": "계약사",
+     "contact": "사이버다임 임상욱 부장 02-546-6990 (sangwook.lim@cyberdigm.co.kr)"
+    }
+   ]
+  },
+  {
+   "id": 30,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "아이브릭스 유지보수",
+   "status": "유지",
+   "contractDate": null,
+   "contractDateNote": "진행중",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 1200000,
+   "monthlyAmount": 100000,
+   "salesRep": "김도한",
+   "clientRep": "김동현 팀장",
+   "targetInfra": "아이브릭스 제품 유지보수",
+   "targetSolution": "IBricks",
+   "note": "2025년 부터 110,000",
+   "sites": [
+    {
+     "name": "해양에너지",
+     "engineerId": 26
+    }
+   ]
+  },
+  {
+   "id": 31,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "아이브릭스 유지보수",
+   "status": "유지",
+   "contractDate": null,
+   "contractDateNote": "진행중",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 1200000,
+   "monthlyAmount": 100000,
+   "salesRep": "김도한",
+   "clientRep": "김동현 팀장",
+   "targetInfra": "아이브릭스 제품 유지보수",
+   "targetSolution": "IBricks",
+   "sites": [
+    {
+     "name": "보성그룹(한양)",
+     "engineerId": 27
+    }
+   ]
+  },
+  {
+   "id": 32,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "아이브릭스 유지보수",
+   "status": "유지",
+   "contractDate": null,
+   "contractDateNote": "자동연장",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 1200000,
+   "monthlyAmount": 100000,
+   "salesRep": "김도한",
+   "clientRep": "김동현 팀장",
+   "targetInfra": "아이브릭스 제품 유지보수",
+   "targetSolution": "IBricks",
+   "serverSpec": "1번서버 CPU:6core , jvm Memory:16/32g",
+   "sites": [
+    {
+     "name": "뉴파워프라즈마",
+     "engineerId": 28
+    }
+   ],
+   "contacts": [
+    {
+     "party": "계약사",
+     "contact": "사이버다임 이상훈 대리 02-546-6993 (sanghoon.lee@cyberdigm.co.kr)"
+    }
+   ]
+  },
+  {
+   "id": 33,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "ECM 구축",
+   "status": "신규",
+   "contractDate": "2026-01-29",
+   "startDate": "2026-01-01",
+   "endDate": "2027-12-31",
+   "amount": 2400000,
+   "monthlyAmount": 100000,
+   "salesRep": "김도한",
+   "clientRep": "김동현 팀장",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v1.0 OEM",
+   "sites": [
+    {
+     "name": "과학기술연합대학원대학교",
+     "engineerId": 26
+    }
+   ]
+  },
+  {
+   "id": 34,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "문서중앙화 고도화",
+   "status": "신규",
+   "contractDate": "2026-02-03",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 3000000,
+   "monthlyAmount": 250000,
+   "salesRep": "김도한",
+   "clientRep": "김동현 팀장",
+   "targetInfra": "검색엔진 3Copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "Ent",
+   "sites": [
+    {
+     "name": "E1",
+     "engineerId": 27
+    }
+   ]
+  },
+  {
+   "id": 35,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "클라우디움 구축",
+   "status": "유지",
+   "contractDate": null,
+   "contractDateNote": "자동연장",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 800000,
+   "monthlyAmount": 66667,
+   "salesRep": "김도한",
+   "clientRep": "유하원 주임",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v2.0 클라우디움",
+   "note": "25.06.10 일괄 계산서 발행 / 20%",
+   "sites": [
+    {
+     "name": "대봉엘에스",
+     "engineerId": 28
+    }
+   ]
+  },
+  {
+   "id": 36,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜젠솔소프트",
+   "name": "국회예결위 재정자료관리시스템 개선 구축",
+   "status": "유지",
+   "contractDate": "2026-02-02",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 1500000,
+   "monthlyAmount": 125000,
+   "salesRep": "김도한",
+   "clientRep": "이준희 이사",
+   "targetInfra": "규정관리(검색엔진 1Copy)",
+   "targetSolution": "ProSearch v2.0",
+   "note": "납품가(1,500만원)의 10% / 익월 초 계선서 발행",
+   "sites": [
+    {
+     "name": "국회예결위",
+     "engineerId": 26
+    }
+   ],
+   "contacts": [
+    {
+     "party": "계약사",
+     "contact": "권민성 주임 010-4645-2385 (ddlldll3@gensolsoft.com)"
+    }
+   ]
+  },
+  {
+   "id": 37,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜젠솔소프트",
+   "name": "우리사주 정보관리시스템",
+   "status": "유지",
+   "contractDate": null,
+   "contractDateNote": "자동연장",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 1200000,
+   "monthlyAmount": 100000,
+   "salesRep": "김도한",
+   "clientRep": "이준희 이사",
+   "targetInfra": "검색엔진 1copy",
+   "targetSolution": "ProSearch v2.0 OEM",
+   "sites": [
+    {
+     "name": "한국증권금융",
+     "engineerId": 27
+    }
+   ],
+   "contacts": [
+    {
+     "party": "계약사",
+     "contact": "딜로이트 공지윤 010-3923-5701 (jiyokong@deloitte.com)"
+    }
+   ]
+  },
+  {
+   "id": 38,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜젠솔소프트",
+   "name": "의안비용추계정보시스템 기능 개선 및 고도화 사업",
+   "status": "유지",
+   "contractDate": "2026-01-07",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 2700000,
+   "monthlyAmount": 225000,
+   "salesRep": "김도한",
+   "clientRep": "이준희 이사",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v2.0 ENT",
+   "note": "2025년 부터 유지보수 수행사에서 진행",
+   "sites": [
+    {
+     "name": "서울시의회",
+     "engineerId": 28
+    }
+   ]
+  },
+  {
+   "id": 39,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "문서집중화시스템 구축",
+   "status": "신규",
+   "contractDate": "2026-02-03",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 3120000,
+   "monthlyAmount": 520000,
+   "salesRep": "김도한",
+   "clientRep": "백진혁 과장",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v1.0+Extor",
+   "note": "OEM",
+   "sites": [
+    {
+     "name": "태광그룹(고려/예가람저축은행)",
+     "engineerId": 26
+    }
+   ]
+  },
+  {
+   "id": 40,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "포스코DX",
+   "name": "정보포탈 및 영업시황",
+   "status": "유지",
+   "contractDate": "2026-01-09",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 4920000,
+   "monthlyAmount": 410000,
+   "salesRep": "김도한",
+   "clientRep": "안종환 프로",
+   "targetInfra": "검색엔진 1copy",
+   "targetSolution": "ProSearch v2.0 ENT , Spider",
+   "note": "12%",
+   "sites": [
+    {
+     "name": "포스코인터네셔널",
+     "engineerId": 27
+    }
+   ]
+  },
+  {
+   "id": 41,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "코비젼",
+   "name": "그룹웨어 재구축",
+   "status": "유지",
+   "contractDate": "2026-01-30",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 7920000,
+   "monthlyAmount": 660000,
+   "salesRep": "김도한",
+   "clientRep": "주난희 대리",
+   "targetInfra": "검색엔진 3copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "Ent",
+   "sites": [
+    {
+     "name": "포스코 인터네셔널",
+     "engineerId": 28
+    }
+   ],
+   "contacts": [
+    {
+     "party": "계약사",
+     "contact": "코비젼 조대수 과장 010-4144-0949 (dscho@covision.co.kr)"
+    },
+    {
+     "party": "고객사",
+     "contact": "황혜미 차장 010-4355-2150 (hm.hwang@poscointl.com)"
+    }
+   ]
+  },
+  {
+   "id": 42,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "펜타시스템테크놀러지",
+   "name": "LG에너지솔루션 표준문서",
+   "status": "유지",
+   "contractDate": "2026-03-31",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 1500000,
+   "monthlyAmount": 125000,
+   "salesRep": "김도한",
+   "clientRep": "서명현 차장",
+   "targetInfra": "검색엔진 1copy",
+   "targetSolution": "ProSearch v2.0 OEM",
+   "sites": [
+    {
+     "name": "LG에너지솔루션",
+     "engineerId": 26
+    }
+   ],
+   "contacts": [
+    {
+     "party": "계약사",
+     "contact": "황예리 010-3460-6089"
+    }
+   ]
+  },
+  {
+   "id": 43,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "펜타시스템테크놀러지",
+   "name": "LG전자 표준문서시스템(Xiper)",
+   "status": "유지",
+   "contractDate": "2026-02-27",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 1500000,
+   "monthlyAmount": 125000,
+   "salesRep": "김도한",
+   "clientRep": "서명현 차장",
+   "targetInfra": "검색엔진 1copy",
+   "targetSolution": "ProSearch v2.0 OEM",
+   "sites": [
+    {
+     "name": "LG전자",
+     "engineerId": 27
+    }
+   ]
+  },
+  {
+   "id": 44,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "펜타시스템테크놀러지",
+   "name": "LG전자 약관포탈업무시스템",
+   "status": "유지",
+   "contractDate": "2026-02-27",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 1500000,
+   "monthlyAmount": 125000,
+   "salesRep": "김도한",
+   "clientRep": "서명현 차장",
+   "targetInfra": "검색엔진 1copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "OEM 방식",
+   "sites": [
+    {
+     "name": "LG전자",
+     "engineerId": 28
+    }
+   ]
+  },
+  {
+   "id": 45,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "코오롱베니트(주)",
+   "name": "그룹웨어 재구축",
+   "status": "신규",
+   "contractDate": "2025-12-22",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 2812000,
+   "monthlyAmount": 281200,
+   "salesRep": "김도한",
+   "clientRep": "김윤영 매니저",
+   "targetInfra": "검색엔진 2copy",
+   "targetSolution": "ProSearch v2.0 ENT",
+   "note": "나온소프트 그룹웨어",
+   "sites": [
+    {
+     "name": "롯데면세점",
+     "engineerId": 26
+    }
+   ]
+  },
+  {
+   "id": 46,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "LG CNS",
+   "name": "코오롱인더스트리 R&BD 통합시스템 구축 (KoRE 시스템)",
+   "status": "갱신",
+   "contractDate": "2025-12-19",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 2250000,
+   "monthlyAmount": 187500,
+   "salesRep": "김도한",
+   "clientRep": "이동근 책임 정준연 선임",
+   "targetInfra": "검색엔진 1copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "Ent",
+   "sites": [
+    {
+     "name": "코오롱인더스트리",
+     "engineerId": 27
+    }
+   ]
+  },
+  {
+   "id": 47,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "LG CNS",
+   "name": "R&D, nPDM 외 3개 시스템",
+   "status": "유지",
+   "contractDate": "2025-11-03",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "inspection": "월 정기점검",
+   "amount": 7650000,
+   "monthlyAmount": 637500,
+   "salesRep": "김도한",
+   "clientRep": "이승진 선임 / 황용철 책임",
+   "targetInfra": "검색엔진 3copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "Ent",
+   "sites": [
+    {
+     "name": "LG전자",
+     "engineerId": 28
+    }
+   ]
+  },
+  {
+   "id": 48,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "LG전자",
+   "name": "LG전자 세무포탈(NTTM) 내 검색엔진",
+   "status": "예정",
+   "contractDate": null,
+   "startDate": "2026-01-01",
+   "endDate": "2026-09-30",
+   "amount": 7500000,
+   "monthlyAmount": 625000,
+   "salesRep": "박재완",
+   "clientRep": "이승진 책임",
+   "targetInfra": "검색엔진 3Copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "Enter",
+   "sites": [
+    {
+     "name": "LG전자",
+     "engineerId": 26
+    }
+   ]
+  },
+  {
+   "id": 49,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "인비스텍",
+   "name": "차세대 그룹웨어 고도화",
+   "status": "유지",
+   "contractDate": "2026-03-09",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 7500000,
+   "monthlyAmount": 625000,
+   "salesRep": "김도한",
+   "clientRep": "김한주 대표",
+   "targetInfra": "검색엔진 3copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "Ent",
+   "sites": [
+    {
+     "name": "LIG넥스원",
+     "engineerId": 27
+    }
+   ]
+  },
+  {
+   "id": 50,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "(주)메타넷티플랫폼",
+   "name": "데이터리뉴얼 사업 검색엔진 구축",
+   "status": "신규",
+   "contractDate": "2026-01-21",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 2250000,
+   "monthlyAmount": 187500,
+   "salesRep": "박재완",
+   "clientRep": "최승섭 부장",
+   "targetInfra": "검색엔진 1copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "Ent",
+   "sites": [
+    {
+     "name": "정림건축",
+     "engineerId": 28
+    }
+   ]
+  },
+  {
+   "id": 51,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "마인드아이티",
+   "name": "경력단절여성등의 경제활동촉진사업 통합시스템",
+   "status": "신규",
+   "contractDate": "2026-01-29",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 1800000,
+   "monthlyAmount": 150000,
+   "salesRep": "김도한",
+   "clientRep": "주유삼 대표",
+   "targetInfra": "검색엔진 1copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "OEM",
+   "sites": [
+    {
+     "name": "서울시여성가족",
+     "engineerId": 26
+    }
+   ]
+  },
+  {
+   "id": 52,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "케이엘정보통신",
+   "name": "내부 업무시스템",
+   "status": "유지",
+   "contractDate": "2026-01-01",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "inspection": "분기 점검",
+   "amount": 2472000,
+   "monthlyAmount": 206000,
+   "salesRep": "김도한",
+   "clientRep": "주지훈 대리",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v2.0 SMB",
+   "sites": [
+    {
+     "name": "한국원자력안전위원회",
+     "engineerId": 27
+    }
+   ]
+  },
+  {
+   "id": 53,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "이디소프트",
+   "name": "컨텐츠 검색",
+   "status": "신규",
+   "contractDate": "2026-02-10",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 4680000,
+   "monthlyAmount": 390000,
+   "salesRep": "박재완",
+   "clientRep": "동은성대표",
+   "targetInfra": "검색엔진 1copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "Enter - 조달 / 5Core",
+   "sites": [
+    {
+     "name": "국가과학기술연구회(NST)",
+     "engineerId": 28
+    }
+   ]
+  },
+  {
+   "id": 54,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "자이오넥스",
+   "name": "PMS 시스템",
+   "status": "신규",
+   "contractDate": "2026-02-04",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 3300000,
+   "monthlyAmount": 275000,
+   "salesRep": "박재완",
+   "clientRep": "남도극 상무",
+   "targetInfra": "검색엔진 1copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "OEM",
+   "sites": [
+    {
+     "name": "LS Electric",
+     "engineerId": 26
+    }
+   ]
+  },
+  {
+   "id": 55,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "오즈씨앤에스",
+   "name": "검색엔진 구축",
+   "status": "신규",
+   "contractDate": "2026-02-06",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 2250000,
+   "monthlyAmount": 187500,
+   "salesRep": "김도한",
+   "clientRep": "박종한 부장",
+   "targetInfra": "검색엔진 1copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "Ent",
+   "sites": [
+    {
+     "name": "경기도경제과학진흥원",
+     "engineerId": 27
+    }
+   ]
+  },
+  {
+   "id": 56,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "비온시이노베이터",
+   "name": "농촌진흥청 내부 업무 포탈",
+   "status": "신규",
+   "contractDate": "2026-03-05",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 1872000,
+   "monthlyAmount": 156000,
+   "salesRep": "김도한",
+   "clientRep": "곽의영 부장",
+   "targetInfra": "검색엔진 1copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "Enter",
+   "sites": [
+    {
+     "name": "농촌진흥청",
+     "engineerId": 28
+    }
+   ]
+  },
+  {
+   "id": 57,
+   "sheet": "2026 계약",
+   "category": "검색엔진",
+   "contractor": "미오소프트",
+   "name": "국회 영상플랫폼 위탁 운영 사업 내 검색엔진 구축",
+   "status": "유지",
+   "contractDate": "2026-01-27",
+   "startDate": "2026-01-01",
+   "endDate": "2026-12-31",
+   "amount": 2250000,
+   "monthlyAmount": 187500,
+   "salesRep": "김도한",
+   "clientRep": "김승모 대표",
+   "targetInfra": "검색엔진 1copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "Ent",
+   "sites": [
+    {
+     "name": "국회",
+     "engineerId": 26
+    }
+   ]
+  },
+  {
+   "id": 58,
+   "sheet": "신규 예정",
+   "category": "검색엔진",
+   "contractor": "보건복지부",
+   "name": "장애인건강보건관리시스템 구축 상용 SW 구매",
+   "status": "신규",
+   "contractDate": null,
+   "contractDateNote": "진행중",
+   "startDate": null,
+   "endDate": null,
+   "amount": 464000,
+   "monthlyAmount": 116000,
+   "salesRep": "김도한",
+   "clientRep": "강현진 대리",
+   "targetInfra": "검색엔진 1Copy(2Core)",
+   "targetSolution": "ProSearch v2.0 ENT",
+   "note": "조달 진행과정에서 내부적으로 문제가 생겨서, 추후 견적을 재 요청",
+   "sites": [
+    {
+     "name": "한국사회보장정보원",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 59,
+   "sheet": "신규 예정",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "문서중앙화 구축",
+   "status": "예정",
+   "contractDate": null,
+   "contractDateNote": "이슈",
+   "startDate": "2026-09-01",
+   "endDate": "2027-08-31",
+   "amount": 3600000,
+   "monthlyAmount": 300000,
+   "salesRep": "김도한",
+   "clientRep": "복창용 부장",
+   "targetInfra": "검색엔진 3copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "Ent",
+   "sites": [
+    {
+     "name": "유신",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 60,
+   "sheet": "신규 예정",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "아이브릭스 유지보수",
+   "status": "신규",
+   "contractDate": null,
+   "startDate": null,
+   "endDate": null,
+   "amount": 1200000,
+   "monthlyAmount": null,
+   "salesRep": "김도한",
+   "clientRep": "김성현 과장",
+   "targetInfra": "아이브릭스 제품 유지보수",
+   "targetSolution": "IBricks",
+   "note": "12개월 일괄 발행",
+   "sites": [
+    {
+     "name": "명화공업",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 61,
+   "sheet": "신규 예정",
+   "category": "검색엔진",
+   "contractor": "베스티안소프트",
+   "name": "국회 의재정보시스템(KOICA 사업) 내 검색",
+   "status": "예정",
+   "contractDate": null,
+   "startDate": null,
+   "endDate": null,
+   "amount": 2250000,
+   "monthlyAmount": 187500,
+   "salesRep": "박재완",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "OEM",
+   "sites": [
+    {
+     "name": "KOICA(세네갈)",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 62,
+   "sheet": "신규 예정",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "ECM 및 OASYS 업무 포탈 통합 사업",
+   "status": "예정",
+   "contractDate": null,
+   "startDate": null,
+   "endDate": null,
+   "amount": 3600000,
+   "monthlyAmount": 300000,
+   "salesRep": "박재완",
+   "clientRep": "복창용 부장",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProVSearch v2.0",
+   "note": "ENT",
+   "sites": [
+    {
+     "name": "감사원",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 63,
+   "sheet": "신규 예정",
+   "category": "검색엔진",
+   "contractor": "㈜가온아이",
+   "name": "그룹웨어 구축",
+   "status": "예정",
+   "contractDate": null,
+   "startDate": null,
+   "endDate": null,
+   "amount": 1050000,
+   "monthlyAmount": 87500,
+   "salesRep": "박재완",
+   "clientRep": "황소희 사원",
+   "targetInfra": "검색엔진 1copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "OEM",
+   "sites": [
+    {
+     "name": "유한양행",
+     "engineerId": null
+    }
+   ],
+   "contacts": [
+    {
+     "party": "계약사",
+     "contact": "가온아이 차재훈 부장 010-9721-1270 (rpix@kaoni.com)"
+    }
+   ]
+  },
+  {
+   "id": 64,
+   "sheet": "신규 예정",
+   "category": "검색엔진",
+   "contractor": "플러스랩스",
+   "name": "대국민서비스 개편사업 영상자막 RAG",
+   "status": "예정",
+   "contractDate": null,
+   "startDate": "2026-06-01",
+   "endDate": "2027-05-31",
+   "amount": 3000000,
+   "monthlyAmount": 250000,
+   "salesRep": "김도한",
+   "clientRep": "김학재대표",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProVsearch v1.0",
+   "note": "Enter",
+   "sites": [
+    {
+     "name": "국회사무처",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 65,
+   "sheet": "신규 예정",
+   "category": "검색엔진",
+   "contractor": "사이버다임",
+   "name": "문서관리체계 구축",
+   "status": "예정",
+   "contractDate": null,
+   "startDate": "2026-09-01",
+   "endDate": "2027-08-31",
+   "amount": 13200000,
+   "monthlyAmount": 1100000,
+   "salesRep": "김도한",
+   "clientRep": "복창용부장",
+   "targetInfra": "검색엔진 3Copy",
+   "targetSolution": "ProVsearch v1.0 / ProSearch / ProExtor",
+   "note": "Enter",
+   "sites": [
+    {
+     "name": "한국화학융합연구원",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 66,
+   "sheet": "신규 예정",
+   "category": "검색엔진",
+   "contractor": "사이버다임",
+   "name": "ECM 구축",
+   "status": "예정",
+   "contractDate": null,
+   "startDate": "2026-10-01",
+   "endDate": "2027-09-30",
+   "amount": 1200000,
+   "monthlyAmount": 100000,
+   "salesRep": "김도한",
+   "clientRep": "송정훈팀장",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch",
+   "note": "OEM",
+   "sites": [
+    {
+     "name": "SK하이이엔지",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 67,
+   "sheet": "신규 예정",
+   "category": "검색엔진",
+   "contractor": "삼성전자",
+   "name": "PVI시스템 구축",
+   "status": "예정",
+   "contractDate": null,
+   "startDate": "2026-10-01",
+   "endDate": "2027-09-01",
+   "amount": 6750000,
+   "monthlyAmount": 562500,
+   "salesRep": "김도한",
+   "clientRep": "한동훈프로",
+   "note": "Enter",
+   "sites": [
+    {
+     "name": "삼성전자",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 68,
+   "sheet": "신규 예정",
+   "category": "검색엔진",
+   "contractor": "사이버다임",
+   "name": "문서중앙화 구축",
+   "status": "예정",
+   "contractDate": null,
+   "startDate": "2026-10-01",
+   "endDate": "2027-08-31",
+   "amount": 1950000,
+   "monthlyAmount": 162500,
+   "salesRep": "김도한",
+   "clientRep": "송정훈팀장",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch OEM / ProExtor",
+   "note": "OEM",
+   "sites": [
+    {
+     "name": "부방그룹",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 69,
+   "sheet": "신규 예정",
+   "category": "검색엔진",
+   "contractor": "LG CNS",
+   "name": "설치 서비스 포탈 구축",
+   "status": "예정",
+   "contractDate": null,
+   "startDate": "2026-11-01",
+   "endDate": "2027-10-31",
+   "amount": 3600000,
+   "monthlyAmount": 300000,
+   "salesRep": "김도한",
+   "targetInfra": "검색엔진 1copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "Enter",
+   "sites": [
+    {
+     "name": "LSE",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 70,
+   "sheet": "신규 예정",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "문서중앙화 구축",
+   "status": "예정",
+   "contractDate": null,
+   "startDate": "2026-11-01",
+   "endDate": null,
+   "amount": 4200000,
+   "monthlyAmount": 350000,
+   "salesRep": "김도한",
+   "clientRep": "노용호부장",
+   "targetInfra": "검색엔진 3Copy",
+   "targetSolution": "ProSearch v2.0/ProExtor",
+   "note": "Enter",
+   "sites": [
+    {
+     "name": "SBI저축은행",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 71,
+   "sheet": "신규 예정",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "ECM 구축",
+   "status": "예정",
+   "contractDate": null,
+   "contractDateNote": "확인",
+   "startDate": "2026-12-01",
+   "endDate": "2027-11-30",
+   "amount": 1200000,
+   "monthlyAmount": 100000,
+   "salesRep": "박재완",
+   "clientRep": "김동현과장",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "Ent",
+   "sites": [
+    {
+     "name": "쌍용 C&E",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 72,
+   "sheet": "신규 예정",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "문서중앙화 및 CUBE",
+   "status": "예정",
+   "contractDate": null,
+   "startDate": "2026-12-01",
+   "endDate": "2027-11-31",
+   "amount": 1800000,
+   "monthlyAmount": 150000,
+   "salesRep": "박재완",
+   "clientRep": "송정훈팀장",
+   "sites": [
+    {
+     "name": "SK머트리얼즈",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 73,
+   "sheet": "신규 예정",
+   "category": "검색엔진",
+   "contractor": "파마리서치",
+   "name": "문서중앙화 구축",
+   "status": "예정",
+   "contractDate": null,
+   "startDate": "2026-10-01",
+   "endDate": "2027-09-30",
+   "amount": 5400000,
+   "monthlyAmount": 450000,
+   "salesRep": "박재완",
+   "clientRep": "조승철과장",
+   "targetInfra": "검색엔진 1copy + 개인정보추출+ProAIP(3식)",
+   "targetSolution": "ProSearch v2.0",
+   "note": "Enter",
+   "sites": [
+    {
+     "name": "파마리서치",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 74,
+   "sheet": "신규 예정",
+   "category": "검색엔진",
+   "contractor": "블랙링크",
+   "name": "통합검색 고도화",
+   "status": "예정",
+   "contractDate": null,
+   "contractDateNote": "진행중",
+   "startDate": "2027-01-01",
+   "endDate": "2028-12-31",
+   "amount": 18000000,
+   "monthlyAmount": 1500000,
+   "salesRep": "박재완",
+   "clientRep": "이재원대표",
+   "targetInfra": "검색엔진 5Copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "Enter",
+   "sites": [
+    {
+     "name": "SL",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 75,
+   "sheet": "신규 예정",
+   "category": "검색엔진",
+   "contractor": "LS Electric",
+   "name": "사이트 내 검색엔진",
+   "status": "유지",
+   "contractDate": null,
+   "contractDateNote": "이슈",
+   "startDate": "2027-01-01",
+   "endDate": "2027-12-31",
+   "inspection": "매월 원격",
+   "amount": 2983500,
+   "monthlyAmount": 248625,
+   "salesRep": "김도한",
+   "clientRep": "이민용 매니저",
+   "targetInfra": "검색엔진 2Copy",
+   "targetSolution": "ProSearch v2.0 ENT",
+   "sites": [
+    {
+     "name": "LS Electric",
+     "engineerId": null
+    }
+   ],
+   "contacts": [
+    {
+     "party": "고객사",
+     "contact": "손상기 매니저 010-5552-3701 (skshon@ls-electric.com)"
+    }
+   ]
+  },
+  {
+   "id": 76,
+   "sheet": "신규 예정",
+   "category": "검색엔진",
+   "contractor": "SK바이오사이언스",
+   "name": "SKYNET 전자결재 분리",
+   "status": "예정",
+   "contractDate": null,
+   "startDate": "2027-01-01",
+   "endDate": "2028-12-31",
+   "amount": 1200000,
+   "monthlyAmount": 100000,
+   "salesRep": "김도한",
+   "clientRep": "나경수",
+   "targetInfra": "검색엔진, AIP",
+   "sites": [
+    {
+     "name": "SK바이오사이언스",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 77,
+   "sheet": "신규 예정",
+   "category": "검색엔진",
+   "contractor": "㈜사이버다임",
+   "name": "문서중앙화 구축",
+   "status": "예정",
+   "contractDate": null,
+   "startDate": "2027-01-01",
+   "endDate": "2027-12-31",
+   "amount": 12600000,
+   "monthlyAmount": 1050000,
+   "salesRep": "박재완",
+   "clientRep": "복창용부장",
+   "targetInfra": "검색엔진 5copy+금칙어모듈",
+   "targetSolution": "ProSearch v2.0",
+   "note": "Enter",
+   "sites": [
+    {
+     "name": "LIG D&A(구, LIG넥스원)",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 78,
+   "sheet": "신규 예정",
+   "category": "검색엔진",
+   "contractor": "엔투솔루션",
+   "name": "여행사 사이트 및 복지몰",
+   "status": "예정",
+   "contractDate": null,
+   "startDate": "2027-01-01",
+   "endDate": "2027-12-31",
+   "amount": 3000000,
+   "monthlyAmount": 250000,
+   "salesRep": "박재완",
+   "clientRep": "김훈용전무",
+   "targetInfra": "검색엔진 1copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "Enter",
+   "sites": [
+    {
+     "name": "CJO투어(씨제이오투어)",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 79,
+   "sheet": "미체결·종료",
+   "category": "인프라",
+   "contractor": "LF",
+   "name": "LF MS 인프라 기술지원 및 유지보수",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": "2024-01-01",
+   "endDate": "2024-12-31",
+   "amount": 19200000,
+   "monthlyAmount": 1600000,
+   "salesRep": "박재완",
+   "targetInfra": "인프라",
+   "targetSolution": "인프라",
+   "note": "비용 문제로 제외됨",
+   "sites": [
+    {
+     "name": "LF",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 80,
+   "sheet": "미체결·종료",
+   "category": "인프라",
+   "contractor": "LF",
+   "name": "LF M365 기술지원",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": "2024-01-01",
+   "endDate": "2024-12-31",
+   "amount": 30000000,
+   "monthlyAmount": 2500000,
+   "salesRep": "박재완",
+   "targetInfra": "M365",
+   "targetSolution": "인프라",
+   "note": "비용 문제로 제외됨",
+   "sites": [
+    {
+     "name": "LF",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 81,
+   "sheet": "미체결·종료",
+   "category": "검색엔진",
+   "contractor": "㈜가온아이",
+   "name": "그룹웨어시스템 재구축",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": null,
+   "endDate": null,
+   "amount": 1000000,
+   "monthlyAmount": 83333,
+   "salesRep": "박재완",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v1.0",
+   "note": "OEM 방식",
+   "sites": [
+    {
+     "name": "빗썸코리아",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 82,
+   "sheet": "미체결·종료",
+   "category": "검색엔진",
+   "contractor": "㈜나온소프트",
+   "name": "그룹웨어 구축",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": "2023-06-01",
+   "endDate": "2024-05-31",
+   "amount": 1320000,
+   "monthlyAmount": 110000,
+   "salesRep": "김도한",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v1.0 OEM",
+   "sites": [
+    {
+     "name": "STB상생방송",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 83,
+   "sheet": "미체결·종료",
+   "category": "검색엔진",
+   "contractor": "매그넘빈트",
+   "name": "홈페이지 구축",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": "2023-01-01",
+   "endDate": "2023-12-31",
+   "amount": 3000000,
+   "monthlyAmount": 250000,
+   "salesRep": "박재완",
+   "targetInfra": "검색엔진 2Copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "Ent",
+   "sites": [
+    {
+     "name": "예스코",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 84,
+   "sheet": "미체결·종료",
+   "category": "검색엔진",
+   "contractor": "㈜비즈웰",
+   "name": "그룹웨어시스템 차세대시스템 구축",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": null,
+   "endDate": null,
+   "amount": null,
+   "monthlyAmount": null,
+   "salesRep": "박재완",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v1.0",
+   "note": "OEM 방식",
+   "sites": [
+    {
+     "name": "서울도시철도그린환경",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 85,
+   "sheet": "미체결·종료",
+   "category": "검색엔진",
+   "contractor": "㈜비즈웰",
+   "name": "그룹웨어 검색엔진",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": "2022-01-01",
+   "endDate": "2022-12-31",
+   "amount": 1200000,
+   "monthlyAmount": 100000,
+   "salesRep": "박재완",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v1.0",
+   "note": "납품가(8백만원)의 15%, 유지보수 안함",
+   "sites": [
+    {
+     "name": "금호타이어",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 86,
+   "sheet": "미체결·종료",
+   "category": "검색엔진",
+   "contractor": "㈜선도소프트",
+   "name": "한국정보화진흥원 디지털사회혁신 온라인 플랫폼 구축",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": "2023-07-01",
+   "endDate": "2024-06-30",
+   "amount": 1500000,
+   "monthlyAmount": 250000,
+   "salesRep": "김도한",
+   "clientRep": "손수진 부장",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v1.0",
+   "note": "납품가(2,000만원)의 15% / 모든 솔루션 걷어 냄으로 인한 계약 종료",
+   "sites": [
+    {
+     "name": "한국정보화진흥원",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 87,
+   "sheet": "미체결·종료",
+   "category": "검색엔진",
+   "contractor": "㈜선도소프트",
+   "name": "동작구청 온라인 창 플랫폼 구축",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": "2022-07-01",
+   "endDate": "2023-07-31",
+   "amount": null,
+   "monthlyAmount": null,
+   "salesRep": "박재완",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v1.0",
+   "note": "없어짐",
+   "sites": [
+    {
+     "name": "동작구청",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 88,
+   "sheet": "미체결·종료",
+   "category": "검색엔진",
+   "contractor": "㈜선도소프트",
+   "name": "환경부 온실가스종합정보센터 온실가스 감축정보 종합DB 포털사이트 기능 강화 용역",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": "2023-01-01",
+   "endDate": "2022-12-31",
+   "amount": 3000000,
+   "monthlyAmount": 250000,
+   "salesRep": "박재완",
+   "targetInfra": "검색엔진 1Copy",
+   "note": "납품가(2,000만원)의 15% (기간은 시트 원문 그대로 — 역전)",
+   "sites": [
+    {
+     "name": "환경부 온실가스종합정보센터",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 89,
+   "sheet": "미체결·종료",
+   "category": "검색엔진",
+   "contractor": "㈜선도소프트",
+   "name": "디지털사회혁신 온라인 플랫폼 구축",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": "2023-07-01",
+   "endDate": "2024-06-30",
+   "amount": 3000000,
+   "monthlyAmount": 250000,
+   "salesRep": "박재완",
+   "targetInfra": "검색엔진 1Copy",
+   "note": "납품가(2,000만원)의 15%",
+   "sites": [
+    {
+     "name": "한국정보화진흥원",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 90,
+   "sheet": "미체결·종료",
+   "category": "검색엔진",
+   "contractor": "성도이엔지",
+   "name": "메일검색",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": "2022-09-01",
+   "endDate": "2023-08-31",
+   "amount": 1500000,
+   "monthlyAmount": 125000,
+   "salesRep": "박재완",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v2.1",
+   "note": "메일 검색",
+   "sites": [
+    {
+     "name": "성도이엔지",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 91,
+   "sheet": "미체결·종료",
+   "category": "검색엔진",
+   "contractor": "인젠트",
+   "name": "문서중앙화시스템",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": "2022-11-01",
+   "endDate": "2023-10-30",
+   "amount": 1950000,
+   "monthlyAmount": 162500,
+   "salesRep": "박재완",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "Ent",
+   "sites": [
+    {
+     "name": "한국에너지기술평가원",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 92,
+   "sheet": "미체결·종료",
+   "category": "검색엔진",
+   "contractor": "콜라비",
+   "name": "연구장비 고도화",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": "2023-01-01",
+   "endDate": "2031-12-31",
+   "amount": 1800000,
+   "monthlyAmount": 150000,
+   "salesRep": "박재완",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v2.0",
+   "sites": [
+    {
+     "name": "충북테크노파크",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 93,
+   "sheet": "미체결·종료",
+   "category": "검색엔진",
+   "contractor": "뉴컨",
+   "name": "국가기상위성센터 홈페이지 검색",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": "2024-02-01",
+   "endDate": "2025-01-31",
+   "amount": 1950000,
+   "monthlyAmount": 162500,
+   "salesRep": "김도한",
+   "clientRep": "윤정환 대표이사",
+   "targetInfra": "검색엔진 1copy",
+   "note": "유지보수 건 없어짐",
+   "sites": [
+    {
+     "name": "국가기상위성센터",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 94,
+   "sheet": "미체결·종료",
+   "category": "검색엔진",
+   "contractor": "㈜에닉스원",
+   "name": "한화 신문스크랩 관리 내 검색엔진 구축",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": "2023-05-01",
+   "endDate": "2023-12-31",
+   "amount": 1200000,
+   "monthlyAmount": 100000,
+   "salesRep": "박재완",
+   "targetSolution": "ProSearch v2.0 SMB",
+   "note": "기사 스크래핑 그 시스템 안씀.",
+   "sites": [
+    {
+     "name": "한화",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 95,
+   "sheet": "미체결·종료",
+   "category": "검색엔진",
+   "contractor": "동원엔터프라이즈",
+   "name": "그룹웨어시스템",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": null,
+   "endDate": null,
+   "amount": null,
+   "monthlyAmount": null,
+   "salesRep": "김도한",
+   "clientRep": "함두완 과장",
+   "targetInfra": "검색엔진 2Copy(Ent)",
+   "targetSolution": "ProSearch v2.0 ENT",
+   "note": "Per Call 진행 / 건당 1 백만원",
+   "sites": [
+    {
+     "name": "동원그룹",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 96,
+   "sheet": "미체결·종료",
+   "category": "검색엔진",
+   "contractor": "㈜젠솔소프트",
+   "name": "표준문서관리시스템",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": "2024-01-01",
+   "endDate": null,
+   "amount": null,
+   "monthlyAmount": 0,
+   "salesRep": "김도한",
+   "targetInfra": "검색엔진 1copy",
+   "targetSolution": "ProSearch v1.0",
+   "sites": [
+    {
+     "name": "서울도시가스",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 97,
+   "sheet": "미체결·종료",
+   "category": "검색엔진",
+   "contractor": "이노오션코리아",
+   "name": "제안관리시스템 구축",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": "2023-11-01",
+   "endDate": "2024-10-31",
+   "amount": null,
+   "monthlyAmount": null,
+   "salesRep": "박재완",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v2.0 OEM",
+   "note": "24.03.21 / 사용자 많아지면 그때 유지보수 진행 예정",
+   "sites": [
+    {
+     "name": "현대트랜시스",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 98,
+   "sheet": "미체결·종료",
+   "category": "검색엔진",
+   "contractor": "이노오션코리아",
+   "name": "제안관리시스템 구축",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": "2024-01-01",
+   "endDate": "2024-12-31",
+   "amount": null,
+   "monthlyAmount": null,
+   "salesRep": "박재완",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v2.0 OEM",
+   "note": "24.03.21 / 사용자 많아지면 그때 유지보수 진행 예정",
+   "sites": [
+    {
+     "name": "현대제철",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 99,
+   "sheet": "미체결·종료",
+   "category": "검색엔진",
+   "contractor": "프로스트",
+   "name": "EIP 3.0 구축",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": "2024-01-01",
+   "endDate": "2024-05-31",
+   "inspection": "매월 원격",
+   "amount": 7200000,
+   "monthlyAmount": 600000,
+   "salesRep": "김도한",
+   "clientRep": "이민기 팀장",
+   "targetInfra": "검색엔진 2Copy(Ent) + 분석",
+   "targetSolution": "ProSearch v2.0",
+   "note": "시스템 활용도가 낮고 예산도 없어 유지보수 진행X, Ent / 25년부터 12%",
+   "sites": [
+    {
+     "name": "한국생산기술연구원",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 100,
+   "sheet": "미체결·종료",
+   "category": "검색엔진",
+   "contractor": "새롬정보시스템",
+   "name": "지식경영시스템 구축",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": "2024-01-01",
+   "endDate": "2024-06-30",
+   "amount": 2160000,
+   "monthlyAmount": 360000,
+   "salesRep": "김도한",
+   "clientRep": "김민규이사",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v2.0",
+   "note": "납품가(2,900만원)의 15% + 전년대비 3% 인상 / 고객 예산 확정되는데로 소급진행",
+   "sites": [
+    {
+     "name": "한국야쿠르트",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 101,
+   "sheet": "미체결·종료",
+   "category": "검색엔진",
+   "contractor": "㈜젠솔소프트",
+   "name": "지수방법론",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": "2024-04-01",
+   "endDate": null,
+   "amount": 1200000,
+   "monthlyAmount": 100000,
+   "salesRep": "김도한",
+   "clientRep": "이준희 이사",
+   "targetInfra": "검색엔진 1copy",
+   "targetSolution": "ProSearch v2.0 OEM",
+   "note": "시스템 철수로 인한 계약 미진행",
+   "sites": [
+    {
+     "name": "한국거래소",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 102,
+   "sheet": "미체결·종료",
+   "category": "검색엔진",
+   "contractor": "스페이스뱅크",
+   "name": "경제정책플랫폼 구축",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": "2024-08-01",
+   "endDate": "2025-07-31",
+   "amount": 3750000,
+   "monthlyAmount": 312500,
+   "salesRep": "김도한",
+   "clientRep": "이원희 대표",
+   "targetInfra": "검색엔진 1copy",
+   "targetSolution": "ProSearch v2.0 ENT",
+   "sites": [
+    {
+     "name": "스페이스뱅크",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 103,
+   "sheet": "미체결·종료",
+   "category": "검색엔진",
+   "contractor": "새롬정보시스템",
+   "name": "그룹웨어 유지보수",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": "2024-01-01",
+   "endDate": "2024-12-31",
+   "amount": 3096000,
+   "monthlyAmount": 270000,
+   "salesRep": "김도한",
+   "clientRep": "김민규 이사",
+   "targetSolution": "ProSearch v1.0",
+   "note": "납품가(1,900만원)의 15%, 3% 인상 예정",
+   "sites": [
+    {
+     "name": "SKC MAS",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 104,
+   "sheet": "미체결·종료",
+   "category": "검색엔진",
+   "contractor": "아난티",
+   "name": "쇼핑몰",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": "2025-01-01",
+   "endDate": "2025-12-31",
+   "amount": 2250000,
+   "monthlyAmount": 187500,
+   "salesRep": "박재완",
+   "clientRep": "방윤정 수석",
+   "targetInfra": "검색엔진 1Copy",
+   "targetSolution": "ProSearch v2.0 ENT",
+   "sites": [
+    {
+     "name": "아난티",
+     "engineerId": null
+    }
+   ]
+  },
+  {
+   "id": 105,
+   "sheet": "미체결·종료",
+   "category": "검색엔진",
+   "contractor": "스마일게이트홀딩스",
+   "name": "통합검색 개선 사업",
+   "status": "종료",
+   "contractDate": null,
+   "startDate": "2025-01-01",
+   "endDate": "2025-12-31",
+   "amount": 1125000,
+   "monthlyAmount": 562500,
+   "salesRep": "김도한",
+   "clientRep": "백승일 과장",
+   "targetInfra": "검색엔진 3Copy",
+   "targetSolution": "ProSearch v2.0 ENT",
+   "sites": [
+    {
+     "name": "스마일게이트홀딩스",
+     "engineerId": null
+    }
+   ]
+  }
+ ],
+ "issues": [
+  {
+   "no": 496,
+   "tags": [
+    "전력거래소",
+    "사이버다임"
+   ],
+   "title": "연관 없는 파일명 검색도 되는 현상 문의",
+   "type": "문의",
+   "engineerId": 26,
+   "date": "2026-05-21",
+   "comments": 1,
+   "status": "완료"
+  },
+  {
+   "no": 474,
+   "tags": [
+    "전력거래소",
+    "사이버다임"
+   ],
+   "title": "프로세스 root로 기동 관련 건",
+   "type": "문의",
+   "engineerId": 26,
+   "date": "2026-04-02",
+   "comments": 1,
+   "status": "완료"
+  },
+  {
+   "no": 430,
+   "tags": [
+    "한국거래소"
+   ],
+   "title": "운영 3번 노후서버 변경 작업 및 OS 업그레이드 관련 회의",
+   "type": "요청",
+   "engineerId": 28,
+   "date": "2026-01-09",
+   "comments": 4,
+   "status": "완료"
+  },
+  {
+   "no": 429,
+   "tags": [
+    "한국거래소"
+   ],
+   "title": "한국거래소 개발서버 디스크풀 문의 대응",
+   "type": "장애",
+   "engineerId": 28,
+   "date": "2026-01-09",
+   "comments": 0,
+   "status": "완료"
+  },
+  {
+   "no": 360,
+   "tags": [
+    "한국거래소"
+   ],
+   "title": "관리도구 보안취약점 조치 사항",
+   "type": "요청",
+   "engineerId": 28,
+   "date": "2025-07-18",
+   "comments": 1,
+   "status": "완료"
+  },
+  {
+   "no": 319,
+   "tags": [
+    "한국거래소"
+   ],
+   "title": "법규시스템 스마트워크 시스템과 검색결과 일치되도록 요청",
+   "type": "요청",
+   "engineerId": 28,
+   "date": "2025-04-21",
+   "comments": 0,
+   "status": "완료"
+  },
+  {
+   "no": 304,
+   "tags": [],
+   "title": "톰캣 버전업 & 개인정보추출 & 금칙어추출 적용 현황",
+   "type": "요청",
+   "engineerId": 26,
+   "date": "2025-02-25",
+   "comments": 0,
+   "status": "완료"
+  },
+  {
+   "no": 297,
+   "tags": [
+    "한국거래소"
+   ],
+   "title": "비공개 전자결재 검색되는 현상 문의",
+   "type": "장애",
+   "engineerId": 28,
+   "date": "2025-02-13",
+   "comments": 0,
+   "status": "완료"
+  },
+  {
+   "no": 291,
+   "tags": [
+    "전력거래소",
+    "사이버다임"
+   ],
+   "title": "개인정보추출 관련 수정",
+   "type": "요청",
+   "engineerId": 26,
+   "date": "2025-02-11",
+   "comments": 0,
+   "status": "완료"
+  },
+  {
+   "no": 283,
+   "tags": [
+    "전력거래소",
+    "사이버다임"
+   ],
+   "title": "인덱스 xfile 증분색인 400 에러",
+   "type": "장애",
+   "engineerId": 26,
+   "date": "2025-01-23",
+   "comments": 3,
+   "status": "완료"
+  },
+  {
+   "no": 279,
+   "tags": [
+    "사이버다임",
+    "전력거래소"
+   ],
+   "title": "리인덱싱 task가 종료되는 현상",
+   "type": "장애",
+   "engineerId": 26,
+   "date": "2025-01-15",
+   "comments": 0,
+   "status": "완료"
+  },
+  {
+   "no": 269,
+   "tags": [
+    "사이버다임",
+    "전력거래소"
+   ],
+   "title": "POC 개인정보추출 모듈 수정",
+   "type": "요청",
+   "engineerId": 26,
+   "date": "2024-12-19",
+   "comments": 0,
+   "status": "완료"
+  },
+  {
+   "no": 255,
+   "tags": [
+    "한국거래소"
+   ],
+   "title": "법규시스템 하이라이팅이 다른시스템과 다르게 나오는 문의",
+   "type": "문의",
+   "engineerId": 28,
+   "date": "2024-12-05",
+   "comments": 1,
+   "status": "완료"
+  },
+  {
+   "no": 230,
+   "tags": [
+    "한국거래소"
+   ],
+   "title": "관리도구 재기동 오류",
+   "type": "장애",
+   "engineerId": 28,
+   "date": "2024-09-06",
+   "comments": 0,
+   "status": "완료"
+  }
+ ]
+}
