@@ -54,6 +54,7 @@ backend() {
 }
 
 [ "$SCOPE" != "pms" ]  && backend host
+[ "$SCOPE" != "pms" ]  && backend pms-mcp-mock   # M-1 mock MCP server (host track)
 [ "$SCOPE" != "host" ] && backend pms
 
 # Frontend (pms scope) — reconnects at M1 (skipped until node_modules exists)

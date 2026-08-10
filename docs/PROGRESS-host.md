@@ -3,9 +3,9 @@
 > 공용 상태·결정 기록·미해결 이슈는 `PROGRESS.md`. 이 파일은 host 트랙의
 > 다음 작업과 세션 로그만 담는다.
 
-## 현재 상태 (2026-08-09)
+## 현재 상태 (2026-08-10)
 
-- **다음 작업:** **M-1 착수 — 목업 MCP 서버**(구현_노트 부록 B 목업 전략 — 유예 결정 2건(`get_project` 분리 · `myRole` 포함)·카탈로그 공백 2건(전사/타부문 scope · `list_maintenance_logs` id 확보 경로)·오염 레코드 인젝션 실험 포함)
+- **다음 작업:** **B2-1 자연어 검증** — 목업(`pms-mcp-mock`, B2-0 통과)을 Claude 클라이언트에 커스텀 커넥터로 등록해 도구 선택 실험(사용자 동석 필요). 산출물 = 카탈로그 description 최종안 + eval 입력·기대값. 유예 결정 2건(`get_project` 분리 · `myRole`)·카탈로그 공백 2건(전사 scope · id 확보 경로)·인젝션(오염 레코드 9105 기심음)이 실험 대상. 이후 B2-2(HS256 JWT 권한 흐름)·B2-3(자체 호스트 연결)
 - **차단 요소:** 없음
 
 ## 세션 로그
@@ -18,6 +18,11 @@
 - 미해결: <다음 세션으로 넘기는 것>
 - 다음 작업: <구체적으로>
 ```
+
+### 2026-08-10 — M-1 착수: 목업 MCP 서버 스캐폴드 + B2-0 배관 검증 통과
+- 완료: ①**결정 ⑦ host 문서 반영** — PRD-host **v2.2**(FR-AI-16 `whoami` 응답 orgRole → 권한 그룹명, v2.2 변경 요약 절, 게이트 P 통과 반영 상태 "확정") · eval-cases **v1.2**(B-03 채점 기준 = 그룹명 "팀원") — 공용 미해결 이슈 해소. ②**`pms-mcp-mock` 스캐폴드**(부록 B-1 구조): Boot 4.1.0 + Spring AI 2.0.0 + Java 25 툴체인(Maven Central 릴리스 대조), `@McpTool`은 코어 편입 패키지 `org.springframework.ai.mcp.annotation` 확인(규칙 6 웹 대조). MockData = 시드 16명·17건(시드 id 정합) + 실험 케이스 기심음: 합집합 키스톤(전세아 PM)·오버부킹(8월 1.3MM/보정 162.5%)·"한국거래소" 3건 모호·타부문 참여(서지람)·OEM 직접 등록 계약·**오염 레코드(이슈 9105 — C-04 인젝션)**. port/ 5종(실전 계약)·mock/ 인메모리+가시성 정책·mcp/ 도구 7종(FR-AI-10~16, 한국어 description 초안). 호출자는 `mock.caller-id` 프로퍼티 고정(기본 18) — B2-2에서 JWT로 교체. ③**테스트 32개 통과** — 가시성 4단·404 은닉 문구·2단계 확인·409 2종·422·billable 모집단·100% 전이 없음 고정. ④**B2-0 배관 검증**: 기동 시 Registered tools: 7, initialize 핸드셰이크·tools/list·도구별 호출 정상(whoami 그룹명 반환·409에 최신값 동봉). ⑤reviewer 리뷰 MAJOR 1건 수정 — `list_overbooked` 원인 배정이 호출자 가시성 밖 프로젝트명 노출 → 프로젝트 가시성 필터 추가+테스트 고정(§4-4 정합). MINOR 1건 — 배선 설정을 mcp/→mock/ 이동(승격 경로 오염 방지). ⑥CLAUDE.md Commands·Ownership, verify.sh host 스코프에 목업 반영. verify.sh host PASS
+- 미해결: 없음 (수동 curl 테스트 시 한글 인자는 파일 바디 필수 — Windows curl.exe 명령행 인코딩 함정, 서버 무관. bootRun 잔존 프로세스가 포트 8090 물면 taskkill)
+- 다음 작업: B2-1 자연어 검증(Claude 클라이언트 커스텀 커넥터 — 사용자 동석) → 산출물이 카탈로그 최종안·eval 입력·기대값. 이후 B2-2 JWT·B2-3 호스트 연결
 
 ### 2026-08-09 — 게이트 P 통과 (사용자 승인 — 기록 세션)
 - 완료: 게이트 P 사용자 승인 접수 → PROGRESS 결정 기록 등재(문서 5종 + 유저_시나리오 v1.1 + eval-cases v1.1 일괄, ADMIN=전사 가시성 미해결 함께 해소), 공용 현재 상태 M-1로 전환, ROADMAP 게이트 P 통과 표기. 부수: 로컬 dirty였던 frontend/package-lock.json(npm install 부산물)은 사용자 확인 후 폐기. verify.sh SKIP 정상(코드 전 단계)
