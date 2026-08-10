@@ -4,6 +4,10 @@ description: Start a session — restore state, plan before work
 
 Start a work session.
 
+**All user-facing output in this session — status summaries, plans,
+explanations — is written in Korean.** (Instruction files stay in English per
+CLAUDE.md; this rule is about what Claude says to the user.)
+
 (Track already known? Use `/next-pms` or `/next-mcp` instead — they fix the
 track and skip the "which track" question, then follow this same procedure.)
 
