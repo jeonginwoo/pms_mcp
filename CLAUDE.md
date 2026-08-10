@@ -17,6 +17,9 @@ for the area this session works on — `docs/PROGRESS-host.md` or
 
 - `host/` — AI host Boot app (agent loop, LLM, MCP client). **Owner: MCP dev.**
   Rules: `host/CLAUDE.md`.
+- `pms-mcp-mock/` — M-1 mock MCP server (구현_노트 부록 B). **Owner: MCP dev.**
+  Its `mcp/` and `port/` layers are the real contract (promoted into `pms/` at
+  M0); `mock/` is disposable. Verified under the host scope.
 - `pms/` — rebuilt PMS Boot app. **Owner: PMS dev**, except the embedded `/mcp`
   adapter module inside it, which the MCP dev owns (principle 2 makes it live
   here). Rules: `pms/CLAUDE.md`.
@@ -64,12 +67,18 @@ Base LLM for dev/eval: claude-sonnet-5 (re-confirm at G3 with pricing + no-train
 ```bash
 bash scripts/verify.sh [host|pms] [--quick]
                          # guarded verification — runs only stages whose tools exist.
-                         # no scope = everything; host/pms = that app only
-                         # (--quick: compile only) full log → build/last-verify.log;
+                         # no scope = everything; host = host app + pms-mcp-mock;
+                         # pms = pms app only (--quick: compile only)
+                         # full log → build/last-verify.log;
                          # on FAIL read only the failing part (grep/tail)
+
+(cd pms-mcp-mock && ./gradlew bootRun)
+                         # M-1 mock MCP server on http://localhost:8090/mcp
+                         # (Streamable HTTP; caller fixed via mock.caller-id, default 18)
 ```
 
-(Real build/run commands land here as soon as scaffolding exists — update immediately.)
+(Real build/run commands for host/ and pms/ land here as soon as scaffolding
+exists — update immediately.)
 
 ## Way of working
 

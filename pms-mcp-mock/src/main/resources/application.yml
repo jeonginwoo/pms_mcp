@@ -1,0 +1,16 @@
+server:
+  port: 8090
+
+spring:
+  ai:
+    mcp:
+      server:
+        name: pms-mcp-mock
+        version: 0.1.0
+        protocol: STREAMABLE   # 구현_노트 §5 — 원칙 7(stateless 지향), STATELESS 전환은 SDK 신 스펙 지원 후 검토
+        type: SYNC
+
+# B2-0 단계: 인증 없음 — 호출자를 프로퍼티로 고정한다 (B2-2에서 JWT 클레임으로 교체).
+# 기본 18 = 전세아(합집합 키스톤: 팀원 그룹인데 SK온 EUE공장 PM).
+mock:
+  caller-id: 18
