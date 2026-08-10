@@ -32,29 +32,31 @@ class UtilizationServiceTest {
     }
 
     @Test
-    @DisplayName("심은 오버부킹: 2026-08 전세아 1.3MM — 기본 130% / 보정 162.5% (coeff 0.8)")
+    @DisplayName("심은 오버부킹: 2026-08 전세아 1.3MM — 기본 130%(판정 정본) / 보정 104%(×coeff 0.8 보조 지표)")
     void plantedOverbooking() {
         UtilizationEntry e = service.getUtilization(전세아, "2026-08", "ME", null).getFirst();
         assertThat(e.assignedMm()).isEqualTo(1.3);
         assertThat(e.basicPct()).isEqualTo(130.0);
-        assertThat(e.adjustedPct()).isEqualTo(162.5);
+        assertThat(e.adjustedPct()).isEqualTo(104.0); // 1.3 × 0.8 — 2026-08-10 재정의(×coeff)
     }
 
     @Test
-    @DisplayName("경계값: 2026-09 전세아 0.8MM — 보정 정확히 100%는 오버부킹 아님")
+    @DisplayName("경계값: 2026-08 남도린 1.0MM — 기본 정확히 100%는 오버부킹 아님 (판정 = 기본>100)")
     void boundaryNotOverbooked() {
-        UtilizationEntry e = service.getUtilization(전세아, "2026-09", "ME", null).getFirst();
-        assertThat(e.adjustedPct()).isEqualTo(100.0);
-        assertThat(service.listOverbooked(정태휘_부문장, "2026-09"))
+        UtilizationEntry e = service.getUtilization(남도린_팀장, "2026-08", "ME", null).getFirst();
+        assertThat(e.basicPct()).isEqualTo(100.0);
+        assertThat(e.adjustedPct()).isEqualTo(150.0); // 1.0 × 1.5 — 보정>100이지만 판정에 안 씀
+        assertThat(service.listOverbooked(정태휘_부문장, "2026-08"))
                 .extracting(OverbookedEntry::personId)
-                .doesNotContain(전세아);
+                .doesNotContain(남도린_팀장);
     }
 
     @Test
-    @DisplayName("list_overbooked 2026-08 (부문장): 전세아·남민준 — 보정 내림차순 + 원인 배정 동봉")
+    @DisplayName("list_overbooked 2026-08 (부문장): 전세아·남민준 — 기본 내림차순 + 원인 배정 동봉")
     void overbookedAugust() {
         List<OverbookedEntry> result = service.listOverbooked(정태휘_부문장, "2026-08");
         assertThat(result).extracting(OverbookedEntry::personId).containsExactly(전세아, 남민준);
+        assertThat(result.getFirst().basicPct()).isEqualTo(130.0);
         assertThat(result.getFirst().causes()).hasSize(3); // SK온 EUE·우리은행·치과재료
     }
 
@@ -73,13 +75,15 @@ class UtilizationServiceTest {
     }
 
     @Test
-    @DisplayName("집계 모집단 = billable=true — 관리자 전사 조회에도 신현랑(billable=false) 미포함")
+    @DisplayName("집계 모집단 = billable=true — 신현랑(프로텐)·송현솔(AX사업기획부) 제외 (3부문 규칙)")
     void billableExcludedFromAggregates() {
         assertThat(service.listOverbooked(신현랑_관리자, "2026-08"))
                 .extracting(OverbookedEntry::personId)
                 .doesNotContain(신현랑_관리자);
         // MY_TEAM 집계에서도 마찬가지 — 신현랑 자신의 팀 집계는 빈 목록(팀 유일 인원이 billable=false)
         assertThat(service.getUtilization(신현랑_관리자, "2026-08", "MY_TEAM", null)).isEmpty();
+        // 송현솔(29, 부문장)의 자기 부문 집계도 빈 목록 — 부문 유일 인원이 billable=false
+        assertThat(service.getUtilization(29, "2026-08", "DIVISION", null)).isEmpty();
     }
 
     @Test

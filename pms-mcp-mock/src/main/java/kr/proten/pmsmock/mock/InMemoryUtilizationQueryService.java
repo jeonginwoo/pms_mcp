@@ -61,24 +61,24 @@ public class InMemoryUtilizationQueryService implements UtilizationQueryService 
     public List<OverbookedEntry> listOverbooked(int callerId, String month) {
         Person caller = data.person(callerId);
         validateMonth(month);
-        // 범위 = 호출자 가시성(서버 판정) ∩ billable=true
+        // 범위 = 호출자 가시성(서버 판정) ∩ billable=true. 판정 = 기본 가동률 > 100 (2026-08-10 재정의)
         return data.people.stream()
                 .filter(p -> visibility.canSeePerson(caller, p))
                 .filter(Person::billable)
                 .map(p -> entryOf(p, month))
-                .filter(e -> e.adjustedPct() > 100.0)
-                .sorted(Comparator.comparingDouble(UtilizationEntry::adjustedPct).reversed())
+                .filter(e -> e.basicPct() > 100.0)
+                .sorted(Comparator.comparingDouble(UtilizationEntry::basicPct).reversed())
                 .map(e -> toOverbooked(caller, e, month))
                 .toList();
     }
 
-    /** 집계 모집단 = billable=true (상위 PRD §3) */
+    /** 집계 모집단 = billable=true (상위 PRD §3). 정렬 = 기본 가동률(집계 정본) 오름차순 */
     private List<UtilizationEntry> aggregate(String month, java.util.function.Predicate<Person> in) {
         return data.people.stream()
                 .filter(in)
                 .filter(Person::billable)
                 .map(p -> entryOf(p, month))
-                .sorted(Comparator.comparingDouble(UtilizationEntry::adjustedPct))
+                .sorted(Comparator.comparingDouble(UtilizationEntry::basicPct))
                 .toList();
     }
 
@@ -88,7 +88,8 @@ public class InMemoryUtilizationQueryService implements UtilizationQueryService 
                 .mapToDouble(Assignment::mm)
                 .sum();
         double basic = round1(assigned / CAPACITY_MM * 100);
-        double adjusted = round1(assigned / (CAPACITY_MM * p.gradeCoeff()) * 100);
+        // 보정 = Σ(배정MM × 직급계수) ÷ 가용 — 단가 가중 보조 지표 (상위 PRD §3, 2026-08-10 재정의: 구 ÷coeff 폐기)
+        double adjusted = round1(assigned * p.gradeCoeff() / CAPACITY_MM * 100);
         return new UtilizationEntry(p.id(), p.name(), month, round1(assigned), CAPACITY_MM, basic, adjusted);
     }
 
@@ -100,7 +101,7 @@ public class InMemoryUtilizationQueryService implements UtilizationQueryService 
                 .map(a -> new OverbookedEntry.Cause(data.projects.get(a.projectId()).name(), a.mm()))
                 .toList();
         Person p = data.person(e.personId());
-        return new OverbookedEntry(e.personId(), e.name(), p.team(), e.adjustedPct(), causes);
+        return new OverbookedEntry(e.personId(), e.name(), p.team(), e.basicPct(), causes);
     }
 
     private static void validateMonth(String month) {

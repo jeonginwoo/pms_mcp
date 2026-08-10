@@ -18,7 +18,7 @@ import kr.proten.pmsmock.model.VisibilityScope;
  *
  * 심어 둔 실험 케이스:
  * - 합집합 키스톤: 전세아(18, 팀원 그룹)가 SK온 EUE공장(347)의 PM — 시드 24% 케이스 (eval D-01)
- * - 오버부킹: 2026-08 전세아 1.3MM/가용 1.0 (보정 162.5%) · 남민준 1.2MM (보정 120%) — S-1 킬러 시나리오
+ * - 오버부킹(기본>100 — 2026-08-10 재정의): 2026-08 전세아 1.3MM(기본 130%) · 남민준 1.2MM(기본 120%) — S-1 킬러 시나리오
  * - "한국거래소" 키워드 3건 매칭(322·334·351) — 쓰기 대상 모호 케이스 (eval SC-21)
  * - 타 부문 참여 가시성: 서지람(4, AI기술연구소)이 대화형 데이터 플랫폼(344) 참여 (eval B-05)
  * - OEM 직접 등록 계약(902, sourceProject 없음) — list_maintenance_logs projectId 단순화 불가의 근거
@@ -34,7 +34,8 @@ public class MockData {
             "팀장", new PermissionGroup("팀장", VisibilityScope.TEAM, false),
             "팀원", new PermissionGroup("팀원", VisibilityScope.SELF, false));
 
-    // 시드 44명 중 16명 — 그룹 4종·4개 부문 커버. billable=false: 신현랑(대표 — 상위 PRD §3)
+    // 시드 44명 중 16명 — 그룹 4종·4개 부문 커버.
+    // billable=false = 프로텐·AX사업기획부·관리•마케팅부 3부문 (2026-08-10 확정 — 여기서는 신현랑·송현솔 해당)
     public final List<Person> people = List.of(
             new Person(1, "신현랑", "대표이사", "프로텐", "프로텐", "관리자", 2.0, false),
             new Person(2, "엄다움", "상무", "AI기술연구소", "AI기술연구소", "부문장", 1.7, true),
@@ -51,7 +52,7 @@ public class MockData {
             new Person(23, "양시온", "주임", "AX솔루션개발2팀", "AX솔루션사업부", "팀원", 0.8, true),
             new Person(26, "노도온", "선임", "CS사업팀", "AX솔루션사업부", "팀원", 1.0, true),
             new Person(28, "송수람", "주임", "CS사업팀", "AX솔루션사업부", "팀원", 0.8, true),
-            new Person(29, "송현솔", "이사", "AX사업기획부", "AX사업기획부", "부문장", 1.6, true));
+            new Person(29, "송현솔", "이사", "AX사업기획부", "AX사업기획부", "부문장", 1.6, false));
 
     public final Map<Integer, Project> projects = new LinkedHashMap<>();
 
@@ -64,7 +65,7 @@ public class MockData {
             new Assignment(19, 332, "2026-07", 0.5),
             new Assignment(16, 322, "2026-07", 0.4),
             new Assignment(16, 330, "2026-07", 0.4),
-            // 2026-08 — 오버부킹 심기: 전세아 1.3MM(보정 162.5%) · 남민준 1.2MM(보정 120%)
+            // 2026-08 — 오버부킹 심기(기본>100): 전세아 1.3MM(기본 130%) · 남민준 1.2MM(기본 120%)
             new Assignment(18, 347, "2026-08", 0.6),
             new Assignment(18, 317, "2026-08", 0.4),
             new Assignment(18, 355, "2026-08", 0.3),
@@ -87,7 +88,7 @@ public class MockData {
             new Assignment(2, 344, "2026-08", 0.3),
             new Assignment(7, 344, "2026-08", 0.2),
             new Assignment(29, 344, "2026-08", 0.2),
-            // 2026-09 — 전세아 0.8MM(보정 100% — 경계값) · 팀 여유 인원 존재 (eval A-03·A-04)
+            // 2026-09 — 전세아 0.8MM(기본 80%) · 팀 여유 인원 존재 (eval A-03·A-04). 기본 100% 경계값은 8월 남도린(1.0MM)
             new Assignment(18, 347, "2026-09", 0.6),
             new Assignment(18, 317, "2026-09", 0.2),
             new Assignment(17, 332, "2026-09", 0.4),

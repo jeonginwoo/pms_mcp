@@ -19,6 +19,11 @@
 - 다음 작업: <구체적으로>
 ```
 
+### 2026-08-10 (후속) — 가동률 의미 재정의 host 반영 (PRD-pms v2.6 riff — 리베이스 + 목업·문서 정합화)
+- 완료: 동료 푸시(`a4a8d10` — 가동률 재정의, 2026-08-10 동석 리뷰로 MCP 확인 완료 기록) 위로 리베이스(PROGRESS.md 충돌 해소 — 양측 기록 병합). host 반영: ①**목업** — 보정 산식 ÷coeff → **×coeff**(단가 가중 보조 지표), `list_overbooked` 판정 보정>100 → **기본>100**(정렬·OverbookedEntry 필드도 basicPct로), billable=false에 송현솔(AX사업기획부 — 3부문 규칙) 추가, 도구 description 2종 갱신 ②**PRD-host v2.3**(FR-AI-12 비고·S-1 예시·v2.3 변경 요약 — 카탈로그·시그니처 무변경) ③**eval-cases v1.3**(A류 판정 주석 = 기본>100, 기대값 입력 후보 = 부록 B 오버부킹 3명) ④테스트 갱신(경계값 = 8월 남도린 기본 100.0·보정 150이지만 미판정 — 재정의 핵심 케이스 고정). verify.sh host PASS(테스트 32개)
+- 미해결: 없음. 목업 배정 수치를 시드 월별 M/M 규칙(부록 B)과 정렬할지는 eval 기대값 확정 시 판단
+- 다음 작업: B2-1 자연어 검증(변동 없음)
+
 ### 2026-08-10 — M-1 착수: 목업 MCP 서버 스캐폴드 + B2-0 배관 검증 통과
 - 완료: ①**결정 ⑦ host 문서 반영** — PRD-host **v2.2**(FR-AI-16 `whoami` 응답 orgRole → 권한 그룹명, v2.2 변경 요약 절, 게이트 P 통과 반영 상태 "확정") · eval-cases **v1.2**(B-03 채점 기준 = 그룹명 "팀원") — 공용 미해결 이슈 해소. ②**`pms-mcp-mock` 스캐폴드**(부록 B-1 구조): Boot 4.1.0 + Spring AI 2.0.0 + Java 25 툴체인(Maven Central 릴리스 대조), `@McpTool`은 코어 편입 패키지 `org.springframework.ai.mcp.annotation` 확인(규칙 6 웹 대조). MockData = 시드 16명·17건(시드 id 정합) + 실험 케이스 기심음: 합집합 키스톤(전세아 PM)·오버부킹(8월 1.3MM/보정 162.5%)·"한국거래소" 3건 모호·타부문 참여(서지람)·OEM 직접 등록 계약·**오염 레코드(이슈 9105 — C-04 인젝션)**. port/ 5종(실전 계약)·mock/ 인메모리+가시성 정책·mcp/ 도구 7종(FR-AI-10~16, 한국어 description 초안). 호출자는 `mock.caller-id` 프로퍼티 고정(기본 18) — B2-2에서 JWT로 교체. ③**테스트 32개 통과** — 가시성 4단·404 은닉 문구·2단계 확인·409 2종·422·billable 모집단·100% 전이 없음 고정. ④**B2-0 배관 검증**: 기동 시 Registered tools: 7, initialize 핸드셰이크·tools/list·도구별 호출 정상(whoami 그룹명 반환·409에 최신값 동봉). ⑤reviewer 리뷰 MAJOR 1건 수정 — `list_overbooked` 원인 배정이 호출자 가시성 밖 프로젝트명 노출 → 프로젝트 가시성 필터 추가+테스트 고정(§4-4 정합). MINOR 1건 — 배선 설정을 mcp/→mock/ 이동(승격 경로 오염 방지). ⑥CLAUDE.md Commands·Ownership, verify.sh host 스코프에 목업 반영. verify.sh host PASS
 - 미해결: 없음 (수동 curl 테스트 시 한글 인자는 파일 바디 필수 — Windows curl.exe 명령행 인코딩 함정, 서버 무관. bootRun 잔존 프로세스가 포트 8090 물면 taskkill)
