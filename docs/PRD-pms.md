@@ -3,7 +3,7 @@
 | 항목 | 내용 |
 |------|------|
 | 문서 | PMS 본체 구현명세 (코딩 에이전트용) · **소유: pms 트랙** |
-| 버전 / 상태 | v2.6 · **확정** (게이트 P 통과 2026-08-09. v2.6은 가동률 의미 재정의 + 시드 정책 완결 — 2026-08-10 PROGRESS 결정 기록, MCP 담당 확인 완료 2026-08-10) |
+| 버전 / 상태 | v2.7 · **확정** (게이트 P 통과 2026-08-09. v2.6 = 가동률 의미 재정의 + 시드 정책 완결(2026-08-10 — MCP 담당 확인 완료). **v2.7 = M-1 카탈로그 공백 2건 해소의 PMS 측 반영 — 2026-08-11 PROGRESS 결정 기록, MCP 담당 확인 대기**) |
 | 작성일 | 2026-08-02 — 구 "PMS — AI 구현용 PRD" v1.0(2026-06-21, 전사본 `reference/PMS_구현용_PRD_v1.0.md`) 현행화 이관 |
 | 범위 | 프로텐 전사 1차 |
 | 규모 | 약 40명(시드 기준 44명) · 2인 개발(MCP 담당 + PMS 담당) |
@@ -75,6 +75,14 @@
 - **PM 역할 가동률 하드 제외 미채택**: PM 자동 배정 기본 M/M=0(A6-7) + 실투입 의미로 충족 — 하드 제외는 실무형 PM(시드: 1인 프로젝트 다수)의 과부하 사각 + 부하 은닉 우회 구멍
 - **시드 확정 2건**(부록 B): 월별 M/M 부여 규칙(실무자=PM 외 참여자, 없으면 PM 본인 · contractMm 안분 근사 · 2026-08 오버부킹 3명 시뮬레이션 검증) · billable=false = 프로텐·AX사업기획부·관리•마케팅부 3부문 10명
 - **유지보수 시드 변환 완료** (같은 날 후속): 시트 3섹션 → `reference/seed/maintenance.json`(계약 105·사이트 157·이슈 14) + engineerId 매핑 규칙·이관 시연 대상(명화공업) 확정 — 부록 B. **시드 적재 정책 전량 해소**(12장)
+
+### v2.7 반영 (2026-08-11 — M-1 카탈로그 공백 2건 해소의 PMS 측 반영, PROGRESS 결정 기록 · **MCP 담당 확인 대기**)
+
+B2-1 자연어 검증(2026-08-10)이 실증한 도구 카탈로그 공백 2건의 결정 중, **PMS 응답 계약에 해당하는 부분만** 반영한다. MCP 도구 카탈로그·description·시스템 프롬프트·eval은 host 트랙 소유이므로 이 문서는 접점만 갖는다(상위 PRD §6).
+
+- **가동률 응답에 조직 정보 동봉** (③ — C1-6 신설 · §7): `GET /api/utilization` 응답 항목에 **`team`·`division` 추가**. MCP `get_utilization` 응답도 동일(scope 열거에 `COMPANY` 추가는 host 소유). 근거: 전사 집계 결과를 "부문별로" 정리하려면 소속이 필요한데 현 응답에 없어 인원 수만큼 개인 조회를 반복해야 했다(B2-1 R3-1 실측)
+- **유지보수 계약 keyword 검색** (④ — D4-1 확장 · §7): `GET /api/maintenance/contracts`에 **`keyword=` 추가 — 계약명·계약사·사이트명(고객사) 부분 일치**. 근거: 가온아이 1계약에 고객사 사이트 45개(시드 실측)인데 사용자는 계약명이 아니라 고객사명으로 부른다. 현 필터(status·계약사·종료일)로는 사이트명에 도달할 수 없어 웹·챗이 같은 한계를 공유했다. MCP 측은 `search_maintenance` 신설로 대응(카탈로그 7종→8종 — host 소유)
+- **미채택**: 프로젝트 상세에 계약 id 동봉(ⓑ안) — 시드 계약 105건 전부 `sourceProjectId=null`(시트 실데이터라 이관 이력 없음)이라 현시점 커버 0건
 
 ---
 
@@ -250,6 +258,7 @@
 - C1-3 Given `overbooked=true` Then **기본**>100인 사람만 (2026-08-10 — 구 "보정>100" 대체)
 - C1-4 Given 배정 변경 Then 커밋 후 2초 내 가동률 조회 API에 반영 — 이벤트 재계산 완료 기준, 통합 테스트로 검증
 - C1-5 Given `billable=false` 인원 When 팀·부문·전사 집계 또는 `overbooked` 목록 조회 Then 모집단에서 제외 — 개인 지정 조회(personId)는 billable 무관 (상위 PRD §3 · 2026-08-06)
+- C1-6 When 가동률 조회(단건·집계 공통) Then 응답 항목에 **`team`·`division` 포함** — 집계 결과를 소속별로 정리하려면 필요(인원 수만큼 개인 조회를 반복하지 않게 한다). MCP `get_utilization` 응답과 동일 (2026-08-11 — PROGRESS 결정 기록, **MCP 담당 확인 대기**)
 
 ### EPIC D · 유지보수 (2026-08-06 재설계 — 계약/사이트/이슈. 권한·가시성 규칙은 상위 PRD §4-2·§4-3 참조)
 
@@ -271,7 +280,7 @@
 - D3-4 When `GET /api/maintenance/issues?status=&assigneeId=&siteId=&contractId=` Then page 봉투 — **미배정(assigneeId=null) 필터 포함**, "내 담당 열린 이슈"가 조회 한 번에 나와야 한다
 
 **US-D4 유지보수를 조회한다** [로그인 사용자 전체]
-- D4-1 When `GET /api/maintenance/contracts?status=&계약사=&종료일=` Then page 봉투 — 유지보수 탭의 원천(시트 대체)
+- D4-1 When `GET /api/maintenance/contracts?status=&계약사=&종료일=&keyword=` Then page 봉투 — 유지보수 탭의 원천(시트 대체). **`keyword`는 계약명·계약사·사이트명(고객사) 부분 일치**이며 매칭된 사이트를 함께 반환한다 — 45사이트 계약(가온아이)에서 고객사명으로 계약에 도달하는 유일한 경로. MCP `search_maintenance`와 동일 매칭 범위 (2026-08-11 신설 — PROGRESS 결정 기록, **MCP 담당 확인 대기**)
 - D4-2 When `GET /api/maintenance/contracts/{id}` Then 계약 + 사이트 목록(engineerId) + 연락처 + 이슈 요약 · 원 프로젝트 링크(sourceProjectId nullable)
 - D4-3 유지보수 조회는 **전사(로그인 사용자 전체)** — 조직 가시성 미적용·404 은닉 없음. 시트·게시판 현행 계승: 계약·이슈는 팀 경계 없는 회사 공용 자산 (게이트 P에서 확인)
 
@@ -374,9 +383,9 @@ GET         /api/projects/{id}/audit               # 프로젝트별 변경 이�
 POST        /api/projects/{id}/complete            # 완료 처리 {version} — 진행률 100% 전제 (US-A7)
 POST        /api/projects/{id}/reopen              # 재개 {version} — 완료→진행중, progress=90 (US-A7)
 GET/POST    /api/projects/{id}/assignments     PUT/DELETE /api/assignments/{id}
-GET         /api/utilization?month=&personId=&orgUnitId=&overbooked=    # orgUnitId = subtree 집계 (구 teamId — 2026-08-09 ⑧)
+GET         /api/utilization?month=&personId=&orgUnitId=&overbooked=    # orgUnitId = subtree 집계 (구 teamId — 2026-08-09 ⑧) · 응답에 team·division 포함 (C1-6 — 2026-08-11)
 POST        /api/projects/{id}/handover        # 계약 필수 정보 포함 — Contract+Site 생성 (US-D1, v2.4)
-GET/POST    /api/maintenance/contracts         GET/PUT /api/maintenance/contracts/{id}    # US-D2·D4
+GET/POST    /api/maintenance/contracts         GET/PUT /api/maintenance/contracts/{id}    # US-D2·D4 — 목록 ?keyword= 계약명·계약사·사이트명 부분 일치 (D4-1 — 2026-08-11)
 GET/POST    /api/maintenance/contracts/{id}/sites    PUT /api/maintenance/sites/{id}      # 사이트·담당 엔지니어 (D2-4)
 GET/POST    /api/maintenance/issues            PATCH /api/maintenance/issues/{id}         # US-D3 — 구 /maintenances/{id}/logs 대체 (MCP list_maintenance_logs 접점: 확인 완료 2026-08-06)
 POST        /api/maintenance/issues/{id}/comments    # append-only (D3-3)
@@ -495,6 +504,7 @@ POST /api/chat    POST /api/chat/feedback        # chat BFF — AI 호스트 프
 - ~~유지보수 데모 데이터~~ — 2026-08-06 해소: 시트 실데이터 적재 확정(부록 B). 함께 구 미해결 "프로젝트:Maintenance 1:1 vs 1:N"도 해소 — 프로젝트:계약 1:1(이관) + 프로젝트 없는 계약 존재 → `list_maintenance_logs`의 projectId 단순화 불가 (~~MCP 담당 확인 대기~~ — 2026-08-06 확인 완료, 유지보수 재설계 결정 기록)
 - ~~시드 적재 정책 잔여~~ — **전량 해소(2026-08-10)**: 배정 월별 M/M 부여 규칙 · billable=false 팀 목록(가동률 재정의 결정과 함께) · 유지보수 시트→JSON 변환 + engineerId 매핑(`reference/seed/maintenance.json` — 부록 B). 남은 것은 적재 구현 시 수행뿐(PMS-M1)
 - ~~가동률 산식의 배정 M/M 의미(계약 배분 vs 실투입)~~ — **2026-08-10 재정의**(배정 M/M=실투입 계획 · 오버부킹=기본>100 · 보정=단가 가중 ×coeff · PM 하드 제외 미채택 — 상위 PRD §3·C1·B1-5, PROGRESS 결정 기록). ~~MCP 담당 확인 대기~~ — **2026-08-10 확인 완료**(동석 확인 — 결정 기록)
+- **M-1 카탈로그 공백 2건의 PMS 측 반영 (2026-08-11 — v2.7)**: 가동률 응답 `team`·`division` 동봉(C1-6) · 유지보수 계약 `keyword` 검색(D4-1). **MCP 담당 확인 대기** — 짝이 되는 도구 카탈로그 변경(`get_utilization` scope에 `COMPANY` 추가 · `search_maintenance` 신설로 7종→8종)은 host 트랙 소유이고, 접점 변경은 양측 합의로 확정된다(상위 PRD §6). 합의 전까지 이 두 AC는 구현하지 말 것
 - ~~(2차) MCP 챗봇 PAT 검증 지점~~ → v3에서 M0로 승격: `/mcp` 인증 체인(토큰 패스스루·audience)은 루트 ROADMAP M0 + 구현 노트 소유. 이 문서는 접점(애플리케이션 서비스 계약)만 가진다
 
 ---
