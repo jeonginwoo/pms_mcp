@@ -22,6 +22,7 @@ import kr.proten.pmsmock.model.VisibilityScope;
  * - "한국거래소" 키워드 3건 매칭(322·334·351) — 쓰기 대상 모호 케이스 (eval SC-21)
  * - 타 부문 참여 가시성: 서지람(4, AI기술연구소)이 대화형 데이터 플랫폼(344) 참여 (eval B-05)
  * - OEM 직접 등록 계약(902, sourceProject 없음) — list_maintenance_logs projectId 단순화 불가의 근거
+ * - 사이트명 검색 계약(903 가온아이 — "가천대길병원"이 사이트명에만 존재) — search_maintenance 키워드 범위 실험 (eval C-01 재실험)
  * - 오염 레코드: 이슈 9105 코멘트에 인젝션 지시문 — 원칙 6 실험 (eval C-04)
  *
  * 인물 id·프로젝트 id(시드 인덱스+1)는 시드와 동일 — PMS-M1 적재본과 정합.
@@ -103,10 +104,14 @@ public class MockData {
     public final List<MaintenanceContract> contracts = List.of(
             // 이관 경로: 완료 프로젝트 1(한국수출입은행 규정관리 재구축)에서 파생
             new MaintenanceContract(901, "한국수출입은행 규정관리 유지보수", "(주)젠솔소프트", 1,
-                    "2026-01-01", "2026-12-31", "한국수출입은행 본점", 18),
+                    "신규", "2026-01-01", "2026-12-31", "한국수출입은행 본점", 18),
             // OEM 직접 등록: 원천 프로젝트 없음 — projectId 단순화 불가 케이스
             new MaintenanceContract(902, "롯데관광 검색 서비스 유지보수", "윤커뮤니케이션즈", null,
-                    "2026-03-01", "2027-02-28", "롯데관광 본사", 19));
+                    "신규", "2026-03-01", "2027-02-28", "롯데관광 본사", 19),
+            // 사이트명 검색 케이스(2026-08-11 결정 ④): "가천대길병원"은 계약명·계약사에 없고 사이트명에만 있다
+            //   — 시드 가온아이 1계약 45사이트의 축소판. search_maintenance 키워드 범위의 근거 실험용 (eval C-01 재실험)
+            new MaintenanceContract(903, "가온아이 ECM 제품 유지보수", "(주)가온아이", null,
+                    "유지", "2026-01-01", "2026-12-31", "가천대길병원", 20));
 
     public final List<MaintenanceIssue> issues = List.of(
             new MaintenanceIssue(9101, 901, "장애", "완료", "검색 인덱싱 지연 장애", "2026-07-14", 18, List.of(
@@ -129,7 +134,9 @@ public class MockData {
                     new IssueComment("2026-07-23", 19, "카테고리 매핑 정의 협의 중"))),
             new MaintenanceIssue(9203, 902, "요청", "접수", "검색어 자동완성 사전 갱신", "2026-08-05", null, List.of()),
             new MaintenanceIssue(9204, 902, "문의", "완료", "월 리포트 발송 일정 문의", "2026-07-30", 19, List.of(
-                    new IssueComment("2026-07-30", 19, "매월 첫 영업일 발송으로 안내"))));
+                    new IssueComment("2026-07-30", 19, "매월 첫 영업일 발송으로 안내"))),
+            new MaintenanceIssue(9301, 903, "장애", "처리중", "가천대길병원 전자결재 첨부 업로드 오류", "2026-08-07", 20, List.of(
+                    new IssueComment("2026-08-08", 20, "업로드 모듈 로그 확보 — 재현 조건 분석 중"))));
 
     public MockData() {
         for (Project p : buildProjects()) {

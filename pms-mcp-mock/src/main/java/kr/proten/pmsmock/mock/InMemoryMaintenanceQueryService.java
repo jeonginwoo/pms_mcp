@@ -9,11 +9,14 @@ import kr.proten.pmsmock.model.MaintenanceContract;
 import kr.proten.pmsmock.model.MaintenanceIssue;
 import kr.proten.pmsmock.port.MaintenanceQueryService;
 import kr.proten.pmsmock.port.ToolError;
+import kr.proten.pmsmock.port.dto.ContractSummary;
 import kr.proten.pmsmock.port.dto.MaintenanceLogsResult;
 
 public class InMemoryMaintenanceQueryService implements MaintenanceQueryService {
 
     private static final int MAX_ISSUES = 50; // 서버 절단 (FR-AI-14)
+    private static final int MAX_CONTRACTS = 50; // 서버 절단 — 시드 105건 대비 (결정 ④)
+    private static final List<String> CONTRACT_STATUSES = List.of("예정", "신규", "유지", "종료"); // PRD-pms §4
 
     private final MockData data;
 
@@ -45,6 +48,25 @@ public class InMemoryMaintenanceQueryService implements MaintenanceQueryService 
         MaintenanceContract parent = data.contracts.stream()
                 .filter(c -> c.id() == issue.contractId()).findFirst().orElseThrow();
         return new MaintenanceLogsResult("ISSUE", parent.id(), parent.name(), List.of(toView(issue)));
+    }
+
+    @Override
+    public List<ContractSummary> searchContracts(int callerId, String keyword, String status) {
+        if (status != null && !status.isBlank() && !CONTRACT_STATUSES.contains(status)) {
+            throw ToolError.validation("status는 예정/신규/유지/종료 중 하나여야 합니다.");
+        }
+        // 검색도 전사(D4-3) — 가시성 판정·404 은닉 없음, 빈 결과는 [] (2026-08-11 결정 ④)
+        String kw = keyword == null ? "" : keyword.trim();
+        return data.contracts.stream()
+                .filter(c -> status == null || status.isBlank() || c.status().equals(status))
+                .filter(c -> kw.isEmpty() || c.name().contains(kw) || c.client().contains(kw)
+                        || c.siteName().contains(kw))
+                .sorted(Comparator.comparing(MaintenanceContract::endDate).reversed())
+                .limit(MAX_CONTRACTS)
+                .map(c -> new ContractSummary(c.id(), c.name(), c.client(), c.status(),
+                        c.startDate(), c.endDate(),
+                        !kw.isEmpty() && c.siteName().contains(kw) ? List.of(c.siteName()) : List.of()))
+                .toList();
     }
 
     private MaintenanceLogsResult.IssueView toView(MaintenanceIssue i) {

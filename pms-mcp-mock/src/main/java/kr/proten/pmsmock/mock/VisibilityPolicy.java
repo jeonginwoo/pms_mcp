@@ -39,13 +39,14 @@ public class VisibilityPolicy {
         };
     }
 
-    /** 집계 scope 허용 여부 — MY_TEAM은 팀 가시성 이상, DIVISION은 부문 가시성 이상 */
+    /** 집계 scope 허용 여부 — MY_TEAM은 팀 가시성 이상, DIVISION은 부문 가시성 이상, COMPANY는 전사 가시성만 (2026-08-11 결정 ③) */
     public boolean canAggregate(Person caller, String scope) {
         VisibilityScope vs = data.groupOf(caller).scope();
         return switch (scope) {
             case "MY_TEAM" -> vs == VisibilityScope.COMPANY || vs == VisibilityScope.DIVISION
                     || vs == VisibilityScope.TEAM;
             case "DIVISION" -> vs == VisibilityScope.COMPANY || vs == VisibilityScope.DIVISION;
+            case "COMPANY" -> vs == VisibilityScope.COMPANY;
             default -> true;
         };
     }
