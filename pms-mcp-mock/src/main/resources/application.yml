@@ -10,7 +10,9 @@ spring:
         protocol: STREAMABLE   # 구현_노트 §5 — 원칙 7(stateless 지향), STATELESS 전환은 SDK 신 스펙 지원 후 검토
         type: SYNC
 
-# B2-0 단계: 인증 없음 — 호출자를 프로퍼티로 고정한다 (B2-2에서 JWT 클레임으로 교체).
-# 기본 18 = 전세아(합집합 키스톤: 팀원 그룹인데 SK온 EUE공장 PM).
+# B2-2: JWT 권한 흐름 — 호출자 = 토큰 sub 클레임 (B2-0의 caller-id 고정 폐지).
+# HS256 대칭키는 목업 전용 — 실전은 JWKS 디코더로 교체(구현_노트 §1-1·B-3).
+# 테스트 토큰 발급: ./gradlew printTestTokens (기본 그룹 4종 대표)
 mock:
-  caller-id: 18
+  jwt:
+    secret: pms-mock-b2-2-hs256-secret-for-local-testing-0123456789

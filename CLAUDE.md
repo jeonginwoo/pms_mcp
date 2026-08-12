@@ -74,7 +74,9 @@ bash scripts/verify.sh [host|pms] [--quick]
 
 (cd pms-mcp-mock && ./gradlew bootRun)
                          # M-1 mock MCP server on http://localhost:8090/mcp
-                         # (Streamable HTTP; caller fixed via mock.caller-id, default 18)
+                         # (Streamable HTTP; auth = HS256 test JWT since B2-2 —
+                         #  caller = token sub claim. Mint tokens:
+                         #  cd pms-mcp-mock && ./gradlew printTestTokens)
 ```
 
 (Real build/run commands for host/ and pms/ land here as soon as scaffolding
