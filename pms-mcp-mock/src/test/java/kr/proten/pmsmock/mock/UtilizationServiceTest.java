@@ -111,6 +111,39 @@ class UtilizationServiceTest {
     }
 
     @Test
+    @DisplayName("COMPANY 집계(2026-08-11 결정 ③): 관리자는 전사 billable 14명 — team·division 동봉")
+    void companyScopeForAdmin() {
+        List<UtilizationEntry> result = service.getUtilization(신현랑_관리자, "2026-08", "COMPANY", null);
+        assertThat(result).hasSize(14); // 16명 중 billable=false 2명(신현랑·송현솔) 제외
+        assertThat(result).allSatisfy(e -> {
+            assertThat(e.team()).isNotBlank();
+            assertThat(e.division()).isNotBlank();
+        });
+        // "부문별로" 정리가 응답만으로 가능해야 한다 (R3-1 실측 — 조직 정보 동봉의 존재 이유)
+        assertThat(result).extracting(UtilizationEntry::division)
+                .contains("AX솔루션사업부", "AI기술연구소", "AX기술연구소");
+    }
+
+    @Test
+    @DisplayName("전사 가시성 없는 호출자의 COMPANY = 404 은닉 — 부문장도 자기 범위 축소 없이 은닉 (결정 ③)")
+    void companyScopeHiddenBelowCompanyVisibility() {
+        assertThatThrownBy(() -> service.getUtilization(정태휘_부문장, "2026-08", "COMPANY", null))
+                .isInstanceOf(ToolError.class)
+                .hasMessageContaining("조회 가능한 범위");
+        assertThatThrownBy(() -> service.getUtilization(조예아, "2026-08", "COMPANY", null))
+                .isInstanceOf(ToolError.class)
+                .hasMessageContaining("조회 가능한 범위");
+    }
+
+    @Test
+    @DisplayName("단건(ME) 응답에도 team·division 동봉 — C1-6과 동일 계약")
+    void entryCarriesOrgInfo() {
+        UtilizationEntry e = service.getUtilization(전세아, "2026-08", "ME", null).getFirst();
+        assertThat(e.team()).isEqualTo("AX솔루션개발1팀");
+        assertThat(e.division()).isEqualTo("AX솔루션사업부");
+    }
+
+    @Test
     @DisplayName("month 형식 오류는 422")
     void invalidMonth() {
         assertThatThrownBy(() -> service.getUtilization(전세아, "8월", "ME", null))

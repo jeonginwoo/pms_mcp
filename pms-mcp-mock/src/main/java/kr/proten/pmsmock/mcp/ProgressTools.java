@@ -25,6 +25,7 @@ public class ProgressTools {
             사용자가 승인한 경우에만 confirmed=true로 다시 호출한다. 확인 없이 confirmed=true로 호출해서는 안 된다.
             version은 프로젝트 상세 조회(search_projects의 projectId 지정)에서 확보한 값을 그대로 전달한다.
             version이 다르면 최신값과 함께 거절되며(다른 사용자가 먼저 수정), 자동 재시도하지 말고 최신값으로 다시 확인받아야 한다.
+            취소된 확인은 재사용하지 않는다 — 사용자가 취소한 뒤 다시 요청하면 confirmed=false부터 다시 시작한다.
             100%로 저장해도 상태는 완료로 바뀌지 않는다 — 완료 처리는 화면에서만 가능하다.""")
     public UpdateProgressResult updateProgress(
             @McpToolParam(description = "프로젝트 id", required = true) int projectId,

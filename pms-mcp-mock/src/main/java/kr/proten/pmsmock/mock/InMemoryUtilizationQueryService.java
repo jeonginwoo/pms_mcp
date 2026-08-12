@@ -53,7 +53,14 @@ public class InMemoryUtilizationQueryService implements UtilizationQueryService 
                 }
                 yield aggregate(month, p -> p.division().equals(caller.division()));
             }
-            default -> throw ToolError.validation("scope는 ME/MY_TEAM/DIVISION/PERSON 중 하나여야 합니다.");
+            case "COMPANY" -> {
+                // 전사 가시성 없는 호출자의 COMPANY = 404 은닉 — 자기 범위 축소 미채택 (2026-08-11 결정 ③)
+                if (!visibility.canAggregate(caller, "COMPANY")) {
+                    throw ToolError.notFound();
+                }
+                yield aggregate(month, p -> true);
+            }
+            default -> throw ToolError.validation("scope는 ME/MY_TEAM/DIVISION/COMPANY/PERSON 중 하나여야 합니다.");
         };
     }
 
@@ -90,7 +97,8 @@ public class InMemoryUtilizationQueryService implements UtilizationQueryService 
         double basic = round1(assigned / CAPACITY_MM * 100);
         // 보정 = Σ(배정MM × 직급계수) ÷ 가용 — 단가 가중 보조 지표 (상위 PRD §3, 2026-08-10 재정의: 구 ÷coeff 폐기)
         double adjusted = round1(assigned * p.gradeCoeff() / CAPACITY_MM * 100);
-        return new UtilizationEntry(p.id(), p.name(), month, round1(assigned), CAPACITY_MM, basic, adjusted);
+        return new UtilizationEntry(p.id(), p.name(), p.team(), p.division(), month,
+                round1(assigned), CAPACITY_MM, basic, adjusted);
     }
 
     private OverbookedEntry toOverbooked(Person caller, UtilizationEntry e, String month) {
