@@ -1,0 +1,36 @@
+// AI 호스트 앱 (구현_노트 §3) — 에이전트 루프 + LLM + MCP 클라이언트 (구조 원칙 1)
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.1.0'
+}
+
+group = 'kr.proten'
+version = '0.1.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation platform('org.springframework.boot:spring-boot-dependencies:4.1.0')
+    implementation platform('org.springframework.ai:spring-ai-bom:2.0.0')
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.ai:spring-ai-starter-model-anthropic'
+    // MCP 클라이언트는 스타터 없이 수동 조립 — 사용자별 토큰 연결이라 부트 자동
+    // 구성(앱 전체 고정 연결)이 성립하지 않는다 (구현_노트 §3-1, 원칙 4)
+    implementation 'org.springframework.ai:spring-ai-mcp'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    // 관통 IT(McpConnectivityIT)는 목업(8090) 기동 후 -Dpms.mcp.e2e=true 로 opt-in
+    systemProperty 'pms.mcp.e2e', System.getProperty('pms.mcp.e2e', 'false')
+}

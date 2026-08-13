@@ -5,7 +5,7 @@
 
 ## 현재 상태 (2026-08-13)
 
-- **다음 작업:** **B2-3 — 자체 호스트 연결**(host 앱 스캐폴드 — 에이전트 루프·MCP 클라이언트, `pms.mcp.base-url`을 목업(8090)으로 겨눠 챗~호스트~MCP 관통. 구현_노트 §3 호스트 구성·시스템 프롬프트 v0.2). eval은 v1.6으로 완결(잔여는 G1 준비 시: 자동 실행 스크립트·오염 레코드 주입·오류 주입 장치)
+- **다음 작업:** **게이트 M-1 판정(사용자 승인)** — B2-0~B2-3 전량 완료로 M-1 목업 체크리스트 잔여 없음. 핵심 시나리오 실측 근거: 가동률·오버부킹·404 은닉 = B2-1 + B2-3 실 LLM 관통, 쓰기 확인 카드 = B2-1(D류). 통과 시 M0 착수(MCP 담당분 = pms 내 `/mcp` 어댑터 + 인증 체인 — 목업 `mcp/`·`port/` 승격, B-3 표). eval 잔여는 G1 준비 시(자동 실행 스크립트·오염 레코드 주입·오류 주입 장치)
 - **차단 요소:** 없음. (pms 확인 대기 1건 — 이슈→계약 링크 기준(사이트명 포함 여부): 공용 미해결 이슈 등재, C류 기대값의 전제)
 
 ## 세션 로그
@@ -18,6 +18,12 @@
 - 미해결: <다음 세션으로 넘기는 것>
 - 다음 작업: <구체적으로>
 ```
+
+### 2026-08-13 (3차) — B2-3 자체 호스트 연결 (host 앱 스캐폴드 + 실 LLM 관통 3케이스)
+
+- 완료: ①**host 앱 스캐폴드**(`host/` — Boot 4.1·Spring AI 2.0, 구현_노트 §3): MCP 클라이언트 스타터 **미포함 수동 조립**(사용자별 토큰 연결이라 앱 전역 고정 연결 불성립 — §3-1 의도의 강화형), `PmsMcpConnector`(대화 단위 생성·close, Authorization 패스스루 — 원칙 4), `ChatService`(ChatClient 에이전트 루프 + 프롬프트 v0.2 사본 — **드리프트 테스트가 구현_노트 §4-1과 1자 일치를 고정**, 10턴 메모리 = 메시지 20·화자 sub로 키 격리·sub 못 읽으면 fail-closed 거절, 오늘 날짜·identity 힌트 주입), 임시 `POST /chat`(BFF 대역 — 실전 BFF는 pms 소유, §1-2). ②**API 실검증 2건**(규칙 6 — 공식 문서·소스 대조): Spring AI 2.0 `SyncMcpToolCallbackProvider` builder 기본값이 도구명 접두사 부착 → **`noPrefix()` 필수**(프롬프트 도구명 정합) · `toolCallbacks(...)`·`chat.options.*` deprecated → `tools(...)`·`chat.model`. 구현_노트 §3 스니펫을 확정 코드로 현행화. ③**관통 IT**(`McpConnectivityIT` — 목업 기동 후 `-Dpms.mcp.e2e=true` opt-in): initialize→tools/list 8종→whoami, **가짜 name 클레임 무시 실측**(서버는 sub만 신뢰 — B2-2 클레임 규칙의 호스트 경유 재확인). ④**실 LLM 관통 3케이스 통과**(전세아 MEMBER 토큰, claude-sonnet-5): scope=ME 한 방(기본 130%·보정 104% — 기본 기준 판정 정합) · 후속 턴 메모리("그 수치" 해석 + 과부하 원인 배정 3건 실데이터) · 404 은닉 정본 문구(가시성 밖 프로젝트 361). ⑤reviewer APPROVE — MINOR 3건 반영(10턴 경계 축출 테스트·fail-closed·포맷), 1건 존치(`/chat` 선언적 422 검증 — BFF 대역이라 생략, **M0에서 패턴 승격 금지** 유의). ⑥API 키 로컬 관리: `spring.config.import` → `host/application-local.yml`(기존 gitignore 패턴 활용, 환경변수 우선 공존). 테스트 host 13개(+opt-in IT 1). verify.sh host PASS
+- 미해결: 없음
+- 다음 작업: 게이트 M-1 판정(사용자 승인 — 핵심 시나리오 목업 통과 근거는 B2-1·B2-3 실측) → M0 착수
 
 ### 2026-08-13 (2차) — B2-2 JWT 권한 흐름 (caller-id 프로퍼티 → HS256 토큰 sub)
 

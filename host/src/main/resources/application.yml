@@ -1,0 +1,21 @@
+server:
+  port: 8081   # 목업 MCP(8090)·PMS(8080 예정)와 분리
+
+spring:
+  config:
+    # 로컬 시크릿 — host/application-local.yml (git 무시: **/application-local*).
+    # API 키를 거기 넣거나, 환경변수 ANTHROPIC_API_KEY로 줘도 된다(환경변수가 우선)
+    import: optional:file:./application-local.yml
+  ai:
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY:}   # 실 LLM 관통 시 필수 — 미설정이면 기동은 되고 호출 시 실패
+      chat:
+        model: claude-sonnet-5         # 기준 모델 (결정 기록 2026-07-31 — 최종 확정은 G3)
+    # MCP 클라이언트 부트 자동 구성은 쓰지 않는다(스타터 미포함) — 요청마다
+    # 그 사용자의 토큰으로 연결해야 하므로 앱 전역 고정 연결 모델이 성립하지
+    # 않는다 (구현_노트 §3-1, 원칙 4). 연결은 PmsMcpConnector가 대화 단위 생성.
+
+# PMS MCP 서버 주소 — M-1(B2-3)은 목업(8090), M0에서 실전 /mcp로 전환
+pms:
+  mcp:
+    base-url: http://localhost:8090
