@@ -90,12 +90,13 @@
 
 > Applies to `pms/`. The `host/` app is a thin agent-loop application — its
 > internal structure is decided at M0.
-> Module list below is carried from the old design — **confirm at M0 scaffolding**:
-> identity · project · resource · maintenance · notification · common
-> (+ supporting modules chat(BFF) · mcpconfig).
+> Module list **confirmed at M0 scaffolding (2026-08-17, shared decision log)**:
+> identity · project · resource · maintenance · notification · common.
+> Supporting-module candidates chat(BFF) · mcpconfig are deferred (revisit at M1);
+> the `/mcp` adapter module is added by the MCP dev when promoting the mock.
 
 ```
-com.proten.pms
+kr.proten.pms
 └── project/                  # module root = public API (only what other modules may reference)
     ├── ProjectApi.java       #   public service interfaces, public DTOs, domain events
     └── internal/             # no references from outside the module (verified by Modulith)

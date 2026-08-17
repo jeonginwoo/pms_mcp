@@ -8,11 +8,10 @@
 1. 루트 `CLAUDE.md` → `pms/CLAUDE.md` → `docs/PROGRESS.md` → `docs/ROADMAP.md` 순으로 읽기
 2. `pms/` 안에서도 `/mcp` 어댑터 모듈은 MCP 담당 소유 — 애플리케이션 서비스 API 변경은 공용 결정 기록 경유
 
-## 현재 상태 (2026-08-14)
+## 현재 상태 (2026-08-17)
 
-- **이슈→계약 링크 기준 확정**(2026-08-14 — 공용 결정 기록, 사용자 승인): 부록 B '이름 일치' = **계약명·계약사·사이트명 3종(사이트명 포함)** — D4-1·`search_maintenance` keyword 매칭 범위와 동일. 2026-08-12 host 세션이 등재한 pms 확인 요청 해소 — eval C류 v1.6 전제 성립(host 추가 반영 불요), 적재 구현은 PMS-M1
-- **③④ 확인 대기 플래그 일괄 해소**: 2026-08-12 MCP 확인 완료(양측 합의 성립·host 반영 완료 — 목업 8종화·PRD-host v2.4·시스템 프롬프트 v0.2·eval v1.5)를 PRD-pms v2.7의 대기 플래그 5곳(헤더·v2.7 절·C1-6·D4-1·12장)에 반영. **C1-6·D4-1 구현 금지 조건 해제** — 구현 시점은 PMS-M1
-- **다음 작업:** 게이트 M-1 대기(잔여 B2-3 자체 호스트 연결 — host 트랙). **PMS-M0 스캐폴드는 게이트 M-1 통과 후.** 대기 중 후보 없음
+- **PMS-M0 스캐폴드 완료**(게이트 M-1 통과 직후 착수 — 루트 ROADMAP M0 첫 항목): `pms/` Gradle 프로젝트(Boot 4.1·Modulith 2.1.0·Java 25) + **모듈 6종 확정**(공용 결정 기록 — identity·project·resource·maintenance·notification·common, chat BFF·mcpconfig 유보, `/mcp` 어댑터 자리는 MCP 담당 몫) + 경계 테스트 4건 초록 + PG(compose)/H2(테스트). 실기동 확인 완료(bootRun ↔ compose PG)
+- **다음 작업:** PMS-M1(identity + 인증 — PRD-pms §10 트랙 내부 순서. 루트 M0 잔여 "시드 적재"와 host 트랙 "/mcp 인증 체인"의 전제)
 - **차단 요소:** 없음
 
 ## 이전 상태 (2026-08-11)
@@ -30,6 +29,12 @@
 - 미해결: <다음 세션으로 넘기는 것>
 - 다음 작업: <구체적으로>
 ```
+
+### 2026-08-17 — PMS-M0 스캐폴드 (`pms/` 신설 — 모듈 6종 확정 + 경계 테스트)
+
+- 완료: ①`pms/` Gradle 프로젝트 신설 — Boot 4.1·**Modulith 2.1.0**(2026-06 GA — Maven Central 실해석으로 좌표 확인)·Java 25 툴체인, host·목업과 동일 관례(베이스 패키지 `kr.proten.pms`). 의존성 web·data-jpa·validation·modulith-starter-core + PG(런타임)/H2(테스트) — 이벤트 발행 레지스트리(starter-jpa)는 §8 이벤트 도입 시(PMS-M3+) 추가로 유보 ②**모듈 목록 확정**(공용 결정 기록, 사용자 승인 — PRD-pms §3이 PMS-M0로 위임한 결정): BC 6종(identity·project·resource·maintenance·notification·common)만 생성, chat BFF·mcpconfig 미생성 유보(M1 재론), `/mcp` 어댑터 모듈은 MCP 담당이 목업 `mcp/`·`port/` 승격 시 추가(자리 선점 안 함) ③경계 테스트 4건 초록 — ModularityTest(`verify()` + 모듈 6종 감지 확인)·DomainPurityTest(`..domain..` Spring/JPA 의존 0 — 스캐폴드 시점 공집합 통과, PMS-M1부터 실효)·컨텍스트 스모크(H2). Modulith 2.1에서 `ApplicationModule.getName()` 제거를 빌드 실패로 발견 → 공식 javadoc 확인 후 `getIdentifier()`로 교체(루트 CLAUDE.md 규칙 6 준용) ④docker-compose(postgres:17 단독 — 앱·Nginx 편입은 PMS-M6) ⑤문서 반영: PRD-pms §3 확정 표기 · ROADMAP M0 체크 · 루트 CLAUDE.md Commands(pms 실행 명령 — compose·bootRun) · conventions §5 위임 문구 해소 + 예시 패키지 `com.proten.pms` 오기 → `kr.proten.pms` 정정. 검증: **verify.sh 전 스코프 PASS**(host·mock·pms 6단계) + **실기동 확인**(사용자 요청 — compose PG 기동 → bootRun 7.9초 기동·Hikari PG 연결·8080 응답 후 정리)
+- 미해결: 없음
+- 다음 작업: PMS-M1(identity + 인증 — 조직 트리·직급·권한 그룹·Person/User·자체 로그인 JWT·가시성 필터. 루트 M0 잔여 항목들의 전제)
 
 ### 2026-08-14 — 이슈→계약 링크 기준 확정(사이트명 포함) + ③④ 합의 성립 후속 플래그 정리
 
