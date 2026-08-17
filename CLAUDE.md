@@ -77,6 +77,16 @@ bash scripts/verify.sh [host|pms] [--quick]
                          # (Streamable HTTP; auth = HS256 test JWT since B2-2 —
                          #  caller = token sub claim. Mint tokens:
                          #  cd pms-mcp-mock && ./gradlew printTestTokens)
+
+(cd host && ./gradlew bootRun)
+                         # AI host app on http://localhost:8081 (B2-3) — targets
+                         # the mock via pms.mcp.base-url; real LLM runs need an
+                         # Anthropic API key (host/application-local.yml, gitignored,
+                         # or ANTHROPIC_API_KEY env var — env wins). Chat:
+                         # POST /chat {"message": ...} with Authorization: Bearer <test JWT>
+
+(cd host && ./gradlew test -Dpms.mcp.e2e=true)
+                         # host↔mock MCP through-line IT (mock must be running)
 ```
 
 (Real build/run commands for host/ and pms/ land here as soon as scaffolding
