@@ -8,7 +8,14 @@ spring:
     password: pms
   jpa:
     hibernate:
-      ddl-auto: validate # 엔티티 없음 — 스키마 관리 방식은 PMS-M1에서 결정
+      # ASSUMPTION: 개발 단계 스키마 관리 = update (단순·표준 — PMS-M0 유보 결정).
+      # 스키마 안정화(시드 적재 이후) 시 Flyway 전환을 재검토한다.
+      ddl-auto: update
+    properties:
+      hibernate:
+        # 모듈별 스키마(§0) — 엔티티의 schema 지정을 DDL로 함께 생성
+        hbm2ddl:
+          create_namespaces: true
     open-in-view: false
 
 server:
@@ -24,9 +31,14 @@ spring.ai.mcp.server:
 pms:
   auth:
     # jwks-uri: 실제 토큰 발급 체계(로그인/BFF 위임 — PMS-M1) 도입 시 설정. 설정되면 HS256보다 우선.
+    #   → PMS-M1a부터 로그인 JWT(RS256) 발급 가동 — 사용 가능 값: http://localhost:8080/api/auth/jwks
+    #     (전환 시점은 MCP 담당 몫 — HS256 테스트 토큰 흐름과 맞바꿈)
     # HS256 시크릿은 로컬·게이트 M0 검증 전용 — 운영 반입 금지 (구현_노트 B-3).
     # 테스트 토큰 발급: ./gradlew printTestTokens
     hs256-secret: pms-m0-hs256-local-gate-secret-0123456789-abcdefghij
+    # 로그인 JWT TTL 기본값은 코드(§7 확정: access 1h·refresh 14d) — 재정의 시에만 기입
+    # access-ttl: 1h
+    # refresh-ttl: 14d
   mcp:
     # 임시 어댑터의 시드 원본 — identity 모듈 적재(PMS-M1)가 대체하면 제거
     seed-people-path: ../reference/seed/people.json

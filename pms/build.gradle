@@ -29,10 +29,15 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    // 자체 로그인(JWT 발급 — RS256+JWKS, 구현_노트 §1-1·B-3 승격 경로 정합).
+    // 검증(oauth2-resource-server)은 /mcp 어댑터와 공유
+    implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.modulith:spring-modulith-starter-core'
     // 이벤트 발행 레지스트리(spring-modulith-starter-jpa)는 §8 이벤트 도입 시(PMS-M3+) 추가
     runtimeOnly 'org.postgresql:postgresql'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    // MockMvc 웹 슬라이스 — Boot 4에서 모듈 분리(@AutoConfigureMockMvc가 이 스타터에)
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
     testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
     testRuntimeOnly 'com.h2database:h2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -52,4 +57,8 @@ tasks.register('printTestTokens', JavaExec) {
     // 시크릿 정본은 application.yml 하나 — 상수 중복 드리프트 방지
     def yml = file('src/main/resources/application.yml').text
     systemProperty 'pms.auth.hs256-secret', (yml =~ /hs256-secret:\s*(\S+)/)[0][1]
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs << '-Xlint:deprecation'
 }
