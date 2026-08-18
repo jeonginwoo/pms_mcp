@@ -22,7 +22,11 @@ repositories {
 dependencies {
     implementation platform('org.springframework.boot:spring-boot-dependencies:4.1.0')
     implementation platform('org.springframework.modulith:spring-modulith-bom:2.1.0')
+    implementation platform('org.springframework.ai:spring-ai-bom:2.0.0')
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    // /mcp 어댑터 모듈 (MCP 담당 — pms-mcp-mock 승격분)
+    implementation 'org.springframework.ai:spring-ai-starter-mcp-server-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.modulith:spring-modulith-starter-core'
@@ -36,4 +40,16 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+// 게이트 M0 수동 검증용 — HS256 테스트 토큰 출력 (기본 그룹 4종 대표, mock과 동일 요령)
+tasks.register('printTestTokens', JavaExec) {
+    group = 'application'
+    description = 'Print HS256 test JWTs for manual /mcp verification'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'kr.proten.pms.mcp.TestJwt'
+    systemProperty 'stdout.encoding', 'UTF-8' // Windows 콘솔 한글 라벨 깨짐 방지
+    // 시크릿 정본은 application.yml 하나 — 상수 중복 드리프트 방지
+    def yml = file('src/main/resources/application.yml').text
+    systemProperty 'pms.auth.hs256-secret', (yml =~ /hs256-secret:\s*(\S+)/)[0][1]
 }

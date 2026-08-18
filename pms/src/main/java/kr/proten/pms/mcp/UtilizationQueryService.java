@@ -1,9 +1,7 @@
-package kr.proten.pmsmock.port;
+package kr.proten.pms.mcp;
 
 import java.util.List;
 
-import kr.proten.pmsmock.port.dto.OverbookedEntry;
-import kr.proten.pmsmock.port.dto.UtilizationEntry;
 
 /**
  * 실전 계약: utilization 모듈 애플리케이션 서비스.

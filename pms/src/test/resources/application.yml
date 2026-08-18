@@ -9,3 +9,16 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
+
+# /mcp 어댑터 (MCP 담당) — 테스트 yml이 메인 yml을 통째로 가리므로 여기에도 필요
+spring.ai.mcp.server:
+  name: pms
+  version: 0.1.0
+  protocol: STREAMABLE
+  type: SYNC
+
+pms:
+  auth:
+    hs256-secret: pms-m0-hs256-test-secret-0123456789-abcdefghij
+  mcp:
+    seed-people-path: ../reference/seed/people.json
