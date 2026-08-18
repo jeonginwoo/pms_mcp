@@ -39,6 +39,10 @@ pms:
     # 로그인 JWT TTL 기본값은 코드(§7 확정: access 1h·refresh 14d) — 재정의 시에만 기입
     # access-ttl: 1h
     # refresh-ttl: 14d
+  # --- 시드 적재 (pms 트랙 소유) — 기동 시 Person이 비어 있으면 identity분 자동 적재.
+  #     빈 값·미설정 = 비활성 (테스트 yml은 미설정 — 픽스처 충돌 방지). 배포 경로는 PMS-M6
+  seed:
+    path: ../reference/seed
   mcp:
     # 임시 어댑터의 시드 원본 — identity 모듈 적재(PMS-M1)가 대체하면 제거
     seed-people-path: ../reference/seed/people.json
