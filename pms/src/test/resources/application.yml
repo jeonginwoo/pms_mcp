@@ -1,13 +1,19 @@
-# 테스트 전용 — 인메모리 H2 (컨텍스트 기동 스모크용. 통합 테스트는 Testcontainers
-# PostgreSQL로 별도 — H2 대체 금지, conventions/java-spring.md §8)
+# 테스트 전용 — 인메모리 H2 (컨텍스트 스모크·웹 슬라이스용. SQL 방언 타는 통합
+# 테스트는 Testcontainers PostgreSQL로 별도 — H2 대체 금지, conventions/java-spring.md §8)
 spring:
   datasource:
-    url: jdbc:h2:mem:pms;DB_CLOSE_DELAY=-1
+    # NON_KEYWORDS=IDENTITY — 모듈 스키마명 identity가 H2 키워드와 충돌하지 않도록
+    url: jdbc:h2:mem:pms;DB_CLOSE_DELAY=-1;NON_KEYWORDS=IDENTITY
     username: sa
     password: ""
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        # 모듈별 스키마(§0)를 테스트 DDL에서도 생성
+        hbm2ddl:
+          create_namespaces: true
     open-in-view: false
 
 # /mcp 어댑터 (MCP 담당) — 테스트 yml이 메인 yml을 통째로 가리므로 여기에도 필요

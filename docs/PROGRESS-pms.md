@@ -8,10 +8,11 @@
 1. 루트 `CLAUDE.md` → `pms/CLAUDE.md` → `docs/PROGRESS.md` → `docs/ROADMAP.md` 순으로 읽기
 2. `pms/` 안에서도 `/mcp` 어댑터 모듈은 MCP 담당 소유 — 애플리케이션 서비스 API 변경은 공용 결정 기록 경유
 
-## 현재 상태 (2026-08-17)
+## 현재 상태 (2026-08-18)
 
-- **PMS-M0 스캐폴드 완료**(게이트 M-1 통과 직후 착수 — 루트 ROADMAP M0 첫 항목): `pms/` Gradle 프로젝트(Boot 4.1·Modulith 2.1.0·Java 25) + **모듈 6종 확정**(공용 결정 기록 — identity·project·resource·maintenance·notification·common, chat BFF·mcpconfig 유보, `/mcp` 어댑터 자리는 MCP 담당 몫) + 경계 테스트 4건 초록 + PG(compose)/H2(테스트). 실기동 확인 완료(bootRun ↔ compose PG)
-- **다음 작업:** PMS-M1(identity + 인증 — PRD-pms §10 트랙 내부 순서. 루트 M0 잔여 "시드 적재"와 host 트랙 "/mcp 인증 체인"의 전제)
+- **PMS-M1a 완료**(PMS-M1을 4슬라이스로 분할한 첫 슬라이스 — 브랜치 `feat/pms-m1-identity`): identity **순수 도메인 5종**(OrgUnit 임의 깊이 트리·Grade·PermissionGroup·Person·User — DomainPurityTest 실효 통과) + JPA 영속화(`identity` 스키마 — 모듈별 스키마) + **자체 로그인 JWT**(RS256, sub=personId·aud=pms — 목업 B2-2·구현_노트 §1-1 정합, access 1h·refresh 14d 회전) + 401 에러 봉투 + `GET /api/me` 최소 구현. 테스트 17개 초록 + PG 실기동 스모크(스키마 자동 생성·무토큰 401·JWKS 200)
+- **host 트랙 참고(접점 정보 — 계약 변경 아님)**: `/mcp` 체인 디코더용 `pms.auth.jwks-uri` = `http://localhost:8080/api/auth/jwks`. 신규 계약 변경 없음 — JWT 형상은 구현_노트 §1-1 기합의 그대로
+- **다음 작업:** PMS-M1b(가시성 필터 + 권한 그룹 판정 — scope 4단·TEAM subtree·404 은닉 기반. 이때 Testcontainers PG 도입)
 - **차단 요소:** 없음
 
 ## 이전 상태 (2026-08-11)
@@ -29,6 +30,14 @@
 - 미해결: <다음 세션으로 넘기는 것>
 - 다음 작업: <구체적으로>
 ```
+
+### 2026-08-18 — PMS-M1a: identity 도메인 + 영속화 + 자체 로그인 JWT
+
+- 완료: PMS-M1(identity+인증)을 4슬라이스로 분할(M1a 도메인·영속화·로그인 → M1b 가시성 필터·그룹 판정 → M1c 관리 API US-E1~E5 → M1d 내 계정 EPIC H — 사용자 승인). **M1a 구현**: ①순수 도메인 5종+저장소 포트(§0 규칙 `api→application→domain←infra` — 도메인은 record, JPA 매핑은 `infra/jpa` 엔티티가 별도 부담. 스캐폴드의 DomainPurityTest 공집합 → 실효 통과) ②`identity` 스키마 영속화 — PG 실기동에서 스키마·테이블 5종 자동 생성 확인 ③자체 로그인 `POST /api/auth/login`·`/refresh`(회전)·**`GET /api/auth/jwks`** — RS256, sub=personId(목업 B2-2 정합)·aud=pms·token_type으로 access/refresh 구분(교차 오용 401), 실패 사유(미존재·불일치·비활성 E2-3)는 전부 같은 401로 수렴(계정 존재 탐지 방지) ④common 모듈: §7 에러 봉투 + 전역 예외 핸들러(ApiException·400 VALIDATION_ERROR) — 보안 체인 401도 같은 봉투 ⑤`GET /api/me` 최소 구현(인증 관통용 personId·이름·email — H1-1 완성은 M1d). 검증: **verify.sh pms PASS**(테스트 17개 — AuthService 단위 6 + 관통 통합 9(무토큰 401 = 게이트 M0 인증 케이스 예행 포함) + 기존 경계 4) + 실기동 스모크(bootRun↔compose PG 7.1초, curl 401 봉투·JWKS 200) 후 정리. Boot 4.1 실측 2건: **Jackson 3(`tools.jackson`)** 전환·`@AutoConfigureMockMvc`는 `spring-boot-starter-webmvc-test`로 분리(빌드에 -Xlint:deprecation 추가)
+- 판단(ASSUMPTION 주석 병기): ①스키마 관리 = **ddl-auto update**(M0 유보 해소 — 단순·표준. 시드 적재 후 Flyway 재검토) ②서명 키 = 기동 시 임시 생성(재기동 시 재로그인 — 운영 키 외부화는 배포 시) ③웹 슬라이스 테스트는 H2(인증 의미론 — 방언 무관), **방언 타는 질의가 생기는 M1b부터 Testcontainers PG**(conventions §8 취지 유지) ④refresh 회전은 무상태(서버측 취소 목록 없음 — 고통 확인 후 jti 추적 추가, 구현_노트 §1-3 PAT와 동일 보완 경로)
+- **(랩업 중 통합) PR #9(/mcp 어댑터 승격 — host 트랙)와 리베이스 병합**: 원격 main에 /mcp 어댑터(7번째 모듈)+인증 체인이 먼저 머지되어 리베이스 — 충돌 2파일(build.gradle·application.yml) 해소(각 트랙 블록 병존, oauth2-resource-server 의존성 중복 제거). **JwtDecoder 빈 충돌을 pms 측에서 해소**: `/mcp`의 `McpJwtDecoderConfig`가 JwtDecoder 빈을 소유(withDefaults 타입 조회)하므로, REST 체인 디코더는 빈이 아닌 보유 컴포넌트(`ApiTokenVerification`)로 바꾸고 체인에 명시 지정 — MCP 담당 코드 무수정. 통합 후 verify.sh pms 재PASS(양 트랙 테스트 전체). **MCP 담당 인지 필요 2건**(코드 리뷰 요청): ①`pms.auth.*` prefix를 양측이 공유하게 됨(mcp: jwks-uri·hs256-secret / pms: access-ttl·refresh-ttl — 프로퍼티명 비충돌) ②main yml의 MCP 소유 블록에 jwks-uri 사용 가능 값 주석 추가(`http://localhost:8080/api/auth/jwks` — 전환 시점은 MCP 담당 몫)
+- 미해결: 없음
+- 다음 작업: PMS-M1b(가시성 필터 + 권한 그룹 판정 — VisibilityScope 4단·TEAM subtree(E3-4)·404 은닉 공통 기반)
 
 ### 2026-08-17 — PMS-M0 스캐폴드 (`pms/` 신설 — 모듈 6종 확정 + 경계 테스트)
 
