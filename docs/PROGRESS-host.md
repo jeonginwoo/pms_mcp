@@ -3,9 +3,9 @@
 > 공용 상태·결정 기록·미해결 이슈는 `PROGRESS.md`. 이 파일은 host 트랙의
 > 다음 작업과 세션 로그만 담는다.
 
-## 현재 상태 (2026-08-17)
+## 현재 상태 (2026-08-18)
 
-- **다음 작업:** **M0 착수 — MCP 담당분 = pms 내 `/mcp` 어댑터 + 인증 체인** (게이트 M-1 2026-08-17 통과 — 결정 기록). 목업 `mcp/`·`port/`를 `pms/`로 승격(구현_노트 B-3 표 — HS256 대칭키 디코더만 JWKS로 교체, audience 검증 빈은 승격 포함), 어댑터는 애플리케이션 서비스만 호출(원칙 3). **선행 의존**: PMS 백엔드 스캐폴드(Modulith 모듈 경계 — pms 트랙)가 먼저라 착수 순서는 pms 트랙과 조율. eval 잔여는 G1 준비 시(자동 실행 스크립트·오염 레코드 주입·오류 주입 장치). 하네스 소소분: CI `setup-java@v4` deprecated → v5 (다음 정비 때)
+- **다음 작업:** **게이트 M0 판정 준비** — MCP 담당분(`/mcp` 어댑터+인증 체인)은 2026-08-18 완료. 시드 적재(pms 트랙) 후 실서버에서 인증 3케이스 실측(구현_노트 §1-4, 토큰은 `cd pms && ./gradlew printTestTokens`) → 사용자 승인으로 게이트 판정. 판정 후 M1(조회 6도구 — 각 모듈 서비스가 port를 구현하면 `internal/seed/` 임시 어댑터 제거 + 가시성 E2E 잔여분(프로젝트·404 은닉)을 mock 테스트에서 마저 승격). **트리거 2건**: ①첫 배포 전 HS256 prod 프로파일 fail-fast 추가(커밋된 테스트 시크릿 — reviewer 지적) ②JWKS 전환 = 실 토큰 발급 체계 등장 시(결정 기록). eval 잔여는 G1 준비 시(자동 실행 스크립트·오염 레코드 주입·오류 주입 장치). 하네스 소소분: CI `setup-java@v4` deprecated → v5 (다음 정비 때)
 - **차단 요소:** 없음. (M0 게이트 전제인 **LLM 학습 미사용 조항 확인은 사람 작업** — 법무·구매 리드타임이 있어 조기 착수 권고)
 
 ## 세션 로그
@@ -18,6 +18,12 @@
 - 미해결: <다음 세션으로 넘기는 것>
 - 다음 작업: <구체적으로>
 ```
+
+### 2026-08-18 — M0: `/mcp` 어댑터 승격 + 인증 체인 (`pms/` 7번째 모듈 — 게이트 인증 3케이스 E2E 예행)
+
+- 완료: ①PR #8(pms 스캐폴드) 머지 확인 후 착수(머지는 사용자 수행). ②**승격**(구현_노트 B-3 표 그대로 — import 경로만 변경): 목업 `port/` 5종+DTO 9종+ToolError → `kr.proten.pms.mcp` **모듈 루트 = 공개 계약**(도메인 모듈이 PMS-M1에서 구현 — 시그니처 변경은 협업 접점), 도구 6클래스(8도구)·CallerContext·보안 체인 → `internal/`. reviewer가 도구 description **바이트 일치** 확인(카탈로그 무변경). ModularityTest 6→7종(2026-08-17 모듈 결정이 예정한 추가). ③**인증 체인**: audience(`aud=pms`) 검증 + 디코더 정책 — JWKS 우선/HS256 폴백/둘 다 없으면 기동 실패(JWKS 유예는 공용 결정 기록), `printTestTokens` 태스크 pms 복제. ④**임시 어댑터**(`internal/seed/` 격리 — mock/ 격리 원리 동일): `PersonQueryService`만 시드 실데이터 44명(whoami·find_person, 가시성 4단 = mock VisibilityPolicy 규칙), 나머지 4포트는 `[503 UNAVAILABLE]` 준비 중(FR-AI-26 표준 형식, 카탈로그 8종 노출 유지). ⑤**테스트 16개 전부 통과**: 게이트 M0 인증 3케이스 E2E(무토큰/타 audience/정상 토큰→whoami가 그 사용자) + 위조 서명·화자 전환·카탈로그 8종·인력 가시성(관리자 44/부문장 16/팀장 5/팀원 1)·503 표준 오류 + 시드 어댑터 단위 4건. 실측 함정 1건: pms 테스트 `application.yml`이 메인 yml을 **통째로 가림** → mcp 블록을 테스트 yml에도 별도 기재. ⑥발견: Boot 4.1 = **Jackson 3**(`tools.jackson.*` 네임스페이스, 언체크 `JacksonException` — 시드 로더 반영. annotations는 `com.fasterxml` 유지). ⑦**reviewer NEEDS_CHANGES → 수정 완료**: MAJOR 1건 = `UtilizationQueryService.listOverbooked` 주석의 "보정>100" 잔재(2026-08-10 재정의 위반 — 목업에서 옮겨온 드리프트, **PMS 담당이 구현할 실전 계약 문서라 치명**)를 pms·목업 양쪽 정정. MINOR 2건 트리거 등재(HS256 prod fail-fast — 현재 상태)·1건 존치(printTestTokens 정규식 — dev 전용). ⑧CLAUDE.md Commands 갱신(pms `/mcp`·토큰 발급). verify.sh 전 스코프 PASS
+- 미해결: 없음
+- 다음 작업: 시드 적재(pms 트랙) 완료 후 게이트 M0 실서버 실측 → 사용자 승인 판정. **LLM 학습 미사용 조항 확인(사람 작업) 병행 권고**
 
 ### 2026-08-17 — 게이트 M-1 통과 (사용자 승인 — 기록 세션) + PR #7 머지 정리·CI 수리
 

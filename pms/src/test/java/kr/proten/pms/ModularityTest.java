@@ -8,8 +8,9 @@ import org.springframework.modulith.core.ApplicationModules;
 
 /**
  * Modulith 모듈 경계 검증 (PRD-pms §0 아키텍처 규칙 — 위반=실패).
- * 모듈 = 메인 패키지의 직속 하위 패키지 6종(§3 확정 목록):
- * identity · project · resource · maintenance · notification · common.
+ * 모듈 = 메인 패키지의 직속 하위 패키지 — §3 확정 6종(identity · project ·
+ * resource · maintenance · notification · common) + /mcp 어댑터 모듈 mcp
+ * (MCP 담당, 2026-08-17 모듈 결정이 예정한 추가).
  * 모듈 루트만 공개 API이고 하위 패키지는 외부 참조 금지 — 이 테스트가 깨지면
  * 테스트가 아니라 구조를 고친다(conventions/java-spring.md §5).
  */
@@ -24,18 +25,20 @@ class ModularityTest {
     }
 
     @Test
-    @DisplayName("확정 모듈 6종이 전부 감지된다")
-    void detectsAllSixModules() {
+    @DisplayName("확정 모듈 6종 + /mcp 어댑터 모듈이 전부 감지된다")
+    void detectsAllModules() {
         var detected = modules.stream()
                 .map(module -> module.getIdentifier().toString())
                 .toList();
 
+        // mcp = 임베디드 /mcp 어댑터 (MCP 담당 — 2026-08-17 모듈 결정이 예정한 추가분)
         assertThat(detected).containsExactlyInAnyOrder(
                 "identity",
                 "project",
                 "resource",
                 "maintenance",
                 "notification",
-                "common");
+                "common",
+                "mcp");
     }
 }
