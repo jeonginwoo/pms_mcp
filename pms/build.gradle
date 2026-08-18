@@ -39,6 +39,11 @@ dependencies {
     // MockMvc 웹 슬라이스 — Boot 4에서 모듈 분리(@AutoConfigureMockMvc가 이 스타터에)
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
     testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
+    // 방언 타는 통합 테스트는 PG 실물 — H2 대체 금지 (conventions §8, PMS-M1b 도입).
+    // Testcontainers 2.x(Boot 4.1 BOM 관리)는 아티팩트가 testcontainers-* 로 개명됨
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+    testImplementation 'org.testcontainers:testcontainers-postgresql'
     testRuntimeOnly 'com.h2database:h2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
