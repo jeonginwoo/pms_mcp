@@ -1,0 +1,15 @@
+# 로컬 개발 기본값 — DB는 docker-compose.yml의 PostgreSQL (운영 값은 배포 시 외부화)
+spring:
+  application:
+    name: pms
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pms
+    username: pms
+    password: pms
+  jpa:
+    hibernate:
+      ddl-auto: validate # 엔티티 없음 — 스키마 관리 방식은 PMS-M1에서 결정
+    open-in-view: false
+
+server:
+  port: 8080

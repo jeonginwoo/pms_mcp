@@ -87,10 +87,14 @@ bash scripts/verify.sh [host|pms] [--quick]
 
 (cd host && ./gradlew test -Dpms.mcp.e2e=true)
                          # host↔mock MCP through-line IT (mock must be running)
-```
 
-(Real build/run commands for host/ and pms/ land here as soon as scaffolding
-exists — update immediately.)
+docker compose -f pms/docker-compose.yml up -d
+                         # local PostgreSQL for the pms app (port 5432)
+
+(cd pms && ./gradlew bootRun)
+                         # rebuilt PMS app on http://localhost:8080 (needs the
+                         # compose DB above; tests run on in-memory H2 instead)
+```
 
 ## Way of working
 

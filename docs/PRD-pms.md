@@ -137,7 +137,7 @@ B2-1 자연어 검증(2026-08-10)이 실증한 도구 카탈로그 공백 2건�
 ```
 
 - Frontend=화면·검증·표시(권한은 UI노출만) / Backend=단일앱 모듈러 모놀리식 / DB=단일PG·모듈별스키마 / 인증=자체 로그인+JWT(stateless) / 알림=SSE 즉시 푸시(⑥) / 스케줄러=일1회(마감알림)만 / 파일저장소 없음.
-- **모듈 목록(PMS-M0 스캐폴드에서 확정)**: 바운디드 컨텍스트 6(identity·project·resource·maintenance·notification·common) + 지원 모듈 후보(chat BFF·mcpconfig — 구 설계 승계 표기) + `/mcp` 어댑터(MCP 담당 소유). v1.0의 "6모듈 고정"은 해제.
+- **모듈 목록(2026-08-17 PMS-M0 스캐폴드에서 확정 — 공용 결정 기록)**: 바운디드 컨텍스트 6(identity·project·resource·maintenance·notification·common)을 생성. 지원 모듈 후보(chat BFF·mcpconfig — 구 설계 승계 표기)는 **미생성 유보**(고통 확인 후 추가 — 챗 연동 시점 M1에 재론). `/mcp` 어댑터 모듈(MCP 담당 소유)은 목업 `mcp/`·`port/` 승격 시 MCP 담당이 추가. 베이스 패키지 = `kr.proten.pms`. v1.0의 "6모듈 고정"은 해제 상태 유지(열거는 확정, 증설은 열림).
 - `/mcp` 어댑터가 호출하는 애플리케이션 서비스는 EPIC A(조회·진척률)·C(가동률)·D(이력)·H(`/api/me` = `whoami`)와 동일 — 도구 카탈로그 대응은 PRD-host §4-2. 서비스 API 변경은 공용 결정 기록 경유(2인 협업 경계).
 
 ## 4. 도메인 모델
