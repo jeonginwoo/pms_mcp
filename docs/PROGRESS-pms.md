@@ -10,14 +10,14 @@
 
 ## 현재 상태 (2026-08-18)
 
-- **PMS-M1a 완료**(PMS-M1을 4슬라이스로 분할한 첫 슬라이스 — 브랜치 `feat/pms-m1-identity`): identity **순수 도메인 5종**(OrgUnit 임의 깊이 트리·Grade·PermissionGroup·Person·User — DomainPurityTest 실효 통과) + JPA 영속화(`identity` 스키마 — 모듈별 스키마) + **자체 로그인 JWT**(RS256, sub=personId·aud=pms — 목업 B2-2·구현_노트 §1-1 정합, access 1h·refresh 14d 회전) + 401 에러 봉투 + `GET /api/me` 최소 구현. 테스트 17개 초록 + PG 실기동 스모크(스키마 자동 생성·무토큰 401·JWKS 200)
-- **host 트랙 참고(접점 정보 — 계약 변경 아님)**: `/mcp` 체인 디코더용 `pms.auth.jwks-uri` = `http://localhost:8080/api/auth/jwks`. 신규 계약 변경 없음 — JWT 형상은 구현_노트 §1-1 기합의 그대로
-- **다음 작업:** PMS-M1b(가시성 필터 + 권한 그룹 판정 — scope 4단·TEAM subtree·404 은닉 기반. 이때 Testcontainers PG 도입)
+- **PMS-M1b 완료**(브랜치 `feat/pms-m1b-visibility`): **가시성 필터 + 권한 그룹 판정 + 404 은닉 공통 기반** — 도메인 `OrgTree`(임의 깊이 subtree·경로상 최상위 부문 계산)·`PersonVisibility`(권한 그룹 scope 4단 해석의 유일 지점 — TEAM=소속 노드 subtree(E3-4)) + `RequesterResolver`(토큰 personId→본인·그룹) + common `NotFoundException`(404 은닉 — 정본 문구 "해당 데이터 없음" 고정, 전 모듈·MCP 매핑 공용) + `GET /api/people`·`/api/people/{id}`(목록=가시성 부분집합·단건=은닉 동형 404, 시스템 계정·비활성 제외). **Testcontainers PG 도입**(M1a 판단 ③ 예약 이행). verify.sh pms PASS — 테스트 56개(신규 25)
+- **host 트랙 참고(접점 정보 — 계약 변경 아님)**: ①`/mcp` 체인 디코더용 `pms.auth.jwks-uri` = `http://localhost:8080/api/auth/jwks`(M1a — JWT 형상은 구현_노트 §1-1 기합의 그대로) ②identity `PeopleQueryService`가 `find_person` 임시 시드 어댑터의 대체 후보로 준비됨 — 전환 시점·identity 공개 API 형상은 MCP 담당 몫(공개 계약 변경이면 공용 결정 기록 경유)
+- **다음 작업:** PMS-M1c(관리 API — US-E1~E5: 인력·조직·직급·권한 그룹 CRUD). 단, 루트 M0 잔여 **시드 적재**를 먼저 당기는 선택지 있음(identity 도메인·가시성이 갖춰져 인력 44명분 적재 + 게이트 M0 실서버 실측이 가능해짐) — 세션 시작 시 결정
 - **차단 요소:** 없음
 
-## 이전 상태 (2026-08-11)
+## 이전 상태 (2026-08-18 오전 — PR #10 머지)
 
-- **B2-1 후속 결정 ③④ pms 측 결정 완료**(2026-08-11 — 공용 결정 기록 2행, ~~MCP 담당 확인 대기~~ → 2026-08-12 확인 완료): ③ `get_utilization` scope에 `COMPANY` 추가 + 응답에 team·division · ④ `search_maintenance` 신설(카탈로그 7종→8종, keyword = 계약명·계약사·**사이트명**). PMS 측 반영 = **PRD-pms v2.7**(C1-6 신설·D4-1 확장·§7·12장)
+- **PMS-M1a 완료**: identity 순수 도메인 5종·JPA 영속화(`identity` 스키마)·자체 로그인 JWT(RS256, JWKS `/api/auth/jwks`)·401 에러 봉투·`GET /api/me` 최소 — 상세는 세션 로그(2026-08-18 M1a)
 - **차단 요소:** 없음
 
 ## 세션 로그
@@ -30,6 +30,15 @@
 - 미해결: <다음 세션으로 넘기는 것>
 - 다음 작업: <구체적으로>
 ```
+
+### 2026-08-18 — PMS-M1b: 가시성 필터 + 권한 그룹 판정 + 404 은닉 공통 기반
+
+- 완료: ①**도메인(순수 유지 — DomainPurityTest 관통)**: `OrgTree`(전체 로드 후 메모리 탐색 — 임의 깊이 subtree·경로상 최상위 부문 계산, 순환 방어)·`PersonVisibility`(권한 그룹 scope 4단 해석의 유일 지점 — COMPANY 전체/DIVISION 부문 subtree/TEAM 소속 노드 subtree(E3-4)/SELF 본인, 본인은 항상 가시. 프로젝트 역할에 의한 확장은 PMS-M2에서 합집합으로 얹음) ②애플리케이션: `Requester`·`RequesterResolver`(토큰 personId→본인+그룹 해석, 부재·비활성=401 — MeQueryService 규칙 승계)·`PeopleQueryService`(목록=가시성 내 부분집합·시스템 계정·비활성 제외(2026-08-09 ④·E2-3), 단건=부재·가시성 밖·시스템·비활성 전부 **동형 404**) ③common `NotFoundException` — 404 은닉 공통 예외, 정본 문구 "해당 데이터 없음" 고정(이후 project·maintenance·MCP 매핑이 공용) ④웹 `GET /api/people`·`GET /api/people/{id}`(부록 A 인력 화면의 조회 절반 — CRUD는 M1c) ⑤**Testcontainers PG 도입**(M1a 판단 ③ 예약 이행): 그룹 4단 화자별 목록 부분집합 + 은닉 4케이스 동형 404 봉투를 실 PG로 관통. 검증: **verify.sh pms PASS** — 테스트 56개(신규 25 = OrgTree 6·PersonVisibility 5·PeopleQueryService 7·PG 통합 7)
+- 판단(ASSUMPTION 주석 병기): ①subtree는 메모리 탐색(조직 노드 수십 개 규모 — 재귀 SQL 불요, 커지면 질의 하향 재검토) ②root 직속 인원의 DIVISION scope=전사로 넓힘(판정 불능보다 안전 — 해당 실데이터는 관리자 그룹뿐) ③`GET /api/people/{id}` 단건 GET 추가 — §7 라우트 표는 PUT/DELETE만 명시, 인력 상세 화면 대응 최소분(모듈 내부 라우트 — 협업 접점 아님)
+- Boot 4.1 실측: BOM 관리 Testcontainers = **2.0.5(2.x)** — 아티팩트 `testcontainers-postgresql`·`testcontainers-junit-jupiter` 개명·`PostgreSQLContainer` 비제네릭·패키지 `org.testcontainers.postgresql` 이동(Maven Central 실물 확인 — 루트 규칙 6 준용). 통합 테스트 JVM 종료 시 "Unsuccessful: drop" 로그는 컨테이너가 컨텍스트 캐시보다 먼저 내려가는 순서 문제로 무해(테스트 주석 기재)
+- MCP 담당 인지(접점 정보 — 계약 변경 아님): `PeopleQueryService`가 `find_person` 임시 시드 어댑터의 대체 후보 — 전환 시점·identity 공개 API 형상은 MCP 담당 몫
+- 미해결: 없음
+- 다음 작업: PMS-M1c(관리 API US-E1~E5) 또는 루트 M0 잔여 **시드 적재** 선행(identity분 가능해짐 — 게이트 M0 실측 전제) — 세션 시작 시 결정
 
 ### 2026-08-18 — PMS-M1a: identity 도메인 + 영속화 + 자체 로그인 JWT
 
