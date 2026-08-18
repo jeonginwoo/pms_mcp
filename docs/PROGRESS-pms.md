@@ -10,14 +10,15 @@
 
 ## 현재 상태 (2026-08-18)
 
-- **PMS-M1b 완료**(브랜치 `feat/pms-m1b-visibility`): **가시성 필터 + 권한 그룹 판정 + 404 은닉 공통 기반** — 도메인 `OrgTree`(임의 깊이 subtree·경로상 최상위 부문 계산)·`PersonVisibility`(권한 그룹 scope 4단 해석의 유일 지점 — TEAM=소속 노드 subtree(E3-4)) + `RequesterResolver`(토큰 personId→본인·그룹) + common `NotFoundException`(404 은닉 — 정본 문구 "해당 데이터 없음" 고정, 전 모듈·MCP 매핑 공용) + `GET /api/people`·`/api/people/{id}`(목록=가시성 부분집합·단건=은닉 동형 404, 시스템 계정·비활성 제외). **Testcontainers PG 도입**(M1a 판단 ③ 예약 이행). verify.sh pms PASS — 테스트 56개(신규 25)
-- **host 트랙 참고(접점 정보 — 계약 변경 아님)**: ①`/mcp` 체인 디코더용 `pms.auth.jwks-uri` = `http://localhost:8080/api/auth/jwks`(M1a — JWT 형상은 구현_노트 §1-1 기합의 그대로) ②identity `PeopleQueryService`가 `find_person` 임시 시드 어댑터의 대체 후보로 준비됨 — 전환 시점·identity 공개 API 형상은 MCP 담당 몫(공개 계약 변경이면 공용 결정 기록 경유)
-- **다음 작업:** PMS-M1c(관리 API — US-E1~E5: 인력·조직·직급·권한 그룹 CRUD). 단, 루트 M0 잔여 **시드 적재**를 먼저 당기는 선택지 있음(identity 도메인·가시성이 갖춰져 인력 44명분 적재 + 게이트 M0 실서버 실측이 가능해짐) — 세션 시작 시 결정
+- **루트 M0 시드 적재 — identity분 완료**(브랜치 `feat/pms-m0-seed-identity`): `IdentitySeedLoader`(ApplicationRunner — 기동 시 Person이 비어 있으면 `people.json` 44명+부록 B 확정 규칙 자동 적재, 멱등) — 직급 9종·조직 트리 18노드(root 프로텐+부문 6+팀 11)·기본 권한 그룹 4종·시스템 계정 `admin@proten.co.kr`·billable=false 10명·User 45(초기 `proten1!`). **시드 인원 id=생성 id 정합 보증**(불일치 시 기동 실패 — 후속 시드·eval 참조 전제). verify.sh pms PASS — 테스트 64개(신규 8, Testcontainers PG) + 실기동 스모크(compose PG·bootRun 자동 적재 45/45/18/9/4·curl 관통)
+- **게이트 M0 잔여**: LLM 학습 미사용 조항 확인(사람 작업) + 인증 3케이스 실서버 실측·사용자 승인 — **코드 전제는 전부 해소**
+- **host 트랙 참고(접점 정보 — 계약 변경 아님)**: identity 시드가 실 DB에 적재됨 — `/mcp` 임시 시드 어댑터 → `PeopleQueryService`+로그인 JWT(`pms.auth.jwks-uri`) 전환 가능 상태(전환 시점은 MCP 담당 몫)
+- **다음 작업:** PMS-M1c(관리 API — US-E1~E5: 인력·조직·직급·권한 그룹 CRUD)
 - **차단 요소:** 없음
 
-## 이전 상태 (2026-08-18 오전 — PR #10 머지)
+## 이전 상태 (2026-08-18 — PR #11 머지)
 
-- **PMS-M1a 완료**: identity 순수 도메인 5종·JPA 영속화(`identity` 스키마)·자체 로그인 JWT(RS256, JWKS `/api/auth/jwks`)·401 에러 봉투·`GET /api/me` 최소 — 상세는 세션 로그(2026-08-18 M1a)
+- **PMS-M1b 완료**: 가시성 필터(`OrgTree`·`PersonVisibility` scope 4단·TEAM subtree)+`RequesterResolver`+404 은닉 공통 `NotFoundException`+`GET /api/people` 목록/단건·Testcontainers PG 도입 — 상세는 세션 로그(2026-08-18 M1b)
 - **차단 요소:** 없음
 
 ## 세션 로그
@@ -30,6 +31,14 @@
 - 미해결: <다음 세션으로 넘기는 것>
 - 다음 작업: <구체적으로>
 ```
+
+### 2026-08-18 — 루트 M0 시드 적재(identity분): 인력 44명·조직 트리·기본 그룹·시스템 계정
+
+- 완료: 세션 시작 결정(사용자 승인) — **M1c보다 시드 적재 선행**(게이트 M0 실측 전제 해소가 우선). ①`identity/internal/seed/IdentitySeedLoader`(ApplicationRunner) — 기동 시 Person이 비어 있으면 한 번만 적재(멱등): 직급 9종(계수 내림차순)·조직 트리 18노드(root 프로텐+부문 6+팀 11 — 대표는 root 직속·team==division 인원은 부문 노드 직속, M1b 판단 ② 정합)·기본 권한 그룹 4종(관리자 systemFixed·부문장/팀장 생성+계약·팀원 SELF — 2026-08-09 ⑦ 매핑)·인원 44(billable=false 3부문 10명)+시스템 계정 `admin@proten.co.kr`(system=true·billable=false)·User 45(초기 `proten1!` — BCrypt 해시 1회 재사용으로 기동 지연 회피) ②**id 정합 보증**: 생성 id≠시드 id면 기동 실패 — 후속 projects·maintenance 시드와 eval 기대값이 시드 인원 id(노도온 26 등)를 참조하므로 조용한 오연결 방지 ③`pms.seed.path` 프로퍼티(메인 yml 기본 `../reference/seed`, 빈 값=비활성 — 테스트 yml 미설정이라 기존 픽스처 무충돌). 검증: **verify.sh pms PASS** — 테스트 64개(신규 8 = 적재 규모·id 정합·트리 소속 3형·그룹 매핑 카운트·billable·시스템 계정·멱등성·로그인→가시성 관통, Testcontainers PG) + 실기동 스모크(compose PG+bootRun: 자동 적재 로그·DB 45/45/18/9/4·curl 대표 로그인 44명·팀원 SELF 본인 1명·무토큰 401) 후 정리
+- 판단(ASSUMPTION 주석 병기): ①프로파일 없이 빈 DB 자동 적재 — 부록 B "compose up 후 자동 적재" 그대로, 프로퍼티 빈 값이 오프 스위치(배포 경로 외부화는 PMS-M6) ②시스템 계정 직급=대표이사 재사용 — 스키마상 필수이나 어떤 화면에도 미노출, 신설 직급은 직급 관리(E4) 목록 오염이라 미채택 ③projects·maintenance 시드는 해당 도메인 구현 시(PMS-M2·M4) 각 모듈이 적재 — 계획 승인에 포함
+- MCP 담당 인지(접점 정보 — 계약 변경 아님): identity 시드가 실 DB에 적재됨 — `/mcp` 임시 시드 어댑터(`pms.mcp.seed-people-path`) → `PeopleQueryService`+로그인 JWT(jwks-uri) 전환 가능 상태
+- 미해결: 없음
+- 다음 작업: PMS-M1c(관리 API US-E1~E5). 게이트 M0 잔여는 사람 작업(LLM 조항 확인)+인증 3케이스 실측·사용자 승인
 
 ### 2026-08-18 — PMS-M1b: 가시성 필터 + 권한 그룹 판정 + 404 은닉 공통 기반
 

@@ -93,7 +93,10 @@ docker compose -f pms/docker-compose.yml up -d
 
 (cd pms && ./gradlew bootRun)
                          # rebuilt PMS app on http://localhost:8080 (needs the
-                         # compose DB above; tests run on in-memory H2 instead).
+                         # compose DB above; auto-seeds identity data from
+                         # reference/seed/ on first boot into an empty DB —
+                         # login: seed email / proten1!. Tests run on H2 +
+                         # Testcontainers PG).
                          # /mcp adapter is embedded (M0) — auth = HS256 test JWT
                          # until the real issuer lands (then set pms.auth.jwks-uri).
                          # Mint tokens: cd pms && ./gradlew printTestTokens
