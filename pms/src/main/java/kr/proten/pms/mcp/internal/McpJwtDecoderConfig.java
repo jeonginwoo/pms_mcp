@@ -1,6 +1,8 @@
 package kr.proten.pms.mcp.internal;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.crypto.spec.SecretKeySpec;
 
@@ -21,7 +23,8 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
  * JwtDecoder 공급 (구현_노트 §1-1·B-3 표).
  * JWKS(pms.auth.jwks-uri)가 설정되면 항상 그쪽이 이긴다 — HS256은 실제 발급
  * 체계가 없는 동안(게이트 M0)의 로컬 검증용이며 운영 반입 금지.
- * audience 검증(aud=pms)은 어느 디코더든 동일하게 조합한다.
+ * 계약 검증기(audience=pms·토큰 유형 — McpSecurityConfig)는 어느 디코더든
+ * 동일하게 전부 조합한다.
  */
 @Configuration
 @EnableConfigurationProperties(PmsAuthProperties.class)
@@ -30,9 +33,10 @@ public class McpJwtDecoderConfig {
     private static final Logger log = LoggerFactory.getLogger(McpJwtDecoderConfig.class);
 
     @Bean
-    JwtDecoder jwtDecoder(PmsAuthProperties props, OAuth2TokenValidator<Jwt> pmsAudienceValidator) {
+    JwtDecoder jwtDecoder(PmsAuthProperties props, List<OAuth2TokenValidator<Jwt>> contractValidators) {
         NimbusJwtDecoder decoder;
         if (props.jwksUri() != null && !props.jwksUri().isBlank()) {
+            log.info("/mcp 토큰 검증 = JWKS 디코더 ({}) — HS256 폴백 비활성", props.jwksUri());
             decoder = NimbusJwtDecoder.withJwkSetUri(props.jwksUri()).build();
         } else if (props.hs256Secret() != null && !props.hs256Secret().isBlank()) {
             log.warn("/mcp 토큰 검증이 로컬 HS256 디코더로 동작 중 — 운영 금지 (pms.auth.jwks-uri 미설정)");
@@ -45,8 +49,10 @@ public class McpJwtDecoderConfig {
             throw new IllegalStateException(
                     "pms.auth.jwks-uri 또는 pms.auth.hs256-secret 중 하나는 설정해야 합니다 — /mcp 토큰 검증 불가");
         }
-        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
-                JwtValidators.createDefault(), pmsAudienceValidator));
+        List<OAuth2TokenValidator<Jwt>> validators = new ArrayList<>();
+        validators.add(JwtValidators.createDefault());
+        validators.addAll(contractValidators);
+        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(validators));
         return decoder;
     }
 }

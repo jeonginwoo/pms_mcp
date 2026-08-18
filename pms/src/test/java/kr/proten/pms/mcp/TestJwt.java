@@ -24,15 +24,23 @@ public final class TestJwt {
     }
 
     public static String mint(String secret, int personId, String name, String audience) {
+        return mint(secret, personId, name, audience, null);
+    }
+
+    /** tokenType이 null이면 클레임 미포함 — 위임 JWT(§1-2)·테스트 토큰의 기본 형상 */
+    public static String mint(String secret, int personId, String name, String audience, String tokenType) {
         try {
-            JWTClaimsSet claims = new JWTClaimsSet.Builder()
+            JWTClaimsSet.Builder builder = new JWTClaimsSet.Builder()
                     .subject(String.valueOf(personId))
                     .claim("name", name)
                     .audience(audience)
                     .claim("channel", "ai-assistant")
                     .issueTime(Date.from(Instant.now()))
-                    .expirationTime(Date.from(Instant.now().plusSeconds(8 * 3600)))
-                    .build();
+                    .expirationTime(Date.from(Instant.now().plusSeconds(8 * 3600)));
+            if (tokenType != null) {
+                builder.claim("token_type", tokenType);
+            }
+            JWTClaimsSet claims = builder.build();
             SignedJWT jwt = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), claims);
             jwt.sign(new MACSigner(secret.getBytes(StandardCharsets.UTF_8)));
             return jwt.serialize();

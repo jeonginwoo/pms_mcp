@@ -45,4 +45,21 @@ public class McpSecurityConfig {
                 : OAuth2TokenValidatorResult.failure(
                         new OAuth2Error("invalid_token", "audience mismatch", null));
     }
+
+    /**
+     * 토큰 유형 검증 — 장수명 refresh 토큰(PMS-M1a 로그인 발급, aud=pms·서명 정상)의
+     * /mcp 오용을 차단한다. 허용 = 무클레임(위임 JWT §1-2·HS256 테스트 토큰) ·
+     * access(로그인) · pat(§1-3) — 그 외 유형은 기본 거절(fail-closed).
+     * audience와 같은 이유로 디코더 구현(HS256/JWKS)과 무관한 계약이라 여기에 둔다.
+     */
+    @Bean
+    OAuth2TokenValidator<Jwt> pmsTokenTypeValidator() {
+        return jwt -> {
+            String type = jwt.getClaimAsString("token_type");
+            return type == null || "access".equals(type) || "pat".equals(type)
+                    ? OAuth2TokenValidatorResult.success()
+                    : OAuth2TokenValidatorResult.failure(
+                            new OAuth2Error("invalid_token", "token_type not allowed for /mcp", null));
+        };
+    }
 }
