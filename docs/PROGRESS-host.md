@@ -3,10 +3,10 @@
 > 공용 상태·결정 기록·미해결 이슈는 `PROGRESS.md`. 이 파일은 host 트랙의
 > 다음 작업과 세션 로그만 담는다.
 
-## 현재 상태 (2026-08-18)
+## 현재 상태 (2026-08-20)
 
-- **다음 작업:** **게이트 M0 판정 준비** — MCP 담당분(`/mcp` 어댑터+인증 체인)은 2026-08-18 완료, **JWKS 전환 준비도 완료**(2차 세션 — 토큰 유형 허용 목록·JWKS 모드 테스트). **시드 적재 identity분 완료(2026-08-18 pms PR #12)로 실서버 실측 가능** — 인증 3케이스 실측(구현_노트 §1-4, 토큰은 `cd pms && ./gradlew printTestTokens`) → 사용자 승인으로 게이트 판정 → **판정 후 전환 스위치 켜기**(main yml `pms.auth.jwks-uri` 한 줄 — 결정 기록). 이후 M1(조회 6도구 — 각 모듈 서비스가 port를 구현하면 `internal/seed/` 임시 어댑터 제거 + 가시성 E2E 잔여분(프로젝트·404 은닉)을 mock 테스트에서 마저 승격. identity `PeopleQueryService`가 person port 대체 후보로 준비됨 — pms 2026-08-18 기록). **트리거 1건**: 첫 배포 전 HS256 prod 프로파일 fail-fast 추가(커밋된 테스트 시크릿 — reviewer 지적). ~~JWKS 전환 트리거~~ → 2026-08-18 발동·준비 완료(스위치만 잔여). eval 잔여는 G1 준비 시(자동 실행 스크립트·오염 레코드 주입·오류 주입 장치). 하네스 소소분: CI `setup-java@v4` deprecated → v5 (다음 정비 때)
-- **차단 요소:** 없음. (M0 게이트 전제인 **LLM 학습 미사용 조항 확인은 사람 작업** — 법무·구매 리드타임이 있어 조기 착수 권고)
+- **다음 작업:** **M1 착수 — 조회 6도구 실구현 연동.** 경로: 각 도메인 모듈 서비스가 port 5종을 구현하면 `/mcp`의 `internal/seed/` 임시 어댑터 제거 + 가시성 E2E 잔여분(프로젝트·404 은닉)을 mock 테스트에서 승격. **첫 후보 = identity `PeopleQueryService`의 person port 대체**(pms 2026-08-18 기록 — 시드가 실 DB에 있으므로 어댑터 교체만). 나머지 4포트(프로젝트·가동률·유지보수·진행률)는 pms 도메인 구현(PMS-M2~) 진도에 종속 — 순서 조율 필요. host 앱도 실서버 `/mcp` 대상 검토(base-url 8080 + 로그인 JWT — 목업은 카탈로그 실험장 존치). M1 세부 체크리스트는 ROADMAP에서 확장(다음 세션 계획 항목). **트리거 1건 유지**: 첫 배포 전 HS256 prod 프로파일 fail-fast(시크릿은 main yml에 잔존 — jwks-uri 삭제 실수 시 HS256 복귀 위험). eval 잔여는 G1 준비 시(자동 실행 스크립트·오염 레코드 주입·오류 주입 장치). 하네스 소소분: CI `setup-java@v4` deprecated → v5 (다음 정비 때)
+- **차단 요소:** 없음
 
 ## 세션 로그
 
@@ -18,6 +18,12 @@
 - 미해결: <다음 세션으로 넘기는 것>
 - 다음 작업: <구체적으로>
 ```
+
+### 2026-08-20 — 게이트 M0 통과 (인증 3케이스 실서버 실측 + 사용자 승인) + JWKS 전환 스위치 활성화
+
+- 완료: ①동기화 — PR #13 머지 확인·main 최신화. ②**게이트 M0 실서버 실측**(구현_노트 §1-4 curl 핸드셰이크, 사용자 계획 승인 후): compose PG **새 볼륨(빈 DB)** → bootRun → **시드 자동 적재 실확인**(기동 로그 인원 44+시스템 1·직급 9·그룹 4·조직 18) + HS256 폴백 WARN 출력 확인. 3케이스 전량 통과 — 무토큰 401 · 타 audience 401(테스트 시크릿으로 `aud=other-service` 토큰 제작, `WWW-Authenticate: audience mismatch`) · 정상 토큰 → initialize→initialized→tools/call whoami가 **그 사용자**(화자 2명 교차: sub=18→전세아/팀원·sub=1→신현랑/관리자 — 권한 그룹명 반환 정합). ③**사용자 승인 접수 → 게이트 M0 통과 등재**(결정 기록) + **LLM 학습 미사용 조항 확인 완료 접수**(게이트 전제 해소 — ROADMAP 체크). ④**JWKS 전환 스위치 활성화**(유예 결정이 예정한 경로): main yml `pms.auth.jwks-uri` 설정 → 재기동 로그 "JWKS 디코더·HS256 폴백 비활성" 확인 → **전환 스모크 3종 실측**: HS256 테스트 토큰 401 · 로그인(`/api/auth/login` 시드 계정) access 토큰(RS256·`token_type=access`) whoami 관통 · **refresh 토큰 401**(허용 목록 실전 첫 실측). ⑤기록 갱신: PROGRESS 결정 기록·공용 현재 상태 M1 전환·ROADMAP 게이트 체크·CLAUDE.md Commands(/mcp 토큰 = 로그인 JWT). verify.sh pms PASS
+- 미해결: 없음
+- 다음 작업: M1 착수 — 조회 6도구 실구현 연동(첫 후보 = identity `PeopleQueryService`로 person port 대체·임시 시드 어댑터 제거), M1 세부 체크리스트 ROADMAP 확장. 4포트는 pms 도메인 진도(PMS-M2~)와 순서 조율
 
 ### 2026-08-18 (2차) — JWKS 전환 준비: `/mcp` 토큰 유형 허용 목록 + JWKS 모드 테스트 (트리거 발동분)
 
