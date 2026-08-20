@@ -1,7 +1,7 @@
 package kr.proten.pms.identity.internal.web;
 
+import kr.proten.pms.common.CallerPersonId;
 import kr.proten.pms.identity.internal.application.MeQueryService;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,7 +19,7 @@ class MeController {
     }
 
     @GetMapping("/api/me")
-    MeQueryService.MeSummary me(Authentication authentication) {
-        return meQueryService.getMe(Long.parseLong(authentication.getName()));
+    MeQueryService.MeSummary me(@CallerPersonId Long callerId) {
+        return meQueryService.getMe(callerId);
     }
 }

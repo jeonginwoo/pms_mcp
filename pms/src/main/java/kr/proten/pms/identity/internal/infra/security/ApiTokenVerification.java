@@ -3,10 +3,6 @@ package kr.proten.pms.identity.internal.infra.security;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.RSAKey;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
-import org.springframework.security.oauth2.core.OAuth2Error;
-import org.springframework.security.oauth2.core.OAuth2TokenValidator;
-import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
@@ -26,18 +22,10 @@ public class ApiTokenVerification {
     ApiTokenVerification(RSAKey rsaKey) throws JOSEException {
         NimbusJwtDecoder nimbusDecoder =
                 NimbusJwtDecoder.withPublicKey(rsaKey.toRSAPublicKey()).build();
-        OAuth2TokenValidator<Jwt> audience = jwt ->
-                jwt.getAudience().contains("pms")
-                        ? OAuth2TokenValidatorResult.success()
-                        : OAuth2TokenValidatorResult.failure(
-                                new OAuth2Error("invalid_token", "audience mismatch", null));
-        OAuth2TokenValidator<Jwt> accessType = jwt ->
-                "access".equals(jwt.getClaimAsString("token_type"))
-                        ? OAuth2TokenValidatorResult.success()
-                        : OAuth2TokenValidatorResult.failure(
-                                new OAuth2Error("invalid_token", "not an access token", null));
         nimbusDecoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
-                JwtValidators.createDefault(), audience, accessType));
+                JwtValidators.createDefault(),
+                TokenClaimValidators.audiencePms(),
+                TokenClaimValidators.tokenType("access")));
         this.decoder = nimbusDecoder;
     }
 

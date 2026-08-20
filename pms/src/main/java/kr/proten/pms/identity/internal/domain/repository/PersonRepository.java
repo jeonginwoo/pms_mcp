@@ -13,4 +13,6 @@ public interface PersonRepository {
     Optional<Person> findById(Long id);
 
     List<Person> findAll();
+
+    long count();
 }
