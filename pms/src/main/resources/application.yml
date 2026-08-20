@@ -30,12 +30,13 @@ spring.ai.mcp.server:
 
 pms:
   auth:
-    # jwks-uri: 설정되면 HS256보다 항상 우선(전환 스위치 = 이 한 줄). 검증·테스트는 완료
-    #   (McpJwksAuthTest — JWKS 우선·refresh/미지 token_type 거절) — 시드 적재 후 게이트
-    #   M0 실측과 함께 활성화한다(2026-08-18 사용자 결정: 게이트는 승인대로 테스트 JWT).
-    #   사용 가능 값: http://localhost:8080/api/auth/jwks (PMS-M1a 로그인 JWT RS256)
-    # HS256 시크릿은 로컬·게이트 M0 검증 전용 — 운영 반입 금지 (구현_노트 B-3).
-    # 테스트 토큰 발급: ./gradlew printTestTokens
+    # jwks-uri 설정 시 HS256보다 항상 우선 — 게이트 M0 통과(2026-08-20)로 활성화.
+    #   /mcp 토큰 = 로그인 JWT(RS256 access — refresh는 token_type 허용 목록이 거절,
+    #   McpJwksAuthTest). HS256 테스트 토큰(printTestTokens)은 더 이상 /mcp를 통과하지 않는다.
+    jwks-uri: http://localhost:8080/api/auth/jwks
+    # HS256 시크릿 = printTestTokens 정본 + 테스트 전용(운영 반입 금지 — 구현_노트 B-3).
+    # jwks-uri가 있으면 디코더는 이를 무시한다 — 실수로 jwks-uri를 지우면 HS256으로
+    # 되돌아가므로 첫 배포 전 prod 프로파일 fail-fast 추가 트리거 유지(PROGRESS-host).
     hs256-secret: pms-m0-hs256-local-gate-secret-0123456789-abcdefghij
     # 로그인 JWT TTL 기본값은 코드(§7 확정: access 1h·refresh 14d) — 재정의 시에만 기입
     # access-ttl: 1h

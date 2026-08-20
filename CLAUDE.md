@@ -97,10 +97,11 @@ docker compose -f pms/docker-compose.yml up -d
                          # reference/seed/ on first boot into an empty DB —
                          # login: seed email / proten1!. Tests run on H2 +
                          # Testcontainers PG).
-                         # /mcp adapter is embedded (M0) — auth = HS256 test JWT
-                         # until the gate M0 verdict; then flip pms.auth.jwks-uri
-                         # (issuer live since PMS-M1a — switch mechanics tested).
-                         # Mint tokens: cd pms && ./gradlew printTestTokens
+                         # /mcp adapter is embedded — auth = login JWT (RS256 via
+                         # pms.auth.jwks-uri, active since gate M0 · 2026-08-20).
+                         # Get a token: POST /api/auth/login (seed email/proten1!)
+                         # → accessToken (refresh tokens are rejected on /mcp).
+                         # HS256 test JWTs (printTestTokens) work in tests only.
 ```
 
 ## Way of working
