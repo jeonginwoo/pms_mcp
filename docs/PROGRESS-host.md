@@ -5,7 +5,7 @@
 
 ## 현재 상태 (2026-08-18)
 
-- **다음 작업:** **게이트 M0 판정 준비** — MCP 담당분(`/mcp` 어댑터+인증 체인)은 2026-08-18 완료. 시드 적재(pms 트랙) 후 실서버에서 인증 3케이스 실측(구현_노트 §1-4, 토큰은 `cd pms && ./gradlew printTestTokens`) → 사용자 승인으로 게이트 판정. 판정 후 M1(조회 6도구 — 각 모듈 서비스가 port를 구현하면 `internal/seed/` 임시 어댑터 제거 + 가시성 E2E 잔여분(프로젝트·404 은닉)을 mock 테스트에서 마저 승격). **트리거 2건**: ①첫 배포 전 HS256 prod 프로파일 fail-fast 추가(커밋된 테스트 시크릿 — reviewer 지적) ②JWKS 전환 = 실 토큰 발급 체계 등장 시(결정 기록). eval 잔여는 G1 준비 시(자동 실행 스크립트·오염 레코드 주입·오류 주입 장치). 하네스 소소분: CI `setup-java@v4` deprecated → v5 (다음 정비 때)
+- **다음 작업:** **게이트 M0 판정 준비** — MCP 담당분(`/mcp` 어댑터+인증 체인)은 2026-08-18 완료, **JWKS 전환 준비도 완료**(2차 세션 — 토큰 유형 허용 목록·JWKS 모드 테스트). **시드 적재 identity분 완료(2026-08-18 pms PR #12)로 실서버 실측 가능** — 인증 3케이스 실측(구현_노트 §1-4, 토큰은 `cd pms && ./gradlew printTestTokens`) → 사용자 승인으로 게이트 판정 → **판정 후 전환 스위치 켜기**(main yml `pms.auth.jwks-uri` 한 줄 — 결정 기록). 이후 M1(조회 6도구 — 각 모듈 서비스가 port를 구현하면 `internal/seed/` 임시 어댑터 제거 + 가시성 E2E 잔여분(프로젝트·404 은닉)을 mock 테스트에서 마저 승격. identity `PeopleQueryService`가 person port 대체 후보로 준비됨 — pms 2026-08-18 기록). **트리거 1건**: 첫 배포 전 HS256 prod 프로파일 fail-fast 추가(커밋된 테스트 시크릿 — reviewer 지적). ~~JWKS 전환 트리거~~ → 2026-08-18 발동·준비 완료(스위치만 잔여). eval 잔여는 G1 준비 시(자동 실행 스크립트·오염 레코드 주입·오류 주입 장치). 하네스 소소분: CI `setup-java@v4` deprecated → v5 (다음 정비 때)
 - **차단 요소:** 없음. (M0 게이트 전제인 **LLM 학습 미사용 조항 확인은 사람 작업** — 법무·구매 리드타임이 있어 조기 착수 권고)
 
 ## 세션 로그
@@ -18,6 +18,13 @@
 - 미해결: <다음 세션으로 넘기는 것>
 - 다음 작업: <구체적으로>
 ```
+
+### 2026-08-18 (2차) — JWKS 전환 준비: `/mcp` 토큰 유형 허용 목록 + JWKS 모드 테스트 (트리거 발동분)
+
+- 완료: ①동기화에서 PMS-M1a(로그인 JWT RS256 + `/api/auth/jwks`)·M1b 머지 확인 → **JWKS 전환 트리거(결정 기록 2026-08-18) 발동** 판단, 세션 계획 사용자 승인(코드·테스트 지금 · **main yml 스위치는 시드 적재·게이트 판정 후** — 게이트 M0 실측은 승인대로 테스트 JWT 유지). ②**결함 발견·해소(결정 기록 등재)**: 로그인 refresh 토큰(14일·`aud=pms`·정상 서명)이 jwks-uri 설정 즉시 `/mcp` 통과 — REST 체인(`ApiTokenVerification`)은 `token_type=access` 강제인데 `/mcp`만 구멍. `access` 균일 강제는 기합의 계약(§1-2 위임 JWT 무클레임·§1-3 PAT `token_type=pat`)을 깨므로 **허용 목록**(무클레임·access·pat, 그 외 fail-closed) — `McpSecurityConfig.pmsTokenTypeValidator` 신설, 디코더는 계약 검증기 목록 주입으로 조합. ③**`McpJwksAuthTest` 신설**(스텁 JWKS 서버 — 자체 RSA 키, `@DynamicPropertySource`): JWKS 우선(HS256 토큰 401)·access 관통·위임 형상(무클레임) 통과·refresh 401·미지 유형 401·타 audience 401. HS256 모드(`McpJwtAuthTest`)에도 refresh형 401 추가, `/mcp` 핸드셰이크 헬퍼 `McpHttp` 추출(중복 제거). 테스트 63개(신규 7) · **verify.sh pms PASS**. ④**PMS 담당 인지 요청 2건 확인 완료**(M1a 랩업 기재분): `pms.auth.*` prefix 공유(프로퍼티명 비충돌 — 이상 없음) · REST 디코더를 빈이 아닌 보유 컴포넌트로 둔 해법(JwtDecoder 빈 = `/mcp` 단일 소유 유지 — 이상 없음). ⑤main yml 주석 갱신(전환 스위치 = jwks-uri 한 줄) · 구현_노트 §1-1에 토큰 유형 규칙 단락 추가. ⑥**reviewer APPROVE** — MINOR 2건 존치(조치 불요 판정): 검증기 List 타입 주입은 타 모듈이 OAuth2TokenValidator 빈을 안 만드는 암묵 관례에 의존(fail-safe 방향 — 제3 검증기 등장 시 마커/qualifier 검토) · `pat` 허용은 §1-3 발급 체계보다 한 마일스톤 선행(기합의 계약이라 수용)
+- 미해결: 없음
+- 다음 작업: 게이트 M0 실서버 실측(테스트 JWT — 시드 적재 identity분은 PR #12로 완료, 실측 가능) → 사용자 승인 판정 → **jwks-uri 활성화**(이 세션에서 준비 완료 — 한 줄 스위치)
+- (랩업 후 추가) PR #13이 pms PR #12(시드 적재 identity분)와 충돌 → origin/main 위 리베이스로 해소(공용 현재 상태 줄 양측 기록 병합 — 워크플로 §3), 시드 완료를 본 트랙 다음 작업에도 반영
 
 ### 2026-08-18 — M0: `/mcp` 어댑터 승격 + 인증 체인 (`pms/` 7번째 모듈 — 게이트 인증 3케이스 E2E 예행)
 

@@ -98,7 +98,8 @@ docker compose -f pms/docker-compose.yml up -d
                          # login: seed email / proten1!. Tests run on H2 +
                          # Testcontainers PG).
                          # /mcp adapter is embedded (M0) — auth = HS256 test JWT
-                         # until the real issuer lands (then set pms.auth.jwks-uri).
+                         # until the gate M0 verdict; then flip pms.auth.jwks-uri
+                         # (issuer live since PMS-M1a — switch mechanics tested).
                          # Mint tokens: cd pms && ./gradlew printTestTokens
 ```
 
