@@ -10,10 +10,9 @@
 
 ## 현재 상태 (2026-08-20)
 
-- **java-spring 컨벤션 개정 완료**(두 담당 동석 합의 — 공용 결정 기록): 프레임워크 관용구 규칙 5건 신설(인증 주체 획득 단일화·검증자 조합·Boot 빈 주입·existsBy/count·traceId 로그 상관) + 문서·코드 불일치 4건 정합화(§7 에러 봉투·validation 400/422·Lombok 미사용 확정·통합 테스트 DB 기준) + §1 필드 주석 규칙. 계기 = pms 코드 리뷰 피드백("언어·프레임워크 이해도")의 실체를 코드 실측으로 특정한 학습 세션
-- **컨벤션 소급 수정 5곳 대기**: 신설 규칙을 현행 코드가 어기는 상태 — `MeController`·`PeopleController` 수동 파싱 · `NimbusTokenProvider` 수동 클레임 검사 · `IdentitySeedLoader`의 `new ObjectMapper()`·`findAll().isEmpty()` · `ErrorResponse` traceId 무배선. 각 파일 1~2개 규모, 기존 테스트 64개가 회귀망
-- **다음 작업:** 컨벤션 소급 수정 5곳(M1c 전 권장) → PMS-M1c(관리 API — US-E1~E5: 인력·조직·직급·권한 그룹 CRUD)
-- **차단 요소:** 없음
+- **컨벤션 소급 수정 5곳 완료**(브랜치 `fix/m1-convention-retrofit` — PR 리뷰 대기): 호출자 식별 단일화(`@CallerPersonId` 리졸버 — common 배치) · refresh 디코더에 검증자 조합 부착(`TokenClaimValidators` 공유로 access/refresh 스타일 통일) · 시드 로더 `ObjectMapper` 빈 주입 · `count()` 파생 질의 · traceId 봉투-로그 상관 배선(전역 핸들러·보안 체인 401 + 상관 검증 테스트 2건). verify.sh pms PASS — 테스트 73개(신규 2)
+- **다음 작업:** PMS-M1c(관리 API — US-E1~E5: 인력·조직·직급·권한 그룹 CRUD)
+- **차단 요소:** 없음(PR 머지는 상대 리뷰 승인 필요 — git-workflow §2)
 
 ## 이전 상태 (2026-08-18 — 시드 적재 머지)
 
@@ -36,6 +35,13 @@
 - 미해결: <다음 세션으로 넘기는 것>
 - 다음 작업: <구체적으로>
 ```
+
+### 2026-08-20 — 컨벤션 소급 수정 5곳 (신설 관용구 규칙 위반 해소)
+
+- 완료: 2026-08-20 컨벤션 개정(관용구 규칙 5건)의 소급 수정 — ①**호출자 식별 단일화**: `@CallerPersonId` 어노테이션(common 공개 API)+`HandlerMethodArgumentResolver`(common/internal/web) 신설, `MeController`·`PeopleController`의 `authentication.getName()` 수동 파싱 제거. common 배치 근거 = M1c 관리 API와 이후 project·resource 컨트롤러 전부가 쓰는 횡단 관심사(에러 봉투와 같은 자리) — ModularityTest 관통 ②**클레임 검증 디코더 부착**: `TokenClaimValidators`(aud=pms·token_type 검증자 팩토리, 패키지 프라이빗) 신설 — `NimbusTokenProvider` refresh 디코더에 검증자 조합 부착(디코드 후 수동 if 2개 제거)·`ApiTokenVerification`도 동일 팩토리로 통일(익명 검증자 중복 제거) ③`IdentitySeedLoader`에 `ObjectMapper` 빈 주입 ④`findAll().isEmpty()` → `count() > 0`(`PersonRepository` 포트+JPA 어댑터에 `count()` 추가) ⑤**traceId 상관 배선**: 봉투 생성 지점 전부(전역 핸들러 3경로·보안 체인 401)에서 traceId+코드를 서버 로그에 기록(500은 스택, 401은 요청 URI 동반 — 토큰 원문·개인정보 로그 금지 준수) + 신규 테스트 `ErrorTraceIdLogTest` 2건(응답 봉투의 traceId가 실제 로그 이벤트에 등장 — 두 생성 경로 각각, ListAppender). 부수: common package-info의 낡은 "ProblemDetail" 서술 → §7 에러 봉투로 정정(컨벤션 정합화 ⓐ와 동일 괴리). 검증: **verify.sh pms PASS** — 테스트 73개(신규 2, token_type 교차 오용 401·시드 멱등성 등 기존 회귀망 전량 초록)
+- MCP 담당 인지(경계 플래그 — 코드 무수정): `mcp/internal/seed/SeedPeople.java`에 동일한 `new ObjectMapper()` 위반 존재 — `/mcp` 모듈 소유라 미수정. M1의 `PeopleQueryService` 승격 시 파일 제거로 자연 해소되는 경로도 있음
+- 미해결: 없음
+- 다음 작업: PMS-M1c(관리 API US-E1~E5)
 
 ### 2026-08-20 — 학습 세션: M0 코드 복습 + 리뷰 피드백 실측 → java-spring 컨벤션 개정
 

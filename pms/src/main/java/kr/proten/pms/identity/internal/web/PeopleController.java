@@ -1,8 +1,8 @@
 package kr.proten.pms.identity.internal.web;
 
 import java.util.List;
+import kr.proten.pms.common.CallerPersonId;
 import kr.proten.pms.identity.internal.application.PeopleQueryService;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,16 +23,12 @@ class PeopleController {
     }
 
     @GetMapping("/api/people")
-    List<PeopleQueryService.PersonSummary> list(Authentication authentication) {
-        return peopleQueryService.listVisible(callerId(authentication));
+    List<PeopleQueryService.PersonSummary> list(@CallerPersonId Long callerId) {
+        return peopleQueryService.listVisible(callerId);
     }
 
     @GetMapping("/api/people/{id}")
-    PeopleQueryService.PersonSummary get(Authentication authentication, @PathVariable Long id) {
-        return peopleQueryService.getPerson(callerId(authentication), id);
-    }
-
-    private Long callerId(Authentication authentication) {
-        return Long.parseLong(authentication.getName());
+    PeopleQueryService.PersonSummary get(@CallerPersonId Long callerId, @PathVariable Long id) {
+        return peopleQueryService.getPerson(callerId, id);
     }
 }

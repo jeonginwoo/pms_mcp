@@ -33,6 +33,11 @@ class PersonRepositoryAdapter implements PersonRepository {
     public List<Person> findAll() {
         return jpaRepository.findAll().stream().map(PersonJpa::toDomain).toList();
     }
+
+    @Override
+    public long count() {
+        return jpaRepository.count();
+    }
 }
 
 interface PersonJpaRepository extends JpaRepository<PersonJpa, Long> {

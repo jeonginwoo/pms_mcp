@@ -62,6 +62,8 @@ public class IdentitySeedLoader implements ApplicationRunner {
     private final OrgUnitRepository orgUnitRepository;
     private final PermissionGroupRepository permissionGroupRepository;
     private final PasswordHasher passwordHasher;
+    // JSON 역직렬화 — Boot 관리 빈 주입 (conventions §4 "Use Boot-managed beans")
+    private final ObjectMapper objectMapper;
     // 시드 디렉터리 — 빈 값이면 적재 비활성
     private final String seedPath;
 
@@ -72,6 +74,7 @@ public class IdentitySeedLoader implements ApplicationRunner {
             OrgUnitRepository orgUnitRepository,
             PermissionGroupRepository permissionGroupRepository,
             PasswordHasher passwordHasher,
+            ObjectMapper objectMapper,
             @Value("${pms.seed.path:}") String seedPath) {
         this.personRepository = personRepository;
         this.userRepository = userRepository;
@@ -79,6 +82,7 @@ public class IdentitySeedLoader implements ApplicationRunner {
         this.orgUnitRepository = orgUnitRepository;
         this.permissionGroupRepository = permissionGroupRepository;
         this.passwordHasher = passwordHasher;
+        this.objectMapper = objectMapper;
         this.seedPath = seedPath;
     }
 
@@ -93,7 +97,7 @@ public class IdentitySeedLoader implements ApplicationRunner {
             log.warn("시드 적재 스킵 — 파일 없음: {} (pms.seed.path 확인)", peopleJson.toAbsolutePath());
             return;
         }
-        if (!personRepository.findAll().isEmpty()) {
+        if (personRepository.count() > 0) {
             log.info("시드 적재 스킵 — 인원 데이터가 이미 있음");
             return;
         }
@@ -142,7 +146,7 @@ public class IdentitySeedLoader implements ApplicationRunner {
 
     private List<SeedPersonRow> readRows(Path peopleJson) {
         try {
-            return new ObjectMapper().readValue(
+            return objectMapper.readValue(
                     Files.readAllBytes(peopleJson), new TypeReference<List<SeedPersonRow>>() {
                     });
         } catch (IOException | JacksonException e) { // Jackson 3는 언체크 JacksonException

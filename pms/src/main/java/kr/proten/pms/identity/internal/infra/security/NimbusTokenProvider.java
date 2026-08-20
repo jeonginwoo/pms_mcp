@@ -7,12 +7,14 @@ import java.util.List;
 import kr.proten.pms.identity.internal.application.InvalidTokenException;
 import kr.proten.pms.identity.internal.application.IssuedTokens;
 import kr.proten.pms.identity.internal.application.TokenProvider;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.oauth2.jwt.JwtException;
+import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.stereotype.Component;
@@ -27,14 +29,21 @@ class NimbusTokenProvider implements TokenProvider {
     private final JwtEncoder jwtEncoder;
     // TTL 정책
     private final AuthProperties properties;
-    // refresh 전용 디코더 — 공용 디코더는 token_type=access를 강제하므로 별도 생성
+    // refresh 전용 디코더 — 공용 디코더는 token_type=access를 강제하므로 별도 생성.
+    // 클레임 검증(aud=pms·token_type=refresh)은 디코더에 부착 (conventions §4)
     private final NimbusJwtDecoder refreshDecoder;
 
     NimbusTokenProvider(JwtEncoder jwtEncoder, AuthProperties properties, RSAKey rsaKey)
             throws JOSEException {
         this.jwtEncoder = jwtEncoder;
         this.properties = properties;
-        this.refreshDecoder = NimbusJwtDecoder.withPublicKey(rsaKey.toRSAPublicKey()).build();
+        NimbusJwtDecoder decoder =
+                NimbusJwtDecoder.withPublicKey(rsaKey.toRSAPublicKey()).build();
+        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
+                JwtValidators.createDefault(),
+                TokenClaimValidators.audiencePms(),
+                TokenClaimValidators.tokenType("refresh")));
+        this.refreshDecoder = decoder;
     }
 
     @Override
@@ -49,14 +58,6 @@ class NimbusTokenProvider implements TokenProvider {
     @Override
     public Long verifyRefresh(String refreshToken) {
         Jwt jwt = decodeOrReject(refreshToken);
-
-        if (!"refresh".equals(jwt.getClaimAsString("token_type"))) {
-            throw new InvalidTokenException();
-        }
-
-        if (!jwt.getAudience().contains("pms")) {
-            throw new InvalidTokenException();
-        }
 
         try {
             return Long.valueOf(jwt.getSubject());

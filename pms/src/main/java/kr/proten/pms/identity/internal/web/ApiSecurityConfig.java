@@ -1,9 +1,12 @@
 package kr.proten.pms.identity.internal.web;
 
 import tools.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import kr.proten.pms.common.ErrorResponse;
 import kr.proten.pms.identity.internal.infra.security.ApiTokenVerification;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -25,6 +28,9 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 class ApiSecurityConfig {
+    // 401 봉투-로그 상관 기록용 (conventions §4 "traceId must trace" — 토큰 원문 로그 금지)
+    private static final Logger log = LoggerFactory.getLogger(ApiSecurityConfig.class);
+
     @Bean
     @Order(10)
     SecurityFilterChain apiSecurityFilterChain(
@@ -32,7 +38,7 @@ class ApiSecurityConfig {
             ObjectMapper objectMapper,
             ApiTokenVerification apiTokenVerification) throws Exception {
         AuthenticationEntryPoint entryPoint = (request, response, exception) ->
-                writeUnauthenticated(response, objectMapper);
+                writeUnauthenticated(request, response, objectMapper);
         http.csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> a
@@ -48,13 +54,15 @@ class ApiSecurityConfig {
     }
 
     /** 401을 §7 에러 봉투로 내려준다 — 기본 응답(본문 없는 WWW-Authenticate)을 대체. */
-    private void writeUnauthenticated(HttpServletResponse response, ObjectMapper objectMapper)
+    private void writeUnauthenticated(
+            HttpServletRequest request, HttpServletResponse response, ObjectMapper objectMapper)
             throws java.io.IOException {
+        ErrorResponse envelope = ErrorResponse.of("UNAUTHENTICATED", "인증이 필요합니다", null);
+        log.warn("에러 봉투 401 UNAUTHENTICATED uri={} traceId={}",
+                request.getRequestURI(), envelope.error().traceId());
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
-        objectMapper.writeValue(
-                response.getWriter(),
-                ErrorResponse.of("UNAUTHENTICATED", "인증이 필요합니다", null));
+        objectMapper.writeValue(response.getWriter(), envelope);
     }
 }
