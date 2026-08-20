@@ -8,15 +8,20 @@
 1. 루트 `CLAUDE.md` → `pms/CLAUDE.md` → `docs/PROGRESS.md` → `docs/ROADMAP.md` 순으로 읽기
 2. `pms/` 안에서도 `/mcp` 어댑터 모듈은 MCP 담당 소유 — 애플리케이션 서비스 API 변경은 공용 결정 기록 경유
 
-## 현재 상태 (2026-08-18)
+## 현재 상태 (2026-08-20)
 
-- **루트 M0 시드 적재 — identity분 완료**(브랜치 `feat/pms-m0-seed-identity`): `IdentitySeedLoader`(ApplicationRunner — 기동 시 Person이 비어 있으면 `people.json` 44명+부록 B 확정 규칙 자동 적재, 멱등) — 직급 9종·조직 트리 18노드(root 프로텐+부문 6+팀 11)·기본 권한 그룹 4종·시스템 계정 `admin@proten.co.kr`·billable=false 10명·User 45(초기 `proten1!`). **시드 인원 id=생성 id 정합 보증**(불일치 시 기동 실패 — 후속 시드·eval 참조 전제). verify.sh pms PASS — 테스트 64개(신규 8, Testcontainers PG) + 실기동 스모크(compose PG·bootRun 자동 적재 45/45/18/9/4·curl 관통)
-- **게이트 M0 잔여**: LLM 학습 미사용 조항 확인(사람 작업) + 인증 3케이스 실서버 실측·사용자 승인 — **코드 전제는 전부 해소**
-- **host 트랙 참고(접점 정보 — 계약 변경 아님)**: identity 시드가 실 DB에 적재됨 — `/mcp` 임시 시드 어댑터 → `PeopleQueryService`+로그인 JWT(`pms.auth.jwks-uri`) 전환 가능 상태(전환 시점은 MCP 담당 몫)
-- **다음 작업:** PMS-M1c(관리 API — US-E1~E5: 인력·조직·직급·권한 그룹 CRUD)
+- **java-spring 컨벤션 개정 완료**(두 담당 동석 합의 — 공용 결정 기록): 프레임워크 관용구 규칙 5건 신설(인증 주체 획득 단일화·검증자 조합·Boot 빈 주입·existsBy/count·traceId 로그 상관) + 문서·코드 불일치 4건 정합화(§7 에러 봉투·validation 400/422·Lombok 미사용 확정·통합 테스트 DB 기준) + §1 필드 주석 규칙. 계기 = pms 코드 리뷰 피드백("언어·프레임워크 이해도")의 실체를 코드 실측으로 특정한 학습 세션
+- **컨벤션 소급 수정 5곳 대기**: 신설 규칙을 현행 코드가 어기는 상태 — `MeController`·`PeopleController` 수동 파싱 · `NimbusTokenProvider` 수동 클레임 검사 · `IdentitySeedLoader`의 `new ObjectMapper()`·`findAll().isEmpty()` · `ErrorResponse` traceId 무배선. 각 파일 1~2개 규모, 기존 테스트 64개가 회귀망
+- **다음 작업:** 컨벤션 소급 수정 5곳(M1c 전 권장) → PMS-M1c(관리 API — US-E1~E5: 인력·조직·직급·권한 그룹 CRUD)
 - **차단 요소:** 없음
 
-## 이전 상태 (2026-08-18 — PR #11 머지)
+## 이전 상태 (2026-08-18 — 시드 적재 머지)
+
+- **루트 M0 시드 적재 — identity분 완료**(브랜치 `feat/pms-m0-seed-identity`): `IdentitySeedLoader`(ApplicationRunner — 기동 시 Person이 비어 있으면 `people.json` 44명+부록 B 확정 규칙 자동 적재, 멱등) — 직급 9종·조직 트리 18노드(root 프로텐+부문 6+팀 11)·기본 권한 그룹 4종·시스템 계정 `admin@proten.co.kr`·billable=false 10명·User 45(초기 `proten1!`). **시드 인원 id=생성 id 정합 보증**(불일치 시 기동 실패 — 후속 시드·eval 참조 전제). verify.sh pms PASS — 테스트 64개(신규 8, Testcontainers PG) + 실기동 스모크(compose PG·bootRun 자동 적재 45/45/18/9/4·curl 관통)
+- ~~**게이트 M0 잔여**: LLM 학습 미사용 조항 확인(사람 작업) + 인증 3케이스 실서버 실측·사용자 승인~~ — **2026-08-20 게이트 M0 통과**(공용 결정 기록)
+- **host 트랙 참고(접점 정보 — 계약 변경 아님)**: identity 시드가 실 DB에 적재됨 — `/mcp` 임시 시드 어댑터 → `PeopleQueryService`+로그인 JWT(`pms.auth.jwks-uri`) 전환 가능 상태(전환 시점은 MCP 담당 몫)
+
+## 그 이전 상태 (2026-08-18 — PR #11 머지)
 
 - **PMS-M1b 완료**: 가시성 필터(`OrgTree`·`PersonVisibility` scope 4단·TEAM subtree)+`RequesterResolver`+404 은닉 공통 `NotFoundException`+`GET /api/people` 목록/단건·Testcontainers PG 도입 — 상세는 세션 로그(2026-08-18 M1b)
 - **차단 요소:** 없음
@@ -31,6 +36,12 @@
 - 미해결: <다음 세션으로 넘기는 것>
 - 다음 작업: <구체적으로>
 ```
+
+### 2026-08-20 — 학습 세션: M0 코드 복습 + 리뷰 피드백 실측 → java-spring 컨벤션 개정
+
+- 완료: ①M1 착수 전 복습 — pms 코드베이스 전수 독해 후 학습 아티팩트 "PMS M0 복습 노트" 작성(구현 현황 지도·요청 여정·SOLID/TDD 평가·M1 port 계약 예습·셀프 체크 10문항) ②"언어·프레임워크 이해도 부족해 보임" 리뷰 피드백의 실체를 코드 실측으로 특정 — **5곳 전부 프레임워크 제공 기능의 수동 재구현**: 컨트롤러별 `authentication.getName()` 파싱 중복(`MeController`·`PeopleController`) · `NimbusTokenProvider` 수동 클레임 검사(`ApiTokenVerification`의 검증자 조합과 스타일 혼재) · `IdentitySeedLoader`의 `new ObjectMapper()`와 `findAll().isEmpty()` · `ErrorResponse` traceId 무배선(로그 미기록으로 상관 불능). 언어(record·switch·compact constructor) 자체는 관용적 — 판정과 방어 근거는 아티팩트에 ③**java-spring 컨벤션 개정**(두 담당 동석 합의 — 공용 결정 기록): 관용구 규칙 5건 신설 + 불일치 4건 정합화 + §1 필드 주석 다듬기. 검토 중 발견한 문서·코드 괴리 — validation 400/422는 코드가 PRD 정합(문서가 낡음), Lombok·H2는 문서가 관행과 다름(실측 기준으로 정리) ④경계 준수: `pms-mcp-mock/`·`host/`·PRD 무수정, 공용 변경은 컨벤션 1건뿐(동석 합의 성립). 검증: **verify.sh pms --quick PASS**(코드 0줄 — 문서만 변경이라 컴파일 스코프)
+- 미해결: **컨벤션 소급 수정 5곳**(현재 상태 참조 — 신설 규칙 위반 상태의 현행 코드)
+- 다음 작업: 컨벤션 소급 수정(M1c 전 권장) → PMS-M1c(관리 API US-E1~E5)
 
 ### 2026-08-18 — 루트 M0 시드 적재(identity분): 인력 44명·조직 트리·기본 그룹·시스템 계정
 

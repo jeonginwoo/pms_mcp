@@ -8,7 +8,7 @@
 
 - **Classes & methods**: Javadoc `/** ... */`. Explain purpose and intent.
     - Use `@param`/`@return` only when they remove ambiguity.
-- **Fields**: single-line `//` comment.
+- **Fields**: single-line `//` comment **only when it carries information the name does not** — a constraint, unit, default, or the decision it comes from. Restating the field name (`// 식별자` on `id`) is noise; omit it.
 - **No HTML tags**: `<ul>`, `<p>`, `<code>` etc. are forbidden in Javadoc. Use `-` for lists and blank lines for paragraphs.
 - **All Javadoc and comments are written in Korean.**
 - **Exception**: no comments on default constructors, getters, or setters.
@@ -61,18 +61,19 @@
 
 - **Records first**: DTOs, value objects, MCP tool inputs/outputs, and `@ConfigurationProperties` are written as **records**. Immutability is the default and it is terser than Lombok.
 - **Prefer lambdas**: lambdas over anonymous classes. Actively use functional interfaces (`Function`, `Predicate`, `Consumer`, `Supplier`, ...).
-- **Lombok is conditional**:
-    - Recommended: `@Getter`, `@RequiredArgsConstructor`, `@Builder`, `@Slf4j`
-    - JPA entities: `@NoArgsConstructor(access = AccessLevel.PROTECTED)` + **no `@Setter`** — state changes go through intent-revealing methods (`updateProgress(int rate)`).
-    - Forbidden: `@Data`. `@Setter`/`@AllArgsConstructor` conflict with the immutability principle — do not use without a clear reason.
+- **No Lombok** (2026-08-20 — aligned with actual practice; no module uses it): records and explicit constructors already cover what Lombok would generate. Do not add the dependency.
+    - JPA entities: protected no-arg constructor + **no setters** — state changes go through intent-revealing methods (`updateProgress(int rate)`).
 - **Immutability**: fields are `final` by default. Remove `final` only when mutability is explicitly needed.
 
 ## 4. Spring rules
 
-- **Dependency injection**: constructor injection only (`@RequiredArgsConstructor` + `final` fields). Field `@Autowired` is forbidden.
+- **Dependency injection**: constructor injection only (explicit constructor + `final` fields). Field `@Autowired` is forbidden.
+- **Use Boot-managed beans**: beans Boot auto-configures (`ObjectMapper`, `Clock`, ...) are injected, never instantiated inline — a hand-made instance silently drops the modules and settings Boot registered. Before `new`-ing a framework type, check whether a bean already exists.
+- **Caller identity in one place**: controllers obtain the authenticated caller via `@AuthenticationPrincipal` or a custom `HandlerMethodArgumentResolver` — hand-parsing `authentication.getName()` in each controller is forbidden (repetition is the smell).
+- **Token claim validation belongs to the decoder**: compose `OAuth2TokenValidator`s (`DelegatingOAuth2TokenValidator`) and attach them where the decoder is built. Decode-then-hand-check-claims with if-statements is forbidden — one codebase, one validation style.
 - **`@Transactional`**: on application services only (never controllers or repositories). Query services default to `@Transactional(readOnly = true)`.
 - **Never expose entities**: REST controllers and MCP adapters never return entities. Convert to record DTOs in the application layer. **MCP tool output feeds straight into the LLM** — include only the fields needed, and never accidentally ship internal identifiers or sensitive fields.
-- **Exception → HTTP mapping**: throw domain exceptions and map them in one place via `@RestControllerAdvice` + `ProblemDetail`. MCP adapters use the same shared mapping module (no ad-hoc try-catch conversion inside individual tools).
+- **Exception → HTTP mapping**: throw `ApiException` subtypes and map them in one place via `@RestControllerAdvice` into the §7 error envelope (`ErrorResponse` — `{error:{code,message,field,traceId}}`; the security chain's 401 writes the same envelope). MCP adapters use the same shared mapping (no ad-hoc try-catch conversion inside individual tools).
 
   | Situation | HTTP | MCP tool error message direction |
   |------|------|--------------------------|
@@ -80,10 +81,12 @@
   | Unauthorized **write** attempt | 403 | "담당자만 가능" |
   | Resource missing **or query outside visibility** | 404 | "해당 데이터 없음" — **conceal existence itself** |
   | Optimistic lock conflict | 409 | prompt re-reading the latest values |
-  | Input validation failure | 422 | explain the parameter error |
+  | Input **format** violation (`@Valid` failure) | 400 | `VALIDATION_ERROR` — name the field |
+  | Input **semantic/rule** violation (unknown enum value, role invariants, fixed targets) | 422 | explain the parameter error |
 
     - **404 concealment principle**: a resource the requester may not view returns 404, not 403 — "does not exist" and "cannot see" must be indistinguishable. This judgment lives inside application services (structural principle 3).
-- **Input validation**: request DTOs are validated declaratively with jakarta validation (`@Valid`, `@NotNull`, ...); failures map to 422.
+- **Input validation**: request DTOs are validated declaratively with jakarta validation (`@Valid`, `@NotNull`, ...); failures map to **400 `VALIDATION_ERROR`** (PRD-pms §7). Semantic rule violations the annotations cannot express map to 422.
+- **traceId must trace**: the error envelope's `traceId` is written to the server log together with the failure it identifies — an identifier the user can report but no one can correlate with a log line is forbidden.
 - **Config binding**: prefer `@ConfigurationProperties` (record). `@Value` only for single values.
 
 ## 5. Spring Modulith package structure (`pms/` app)
@@ -111,6 +114,7 @@ kr.proten.pms
 ## 6. Code quality
 
 - Remove unused variables, imports, and methods
+- **Ask the DB, don't load-and-scan**: existence/count questions go through derived queries (`existsBy...`, `count()`), never `findAll()` + `isEmpty()`/`size()`. Deliberate load-all + in-memory filtering is allowed only with an ASSUMPTION comment stating the scale rationale and the revisit trigger.
 - No duplicated code; minimize cognitive complexity
 - No empty catch blocks (at minimum log or leave an intent comment)
 - No raw types (specify generic types); compare strings with `equals()`
@@ -144,7 +148,7 @@ kr.proten.pms
     - Names: `methodName_condition_expectedResult`, or Korean via `@DisplayName`.
     - Structure: separate with Given-When-Then comments.
     - Unit tests isolate collaborators with Mockito; keep boundary tests (Modulith/ArchUnit) and integration tests separate.
-- **Integration test DB**: Testcontainers (PostgreSQL). No H2 substitute — dialect differences make a pass meaningless.
+- **Integration test DB**: anything that touches SQL dialect runs on Testcontainers (PostgreSQL) — an H2 pass there is meaningless. Dialect-independent semantics (auth flow, error envelope shape) may run on H2 for speed; state that rationale in the test's class comment (2026-08-20 — codifies the M1a/M1b practice).
 - **Link to verification gates**: `bash scripts/verify.sh` runs the tests accumulated through TDD. Writing tests in a batch afterwards hollows out this gate and is forbidden.
 
 ## 9. Example
@@ -155,13 +159,15 @@ kr.proten.pms
  * 가시성 규칙(본부장=본부, 팀장=팀, 팀원=본인 참여)과 404 은닉이 이 계층에 있다.
  */
 @Service
-@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ProjectQueryService {
-    // 프로젝트 저장소
     private final ProjectRepository projectRepository;
-    // 요청자 기준 가시성 판정
     private final VisibilityPolicy visibilityPolicy;
+
+    public ProjectQueryService(ProjectRepository projectRepository, VisibilityPolicy visibilityPolicy) {
+        this.projectRepository = projectRepository;
+        this.visibilityPolicy = visibilityPolicy;
+    }
 
     /**
      * 프로젝트 단건을 조회합니다.
