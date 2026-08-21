@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// dev 서버(5173)에서 /api 호출을 PMS 백엔드(8080)로 프록시 → 동일 출처라 CORS 불필요
+// dev 서버(5173)에서 /api 호출을 pms 앱(8080)으로 프록시 → 동일 출처라 CORS 설정이 불필요하다
 export default defineConfig({
   plugins: [react()],
   server: {
