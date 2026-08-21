@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * 재구축 PMS 앱 진입점 — Modulith 모듈러 모놀리스.
- * 직속 하위 패키지 6종이 애플리케이션 모듈이다(§3 확정: identity · project ·
- * resource · maintenance · notification · common). /mcp 어댑터 모듈은 MCP 담당이
- * M0에서 추가한다(구조 원칙 2 — 별도 프로세스 금지).
+ * 재구축 PMS 앱 진입점 — 도메인별 Modulith 모듈러 모놀리스.
+ * 직속 하위 패키지가 애플리케이션 모듈이다: person(사람·조직·직급·권한 그룹) ·
+ * project(프로젝트·배정) · common(에러 봉투 등 최소 공통분모).
+ * 각 모듈은 3계층(controller → service → repository)으로 구성된다.
  */
 @SpringBootApplication
 public class PmsApplication {

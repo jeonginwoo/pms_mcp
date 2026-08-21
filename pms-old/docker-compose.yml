@@ -1,0 +1,16 @@
+# 로컬 개발 DB (PRD-pms §0 배포 스택의 일부 — 앱·Nginx 편입은 PMS-M6에서)
+# 기동: docker compose -f pms/docker-compose.yml up -d
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: pms
+      POSTGRES_USER: pms
+      POSTGRES_PASSWORD: pms
+    ports:
+      - "5432:5432"
+    volumes:
+      - pms-pgdata:/var/lib/postgresql/data
+
+volumes:
+  pms-pgdata:

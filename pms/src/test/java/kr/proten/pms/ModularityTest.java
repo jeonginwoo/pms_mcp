@@ -8,14 +8,15 @@ import org.springframework.modulith.core.ApplicationModules;
 
 /**
  * Modulith 모듈 경계 검증 (PRD-pms §0 아키텍처 규칙 — 위반=실패).
- * 모듈 = 메인 패키지의 직속 하위 패키지 — §3 확정 6종(identity · project ·
- * resource · maintenance · notification · common) + /mcp 어댑터 모듈 mcp
- * (MCP 담당, 2026-08-17 모듈 결정이 예정한 추가).
- * 모듈 루트만 공개 API이고 하위 패키지는 외부 참조 금지 — 이 테스트가 깨지면
+ *
+ * 모듈 = 메인 패키지의 직속 하위 패키지. 이번 재구축 범위는 도메인 모듈 2종
+ * (person · project) + 공통 모듈 1종이며, resource·maintenance·notification과
+ * /mcp 어댑터는 각 담당이 필요할 때 추가한다(2026-08-21 결정).
+ *
+ * 모듈 루트만 공개 API이고 internal 하위는 외부 참조 금지 — 이 테스트가 깨지면
  * 테스트가 아니라 구조를 고친다(conventions/java-spring.md §5).
  */
 class ModularityTest {
-    // 메인 클래스 기준으로 도출한 모듈 모델 (기본 감지 전략: 직속 하위 패키지)
     private final ApplicationModules modules = ApplicationModules.of(PmsApplication.class);
 
     @Test
@@ -25,20 +26,12 @@ class ModularityTest {
     }
 
     @Test
-    @DisplayName("확정 모듈 6종 + /mcp 어댑터 모듈이 전부 감지된다")
+    @DisplayName("현재 모듈은 person · project · common 3종")
     void detectsAllModules() {
         var detected = modules.stream()
                 .map(module -> module.getIdentifier().toString())
                 .toList();
 
-        // mcp = 임베디드 /mcp 어댑터 (MCP 담당 — 2026-08-17 모듈 결정이 예정한 추가분)
-        assertThat(detected).containsExactlyInAnyOrder(
-                "identity",
-                "project",
-                "resource",
-                "maintenance",
-                "notification",
-                "common",
-                "mcp");
+        assertThat(detected).containsExactlyInAnyOrder("person", "project", "common");
     }
 }

@@ -1,0 +1,69 @@
+package kr.proten.pms.project.service.impl;
+
+import kr.proten.pms.project.service.dto.ProjectVisibility;
+import kr.proten.pms.project.service.dto.ProjectSummary;
+import kr.proten.pms.project.service.dto.ProjectDetail;
+import kr.proten.pms.project.service.ProjectQueryService;
+import kr.proten.pms.project.service.entity.Project;
+import kr.proten.pms.project.repository.ProjectRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * 프로젝트 조회 유스케이스 — AC A3-1~A3-3.
+ * 가시성 필터는 질의 조건으로 내려가고(전체 로드 후 메모리 필터 금지) 단건은
+ * 가시성 밖을 404로 은닉한다 — 판정 자체는 ProjectVisibilityService가 소유한다.
+ */
+@Service
+@Transactional(readOnly = true)
+public class ProjectQueryServiceImpl implements ProjectQueryService {
+    private final ProjectRepository projectRepository;
+    private final ProjectVisibilityService projectVisibilityService;
+    private final ProjectViewFactory projectViewFactory;
+
+    public ProjectQueryServiceImpl(
+            ProjectRepository projectRepository,
+            ProjectVisibilityService projectVisibilityService,
+            ProjectViewFactory projectViewFactory) {
+        this.projectRepository = projectRepository;
+        this.projectVisibilityService = projectVisibilityService;
+        this.projectViewFactory = projectViewFactory;
+    }
+
+    /** 가시성 범위 내 프로젝트 목록 — 조직 범위와 본인 배정의 합집합이다. */
+    public Page<ProjectSummary> listVisible(long callerPersonId, Pageable pageable) {
+        ProjectVisibility visibility = projectVisibilityService.visibilityOf(callerPersonId);
+
+        if (visibility.unrestricted()) {
+            return toSummaryPage(projectRepository.findByDeletedFalse(pageable));
+        }
+
+        if (visibility.visibleProjectIds().isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        return toSummaryPage(projectRepository.findByIdInAndDeletedFalse(
+                visibility.visibleProjectIds(), pageable));
+    }
+
+    /**
+     * 프로젝트 단건 조회.
+     * 배정 레코드는 타 팀 인원까지 그대로 노출한다 — 프로젝트 컨텍스트 안에서는
+     * 조직 가시성이 확장되기 때문이다(상위 PRD §4-4).
+     */
+    public ProjectDetail getProject(long callerPersonId, long projectId) {
+        Project project = projectVisibilityService.requireVisible(callerPersonId, projectId);
+
+        return projectViewFactory.toDetail(project);
+    }
+
+    private Page<ProjectSummary> toSummaryPage(Page<Project> projects) {
+        return new PageImpl<>(
+                projectViewFactory.toSummaries(projects.getContent()),
+                projects.getPageable(),
+                projects.getTotalElements());
+    }
+}

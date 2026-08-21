@@ -1,0 +1,50 @@
+# 로컬 개발 기본값 — DB는 docker-compose.yml의 PostgreSQL (운영 값은 배포 시 외부화)
+spring:
+  application:
+    name: pms
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pms
+    username: pms
+    password: pms
+  jpa:
+    hibernate:
+      # ASSUMPTION: 개발 단계 스키마 관리 = update (단순·표준 — PMS-M0 유보 결정).
+      # 스키마 안정화(시드 적재 이후) 시 Flyway 전환을 재검토한다.
+      ddl-auto: update
+    properties:
+      hibernate:
+        # 모듈별 스키마(§0) — 엔티티의 schema 지정을 DDL로 함께 생성
+        hbm2ddl:
+          create_namespaces: true
+    open-in-view: false
+
+server:
+  port: 8080
+
+# --- /mcp 어댑터 모듈 (MCP 담당 — 이하 블록 소유) -------------------------
+spring.ai.mcp.server:
+  name: pms
+  version: 0.1.0
+  protocol: STREAMABLE # 원칙 7(stateless 지향) — STATELESS 전환은 SDK 신 스펙 지원 후 검토
+  type: SYNC
+
+pms:
+  auth:
+    # jwks-uri 설정 시 HS256보다 항상 우선 — 게이트 M0 통과(2026-08-20)로 활성화.
+    #   /mcp 토큰 = 로그인 JWT(RS256 access — refresh는 token_type 허용 목록이 거절,
+    #   McpJwksAuthTest). HS256 테스트 토큰(printTestTokens)은 더 이상 /mcp를 통과하지 않는다.
+    jwks-uri: http://localhost:8080/api/auth/jwks
+    # HS256 시크릿 = printTestTokens 정본 + 테스트 전용(운영 반입 금지 — 구현_노트 B-3).
+    # jwks-uri가 있으면 디코더는 이를 무시한다 — 실수로 jwks-uri를 지우면 HS256으로
+    # 되돌아가므로 첫 배포 전 prod 프로파일 fail-fast 추가 트리거 유지(PROGRESS-host).
+    hs256-secret: pms-m0-hs256-local-gate-secret-0123456789-abcdefghij
+    # 로그인 JWT TTL 기본값은 코드(§7 확정: access 1h·refresh 14d) — 재정의 시에만 기입
+    # access-ttl: 1h
+    # refresh-ttl: 14d
+  # --- 시드 적재 (pms 트랙 소유) — 기동 시 Person이 비어 있으면 identity분 자동 적재.
+  #     빈 값·미설정 = 비활성 (테스트 yml은 미설정 — 픽스처 충돌 방지). 배포 경로는 PMS-M6
+  seed:
+    path: ../reference/seed
+  mcp:
+    # 임시 어댑터의 시드 원본 — identity 모듈 적재(PMS-M1)가 대체하면 제거
+    seed-people-path: ../reference/seed/people.json
