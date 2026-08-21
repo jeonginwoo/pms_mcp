@@ -1,6 +1,8 @@
-// 재구축 PMS 앱 (PRD-pms §3) — Modulith 모듈러 모놀리스.
-// /mcp 어댑터는 이 앱에 임베디드되는 별도 모듈(구조 원칙 2)로, MCP 담당이 M0에서
-// pms-mcp-mock의 mcp/·port/ 를 승격해 추가한다 — 이 트랙에서 만들지 않는다.
+// 재구축 PMS 앱 — Modulith 모듈러 모놀리스, 도메인별 모듈(person · project · common).
+// 3계층(controller → service → repository)이며 JPA 엔티티가 곧 도메인 모델이다
+// (2026-08-21 결정 — 구 api→application→domain←infra 육각형 구조 폐기).
+// 인증·/mcp 어댑터·resource·maintenance·notification은 이 재구축 범위 밖 —
+// 직전 구현은 ../pms-old 에 참고용으로 보존한다.
 plugins {
     id 'java'
     id 'org.springframework.boot' version '4.1.0'
@@ -22,29 +24,30 @@ repositories {
 dependencies {
     implementation platform('org.springframework.boot:spring-boot-dependencies:4.1.0')
     implementation platform('org.springframework.modulith:spring-modulith-bom:2.1.0')
-    implementation platform('org.springframework.ai:spring-ai-bom:2.0.0')
+    // 웹 계층은 common의 에러 봉투 변환(@RestControllerAdvice)이 쓴다 —
+    // 모듈별 controller 패키지는 인증 도입 시 채운다(호출자 식별이 전제)
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    // /mcp 어댑터 모듈 (MCP 담당 — pms-mcp-mock 승격분)
-    implementation 'org.springframework.ai:spring-ai-starter-mcp-server-webmvc'
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
-    // 자체 로그인(JWT 발급 — RS256+JWKS, 구현_노트 §1-1·B-3 승격 경로 정합).
-    // 검증(oauth2-resource-server)은 /mcp 어댑터와 공유
+    // 자체 로그인 — JWT 발급(RS256)·비밀번호 해시. pms.auth.enabled=false 동안에는
+    // common/config의 전면 허용 체인이 걸린다(스타터가 있으면 기본이 전면 차단이므로)
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.springframework.modulith:spring-modulith-starter-core'
-    // 이벤트 발행 레지스트리(spring-modulith-starter-jpa)는 §8 이벤트 도입 시(PMS-M3+) 추가
+    // 이벤트 발행 레지스트리(spring-modulith-starter-jpa)는 도메인 이벤트 도입 시 추가
+    // Boot 4는 기술별 자동 구성이 스타터로 분리됨 — flyway-core 단독은 자동 구성이 없다
+    implementation 'org.springframework.boot:spring-boot-starter-flyway'
+    runtimeOnly 'org.flywaydb:flyway-database-postgresql'
     runtimeOnly 'org.postgresql:postgresql'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    // MockMvc 웹 슬라이스 — Boot 4에서 모듈 분리(@AutoConfigureMockMvc가 이 스타터에)
-    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
     testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
-    // 방언 타는 통합 테스트는 PG 실물 — H2 대체 금지 (conventions §8, PMS-M1b 도입).
+    // MockMvc 웹 슬라이스 — Boot 4에서 모듈 분리(@WebMvcTest·@AutoConfigureMockMvc가 이 스타터에)
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    // 방언 타는 통합 테스트는 PG 실물 — H2 대체 금지 (conventions §8).
     // Testcontainers 2.x(Boot 4.1 BOM 관리)는 아티팩트가 testcontainers-* 로 개명됨
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
     testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
     testImplementation 'org.testcontainers:testcontainers-postgresql'
-    testRuntimeOnly 'com.h2database:h2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
@@ -52,18 +55,16 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
-// 게이트 M0 수동 검증용 — HS256 테스트 토큰 출력 (기본 그룹 4종 대표, mock과 동일 요령)
-tasks.register('printTestTokens', JavaExec) {
-    group = 'application'
-    description = 'Print HS256 test JWTs for manual /mcp verification'
-    classpath = sourceSets.test.runtimeClasspath
-    mainClass = 'kr.proten.pms.mcp.TestJwt'
-    systemProperty 'stdout.encoding', 'UTF-8' // Windows 콘솔 한글 라벨 깨짐 방지
-    // 시크릿 정본은 application.yml 하나 — 상수 중복 드리프트 방지
-    def yml = file('src/main/resources/application.yml').text
-    systemProperty 'pms.auth.hs256-secret', (yml =~ /hs256-secret:\s*(\S+)/)[0][1]
-}
-
 tasks.withType(JavaCompile).configureEach {
     options.compilerArgs << '-Xlint:deprecation'
+}
+
+// 시드 users 행의 password_hash 재생성용 — 초기 비밀번호는 부록 B 확정값이다.
+// BCrypt는 매번 다른 솔트를 쓰므로 출력값이 달라도 모두 유효하다.
+tasks.register('printPasswordHash', JavaExec) {
+    group = 'application'
+    description = 'Print a BCrypt hash for the seed initial password'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'kr.proten.pms.person.PrintPasswordHash'
+    systemProperty 'stdout.encoding', 'UTF-8'
 }
