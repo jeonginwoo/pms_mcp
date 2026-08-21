@@ -98,10 +98,10 @@ B2-1 자연어 검증(2026-08-10)이 실증한 도구 카탈로그 공백 2건�
 - 배포: Nginx → Spring Boot → PostgreSQL (Docker Compose)
 
 **아키텍처 규칙 (위반=실패)**
-- 모듈러 모놀리식 · Modulith 경계 강제 (모듈 목록은 §3 — PMS-M0 스캐폴드에서 확정)
-- `api→application→domain←infra`, domain은 Spring/JPA import 0
-- 모듈 간 객체참조 금지, ID로만 연결(질의는 포트)
-- 단일 DB · 모듈별 스키마 · 모듈 간 물리 FK 금지
+- 모듈러 모놀리식 · Modulith 경계 강제 · **도메인 하나 = 모듈 하나** (모듈 목록은 §3)
+- 모듈 내부는 **3계층 `controller → service → repository`** 한 방향이며 **JPA 엔티티가 곧 도메인 모델**이다 (2026-08-21 재구축 결정 — 구 `api→application→domain←infra`·"domain은 Spring/JPA import 0" 규칙을 대체. 근거·경위는 PROGRESS 결정 기록). `service` = 유스케이스 인터페이스(모듈 계약), 하위에 `impl`(구현·내부 협력자)·`dto`(입출력)·`entity`(JPA 엔티티·VO). 영속 관심사(`jakarta.persistence`)는 `service/entity`·`repository`에만, 웹 관심사는 `controller`와 common의 에러 봉투 변환에만 둔다 — `LayerRuleTest`(ArchUnit)가 강제한다
+- 모듈 간 객체참조 금지, ID로만 연결. 다른 모듈은 그 모듈이 `@NamedInterface`로 공개한 **`service`(계약)와 `service/dto`(값)만** 참조한다 — `repository`·`service/entity`·`service/impl`은 모듈 내부라 엔티티·리포지토리가 경계를 넘지 못한다(`ModularityTest`가 검증)
+- 단일 DB · **단일 스키마** · 모듈 간 물리 FK 금지 (2026-08-21 재구축 결정 — 구 "모듈별 스키마" 대체. 스키마는 Flyway가 소유: `src/main/resources/db/migration/V__*.sql`, `ddl-auto=none`. 기존 마이그레이션은 수정하지 않고 새 버전을 추가한다)
 - 이벤트는 사후 fan-out만, 즉시·원자적은 동기 호출
 - 권한은 서버 최종 판정, 프론트는 UI 노출 제어만
 - `/mcp` 어댑터는 애플리케이션 서비스만 호출 — 리포지토리 직접 접근 금지 (구조 원칙 3)
@@ -122,7 +122,7 @@ B2-1 자연어 검증(2026-08-10)이 실증한 도구 카탈로그 공백 2건�
 
 권한 모델(두 축·조직 가시성·기능별 권한 표·404 은닉 의미론)은 **상위 `docs/PRD.md` §4가 유일 원본**이다. 구현 관점 보충만 남긴다:
 
-- 소유 모듈: 조직 가시성 = identity, 프로젝트 역할 = project
+- 소유 모듈: 조직 가시성 = person(구 identity — 2026-08-21 개명), 프로젝트 역할 = project
 - 판정식은 상위 `PRD.md` §4-1이 원본(`canDo = orgPerm OR projectPerm`, 가시성은 §4-4). 서버가 최종 판정(§0 아키텍처 규칙), 프론트는 UI 노출 제어만
 - **권한 그룹 (2026-08-09 확정 — 상위 `PRD.md` §4-3이 규칙 원본)**: 구 orgRole 고정 4단을 편집 가능한 `PermissionGroup`(가시성 scope 4단 + 프로젝트 밖 기능 플래그 4종)으로 일반화. 판정·가시성·404 은닉이 전부 그룹 정의를 따른다. 시드 `people.json`의 orgRole 값(ADMIN/DIVISION_HEAD/TEAM_LEAD/MEMBER)은 기본 그룹 4종(관리자·부문장·팀장·팀원)으로 매핑 적재(부록 B)
 - **확정(2026-08-03)**: 판정은 **합집합** — `canDo = orgPerm(orgRole) OR projectPerm(프로젝트 역할)`. orgRole을 선행 게이트로 쓰지 않는다. 프로젝트 역할은 **PM / PL / 참여자** 3단이며 프로젝트마다 개별 판정한다(구 "관리자/담당자" 대체). orgRole은 가시성 + 프로젝트 밖 행위(생성·조직 관리)만 담당. 프로토타입 기능 플래그 5종 미채택, 부문장 `editProgress:false` 폐기. 상세 표는 상위 `PRD.md` §4가 유일 원본 — 본 문서는 참조만 한다 (PROGRESS 결정 기록 2026-08-03)
@@ -136,17 +136,18 @@ B2-1 자연어 검증(2026-08-10)이 실증한 도구 카탈로그 공백 2건�
                                           [AI 호스트 Boot 앱] --MCP(Streamable HTTP)--> 위 /mcp
 ```
 
-- Frontend=화면·검증·표시(권한은 UI노출만) / Backend=단일앱 모듈러 모놀리식 / DB=단일PG·모듈별스키마 / 인증=자체 로그인+JWT(stateless) / 알림=SSE 즉시 푸시(⑥) / 스케줄러=일1회(마감알림)만 / 파일저장소 없음.
-- **모듈 목록(2026-08-17 PMS-M0 스캐폴드에서 확정 — 공용 결정 기록)**: 바운디드 컨텍스트 6(identity·project·resource·maintenance·notification·common)을 생성. 지원 모듈 후보(chat BFF·mcpconfig — 구 설계 승계 표기)는 **미생성 유보**(고통 확인 후 추가 — 챗 연동 시점 M1에 재론). `/mcp` 어댑터 모듈(MCP 담당 소유)은 목업 `mcp/`·`port/` 승격 시 MCP 담당이 추가. 베이스 패키지 = `kr.proten.pms`. v1.0의 "6모듈 고정"은 해제 상태 유지(열거는 확정, 증설은 열림).
+- Frontend=화면·검증·표시(권한은 UI노출만) / Backend=단일앱 모듈러 모놀리식 / DB=단일PG·단일스키마(Flyway 소유 — §0) / 인증=자체 로그인+JWT(stateless) / 알림=SSE 즉시 푸시(⑥) / 스케줄러=일1회(마감알림)만 / 파일저장소 없음.
+- **모듈 목록(2026-08-21 재구축에서 갱신 — 공용 결정 기록. 구 2026-08-17 PMS-M0 확정 6종을 대체)**: 현재 **person · project · common 3종**. `identity`는 계정·인증이 범위에서 빠지며 담는 것이 사람·조직·직급·권한 그룹뿐이 되어 **`person`으로 개명**. `resource`·`maintenance`·`notification`과 `/mcp` 어댑터 모듈(MCP 담당 소유 — 구현은 `pms-old/`에 보존)은 **해당 작업 착수 시 담당이 추가**한다(빈 모듈 선생성 금지). 지원 모듈 후보(chat BFF·mcpconfig)는 미생성 유보 — 챗 연동 시점 M1에 재론. 베이스 패키지 = `kr.proten.pms`. "모듈 고정"은 해제 상태 유지(증설은 열림).
 - `/mcp` 어댑터가 호출하는 애플리케이션 서비스는 EPIC A(조회·진척률)·C(가동률)·D(이력)·H(`/api/me` = `whoami`)와 동일 — 도구 카탈로그 대응은 PRD-host §4-2. 서비스 API 변경은 공용 결정 기록 경유(2인 협업 경계).
 
 ## 4. 도메인 모델
 
 모든 수정 가능 엔티티는 `version:long`(낙관적 락). 모듈 간 참조는 `*Id`.
 
-- **identity**: `OrgUnit`(parentId — nullable(회사 root), name — **임의 깊이 트리**, 2026-08-09 ⑧. 구 `Division`·`Team` 2단 대체, "부문"·"팀"은 트리 상 위치의 파생 개념) · `Grade`(name, coeff — 시드 값은 부록 B, 편집 가능 US-E4) · `PermissionGroup`(name · visibilityScope{COMPANY,DIVISION,TEAM,SELF — TEAM은 subtree 포함} · 기능 플래그 4종{createProject, manageContracts, manageAllProjects, manageOrg} · systemFixed — 2026-08-09 ⑦, 상위 PRD §4-3이 규칙 원본, US-E5) · `Person`(orgUnitId, gradeId, **groupId** — 구 orgRole 대체, capacity, **billable** — 가동률 집계 대상 여부, 상위 PRD §3 · 2026-08-06, **system** — 시스템 계정 플래그: 삭제·수정 불가, 인력·가동률·배정 목록 제외 · 2026-08-09 ④) · `User`(personId, email(로그인 ID), passwordHash, phone, notifPrefs — 내 계정 EPIC H 대응)
+- **person**(구 identity — 2026-08-21 개명): `OrgUnit`(parentId — nullable(회사 root), name — **임의 깊이 트리**, 2026-08-09 ⑧. 구 `Division`·`Team` 2단 대체, "부문"·"팀"은 트리 상 위치의 파생 개념) · `Grade`(name, coeff — 시드 값은 부록 B, 편집 가능 US-E4) · `PermissionGroup`(name · visibilityScope{COMPANY,DIVISION,TEAM,SELF — TEAM은 subtree 포함} · 기능 플래그 4종{createProject, manageContracts, manageAllProjects, manageOrg} · systemFixed — 2026-08-09 ⑦, 상위 PRD §4-3이 규칙 원본, US-E5) · `Person`(orgUnitId, gradeId, **groupId** — 구 orgRole 대체, capacity, **billable** — 가동률 집계 대상 여부, 상위 PRD §3 · 2026-08-06, **system** — 시스템 계정 플래그: 삭제·수정 불가, 인력·가동률·배정 목록 제외 · 2026-08-09 ④) · `User`(personId, email(로그인 ID), passwordHash, phone, notifPrefs — 내 계정 EPIC H 대응)
   - v1.0의 `Division.inScope`는 제거 — 전사 범위 전환으로 불필요(②)
-- **project**: `Project`(client·name·solution(제품군)·engagement{REMOTE,ONSITE,PARTIAL_ONSITE — 원격·상주·부분상주. **OFFSITE 폐지**, 2026-08-09 ③⑥}·**managerId(PM)**·contractMM·기간·status·progress·deleted·version) · `ProjectAssignment`(personId·**role{PM,PL,PARTICIPANT}**·기간·monthlyMM·status)
+- **project**: `Project`(client·name·solution(제품군)·engagement{REMOTE,ONSITE,PARTIAL_ONSITE — 원격·상주·부분상주. **OFFSITE 폐지**, 2026-08-09 ③⑥}·**managerId(PM)**·contractMM·기간·status·progress·deleted·version)  · `ProjectAssignment`(personId·**role{PM,PL,PARTICIPANT}**·기간·monthlyMM·status)
+  - **기간 규칙 (2026-08-22)**: 종료일은 시작일보다 **뒤여야** 한다 — 같은 날짜도 거절(`400 VALIDATION_ERROR` field=endDate). 프로젝트·배정 양쪽에 같은 규칙이고 엔티티가 갖는다. 한쪽만 비어 있는 열린 기간은 허용한다(계약 전 단계에 종료일이 없을 수 있다)
   - 필드명·값은 시드 `projects.json` 정합(client·solution·managerId — v1.0의 account·productType 대체. AC A1-3의 pmId = managerId). 시드 engagement의 OFFSITE 32건은 적재 시 REMOTE로 흡수(부록 B)
   - **`ProjectAssignment.role`이 프로젝트 역할의 정본**(2026-08-03). `Project.managerId`는 대표 PM 파생 읽기 필드로 유지 — 시드 정합·조회 편의. 불변식: 프로젝트당 `role=PM` 정확히 1행, `managerId`와 일치. 값은 `PARTICIPANT`를 쓴다 — orgRole의 `MEMBER`와 이름이 겹치면 안 된다. `role=PL`은 복수 행 물리적으로 허용하되 API에서 당분간 1명으로 제약(제약 해제 시 스키마·접점 변경 없음)
   - `ProjectPermissionOverride`(projectId·role{PL,PARTICIPANT}·action{EDIT_INFO,ASSIGN,PROGRESS,COMPLETE_REOPEN}·allowed) — **기본값(상위 PRD §4-2 표)과 다른 셀만 저장**, 행 부재 = 기본값. PM 열·조회·삭제·이관은 저장 대상이 아니다(고정 — 상위 §4-2). 완료 처리·재개는 `COMPLETE_REOPEN` 단일 action(묶음 규칙). 낙관적 락은 `Project.version` 공용 (2026-08-06 — US-A8)
@@ -158,7 +159,8 @@ B2-1 자연어 검증(2026-08-10)이 실증한 도구 카탈로그 공백 2건�
   - `MaintenanceIssue`(siteId · type{장애,문의,요청} · 제목 · 상태{접수,처리중,고객확인대기,완료} · assigneeId — **기본값 = 사이트 engineerId** · 접수일 · 완료일 · version) · `IssueComment`(issueId · 작성자 personId · 내용, **append-only** — 구 `MaintenanceLog` 불변식 계승)
   - 프로젝트:계약 = **1:1**(이관 경로) · 프로젝트 없는 계약 존재(직접 등록 — US-D2). MCP `list_maintenance_logs` 접점 영향은 PROGRESS 결정 기록 참조(확인 완료 2026-08-06)
 - **notification**: `Notification`(recipientId·type·refType·refId·message·read·createdAt)
-- **common**: `AuditLog`(entityType·entityId·action·actorId·source{WEB,MCP}·before·after·**projectId(nullable)**, append-only) · `CommonCode`
+- **common**: `AuditLog`(entityType·entityId·action·actorId·source{WEB,MCP}·before·after·**projectId(nullable)**·createdAt, append-only) · `CommonCode`
+  - `createdAt`은 2026-08-21 구현에서 명시화 — G2-2의 "최신순"과 A7-3의 "행위자·시각은 감사 로그가 담당"이 시각 컬럼을 전제한다. before·after는 **바뀐 필드만** 담는 JSON 스냅샷이고, 무엇이 바뀌었는지 판정하는 지점은 도메인 쪽 한 곳(`ProjectAuditRecorder`)이다
   - `projectId`는 프로젝트 스코프 이벤트(프로젝트 CRUD·상태 전이·진행률·배정·역할·권한 커스텀)에만 채운다 — 배정·역할처럼 entityId가 프로젝트가 아닌 행을 프로젝트별로 필터하기 위한 참조 컬럼(US-G2, 2026-08-06). 조직·계정 변경(E1·E2·H1)은 null. **저장은 이 테이블 하나뿐** — 프로젝트별 로그를 이중 기록하지 않는다(통합로그와 프로젝트 이력은 같은 행의 두 조회 뷰)
 
 ## 5. 상태 전이 (Project)
@@ -198,6 +200,7 @@ B2-1 자연어 검증(2026-08-10)이 실증한 도구 카탈로그 공백 2건�
 - A2-5 Given progress<0 or >100 When 저장 Then `400`
 - A2-6 Given version 불일치 When `confirmed:true` Then `409 STALE_VERSION` + 최신 progress·version 반환
 - A2-8 Given status=완료 When `PUT /progress` Then `409 PROJECT_COMPLETED` — 완료 상태의 진척률 직접 수정 금지, 재개(US-A7) 후 수정 (2026-08-06 — 유저_시나리오 §7 발견 #3 해소)
+- A2-9 Given status ∈ {계약대기, 수주확정, 유지보수중} When `PUT /progress` Then `409 NOT_IN_PROGRESS` — **진척률은 진행중에서만 수정한다** (2026-08-22 결정: 계약 전·수주 단계에는 기록할 진척이 없고, 이관 후에는 계약이 소관이다). 완료는 A2-8이 더 구체적인 안내(재개 후 수정)를 주므로 그대로 둔다. **MCP `update_progress`도 같은 서비스라 같은 거절을 받는다** — 챗은 "상태를 먼저 옮기라"는 거절을 전달한다
 
 **US-A3 가시성 범위 내에서 프로젝트를 조회한다**
 - A3-1 Given 팀장 When `GET /projects` Then **자기 팀 범위 ∪ 본인이 배정된 프로젝트**(타 팀 포함) page 봉투 — 가시성은 프로젝트 역할이 확장한다(상위 PRD §4-4). 시드 기준 참여자가 2개 팀 이상인 프로젝트가 46건이라 상시 발생하는 경로다
@@ -206,7 +209,7 @@ B2-1 자연어 검증(2026-08-10)이 실증한 도구 카탈로그 공백 2건�
 
 **US-A4 PM으로서 프로젝트를 소프트 삭제한다** [PM]
 - A4-1 When `DELETE /projects/{id}` Then `204`, deleted=true, 목록·중복검사 제외, AuditLog DELETE
-- A4-2 Given PL 또는 참여자 토큰 When 삭제 Then `403`
+- A4-2 Given PL 또는 참여자 토큰 When 삭제 Then `403` — 단 **"프로젝트 생성" 플래그 보유자는 PM이 아니어도 삭제 가능**(2026-08-22 결정 — 상위 PRD §4-2 삭제 행 확장. 판정 = PM 역할 OR 생성 플래그)
 
 **US-A5 프로젝트 정보 수정은 PM·PL만, 상태는 정의된 전이만 허용된다** [PM·PL] — 프로토타입 수정 폼의 status 자유 편집 대비 서버 강제 (2026-08-02)
 - A5-1 Given 순방향 전이(계약대기→수주확정→진행중 — §5) When `PUT /projects/{id}` (status 포함) Then `200` + AuditLog STATE_CHANGE. **완료·재개·이관으로의 전이는 이 경로에서 불가**(`409 INVALID_TRANSITION`) — 전용 경로(US-A7 `/complete`·`/reopen`, US-D1 `/handover`)로만 (2026-08-06)
@@ -368,7 +371,7 @@ B2-1 자연어 검증(2026-08-10)이 실증한 도구 카탈로그 공백 2건�
 | UNAUTHENTICATED | 401 | 토큰 없음/만료 |
 | FORBIDDEN | 403 | 권한 없는 행위 (구 `FORBIDDEN_FIELD` 개명 — 2026-08-06, 프로토타입 미사용 확인) |
 | NOT_FOUND | 404 | 없음/가시성 밖 |
-| DUPLICATE_* / NOT_COMPLETED / INVALID_TRANSITION / PROJECT_COMPLETED / PROGRESS_INCOMPLETE / IN_USE | 409 | 중복·상태 위반·전이 위반·사용 중 삭제 거절 (A2-8·A7-2·A7-4 · IN_USE는 E3-3·E4-3·E5-4 — 2026-08-09) |
+| DUPLICATE_* / NOT_COMPLETED / INVALID_TRANSITION / PROJECT_COMPLETED / PROGRESS_INCOMPLETE / NOT_IN_PROGRESS / IN_USE | 409 | 중복·상태 위반·전이 위반·사용 중 삭제 거절 (A2-8·A7-2·A7-4 · IN_USE는 E3-3·E4-3·E5-4 — 2026-08-09 · **NOT_IN_PROGRESS는 A2-9 — 2026-08-22** · `DUPLICATE_*`에 `DUPLICATE_EMAIL`(E2-1·H1-2)·`DUPLICATE_ROOT`(회사 root 중복 — 2026-08-22)가 든다) |
 | STALE_VERSION | 409 | 동시 수정 충돌 |
 | REF_NOT_FOUND / PM_REQUIRED / MULTIPLE_PM / INVALID_ROLE / IMMUTABLE_PERMISSION / IMMUTABLE_GROUP / IMMUTABLE_ACCOUNT | 422 | 참조 대상 없음 · 역할 구성 위반 · 고정 대상 변경 시도 (A1-4·A1-6·A6-7·A8-4 · E5-3·E2-5는 2026-08-09 — `MULTIPLE_PL`은 2026-08-06 삭제) |
 
@@ -427,7 +430,7 @@ POST /api/chat    POST /api/chat/feedback        # chat BFF — AI 호스트 프
 순서대로 진행. 각 단계 끝에서 해당 AC 테스트가 초록이어야 다음으로. 라벨은 루트 `docs/ROADMAP.md`의 M-1~M3(제품 단계)와 구분되는 **pms 트랙 내부 순서**다.
 
 - **PMS-M0 스캐폴딩**: Gradle 모듈(§3 목록 확정) + Modulith + PG/H2 + Docker Compose + 레이어 골격. 경계 테스트 통과. — 루트 ROADMAP M0의 "PMS 백엔드 스캐폴드" 항목에 대응
-- **PMS-M1 identity + 인증**: 조직/사람/직급/User, 자체 로그인(email)→JWT, 가시성 필터, 내 계정·사용자 관리. (로그인·401·403, EPIC H·US-E2) — 루트 M0의 `/mcp` 인증 체인(MCP 담당)이 이 위에 얹힌다
+- **PMS-M1 person + 인증**: 조직/사람/직급/User, 자체 로그인(email)→JWT, 가시성 필터, 내 계정·사용자 관리. (로그인·401·403, EPIC H·US-E2) — 루트 M0의 `/mcp` 인증 체인(MCP 담당)이 이 위에 얹힌다
 - **PMS-M2 project (핵심)**: Project/Assignment CRUD, 상태전이, 2종 권한, 낙관적 락, AuditLog. (EPIC A·B·G)
 - **PMS-M3 resource (가동률)**: Capacity, 합산·보정 가동률, 오버부킹, 이벤트 재계산. (EPIC C)
 - **PMS-M4 maintenance**: 완료→이관(동기·원자적), Maintenance/Log(append-only). (EPIC D)
@@ -455,7 +458,7 @@ POST /api/chat    POST /api/chat/feedback        # chat BFF — AI 호스트 프
 | `/settings` | 설정 (2026-08-09 ⑤⑦⑧ — 3탭, 프로토타입 3차 반영 구조) | **[사용자 관리]** 사용자 CRUD(US-E2 — 그룹 부여 포함)·시스템 계정은 수정/삭제 비활성(E2-5) · **[조직 관리]** 조직 트리(좌 — US-E3: +하위/개명/삭제, 노드별 인원·프로젝트 수) + 직급 관리·권한 그룹 관리(우 — US-E4·E5: 그룹 행 = 뱃지·설명·n명·[권한 ▾] 펼침(가시성 select+기능 토글)·[수정]·인원 0일 때만 [삭제], 관리자 그룹은 버튼 비활성) · **[감사 로그]** 통합로그 조회(G1-3) | 그룹: 사용자/조직/권한 관리 |
 | `/projects` | 프로젝트 목록 | **phase 탭(영업/솔루션 — status 파생, v2.4)** · 상태·제품군(solution) 필터 · 이름 검색 · 페이지네이션 · (생성 권한자) 등록 버튼 · 완료 건은 "이관 대기" 뱃지(솔루션 탭 잔류) | 가시성 범위 |
 | `/projects/new` | 프로젝트 등록 | 입력 항목 폼 + 참여자별 role(**PM/PL/참여자**) 선택, PM 1명 필수 · 수행형태 3종(원격·상주·부분상주 — 2026-08-09 ③⑥) · 422/409 오류 표시 | 그룹: 프로젝트 생성 |
-| `/projects/:id` | 프로젝트 상세 | 기본정보 · 상태 뱃지 · 진행률(권한 시 수정 — **100% 저장만 확인 모달, 그 외 1클릭** 2026-08-09 ①. 서비스·MCP 2단계는 무변경) · 배정 목록(**역할 뱃지 PM/PL/참여자**) · lastEditedBy/At · (PM) PM 교체·PL 지정 UI · (배정 인원, 100% 시) **완료 처리 버튼** · (배정 인원, 완료 시) **재개 버튼**(US-A7) · (PM, 완료 시) 이관 버튼 · (PM) **권한 패널**(역할×기능 토글 매트릭스 — US-A8. 고정 셀은 잠금 표시, 기본값과 다른 셀은 커스텀 뱃지, **기본값 복원** 버튼. 완료·재개는 한 토글) · **이력 탭**(프로젝트 스코프 변경 이력 — US-G2, 가시성 범위 전체. lastEditedBy/At의 상세판) | 가시성 범위 |
+| `/projects/:id` | 프로젝트 상세 | 기본정보 · 상태 뱃지 · **(PM·PL) 상태 전이 버튼 — 다음 한 칸만(계약대기→수주확정→진행중) + 확인 카드. 되돌릴 수 없으므로 조회 화면에서 확인과 함께 수행하고, 정보 수정 폼에서는 status를 다루지 않는다(2026-08-22 결정)** · 진행률(권한 시 수정 — **100% 저장만 확인 모달, 그 외 1클릭** 2026-08-09 ①. 서비스·MCP 2단계는 무변경) · 배정 목록(**역할 뱃지 PM/PL/참여자**) · lastEditedBy/At · (PM) PM 교체·PL 지정 UI · (배정 인원, 100% 시) **완료 처리 버튼** · (배정 인원, 완료 시) **재개 버튼**(US-A7) · (PM, 완료 시) 이관 버튼 · (PM) **권한 패널**(역할×기능 토글 매트릭스 — US-A8. 고정 셀은 잠금 표시, 기본값과 다른 셀은 커스텀 뱃지, **기본값 복원** 버튼. 완료·재개는 한 토글) · **이력 탭**(프로젝트 스코프 변경 이력 — US-G2, 가시성 범위 전체. lastEditedBy/At의 상세판) | 가시성 범위 |
 | 〃 배정 패널 | 인력 배정 | 배정 추가(사람 검색→기간·월별 M/M — **레이블·헬프에 "실투입 계획(계약 배분 아님)" 명시**, B1-5) · 종료 처리 · 409 표시 — 프로토타입의 월별 upsert UI는 기간 모델 API(§7)로 재연동 시 조정(2026-08-02 기간 모델 확정) | PM(§6 태그 규칙 — ADMIN 치환 포함) |
 | `/utilization` | 가동률 대시보드 | 월 선택 · 팀 필터 · 기본/보정 표 · 과부하(**기본**>100% — 2026-08-10) 강조 · 과부하만 보기 | 가시성 범위 |
 | `/maintenance` | 유지보수 계약 목록 (탭 원천) | 상태·계약사·종료일 필터 · (등록 권한자) 계약 등록 버튼 — 시트 대체 (v2.4) | 로그인 사용자(전사 — D4-3) |

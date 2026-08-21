@@ -20,10 +20,17 @@ for the area this session works on — `docs/PROGRESS-host.md` or
 - `pms-mcp-mock/` — M-1 mock MCP server (구현_노트 부록 B). **Owner: MCP dev.**
   Its `mcp/` and `port/` layers are the real contract (promoted into `pms/` at
   M0); `mock/` is disposable. Verified under the host scope.
-- `pms/` — rebuilt PMS Boot app. **Owner: PMS dev**, except the embedded `/mcp`
-  adapter module inside it, which the MCP dev owns (principle 2 makes it live
-  here). Rules: `pms/CLAUDE.md`.
-- `frontend/` — React prototype (old design, reference). Owner: PMS dev.
+- `pms/` — rebuilt PMS Boot app (**rebuilt again 2026-08-21** — one module per
+  domain, three layers `controller → service → repository`, JPA entity as the
+  domain model). **Owner: PMS dev**, except the embedded `/mcp` adapter module,
+  which the MCP dev owns (principle 2 makes it live here) and which is **not yet
+  in the new app**. Rules: `pms/CLAUDE.md`.
+- `pms-old/` — the previous `pms/`, kept as **read-only reference**: it holds the
+  gate-M0 output (`/mcp` adapter, login/JWT/JWKS auth chain, identity seed
+  loader) that the rebuild left out. `verify.sh`/CI ignore it.
+- `frontend/` — the web client, **wired to the real `pms/` API** (React + TS,
+  rebuilt 2026-08-22: old prototype's design, new API/state layer; only
+  implemented endpoints are used). Owner: PMS dev. See `frontend/README.md`.
 - `prototype/` — mock-data screen prototype for gate-P planning review (React/TS,
   no backend — see its README). **Not a spec**; PRD wins on conflict. Owner: PMS dev.
 - `docs/`, `reference/seed/`, this file — shared, with two exceptions:
@@ -93,15 +100,15 @@ docker compose -f pms/docker-compose.yml up -d
 
 (cd pms && ./gradlew bootRun)
                          # rebuilt PMS app on http://localhost:8080 (needs the
-                         # compose DB above; auto-seeds identity data from
-                         # reference/seed/ on first boot into an empty DB —
-                         # login: seed email / proten1!. Tests run on H2 +
-                         # Testcontainers PG).
-                         # /mcp adapter is embedded — auth = login JWT (RS256 via
-                         # pms.auth.jwks-uri, active since gate M0 · 2026-08-20).
-                         # Get a token: POST /api/auth/login (seed email/proten1!)
-                         # → accessToken (refresh tokens are rejected on /mcp).
-                         # HS256 test JWTs (printTestTokens) work in tests only.
+                         # compose DB above). REST API on /api/people and
+                         # /api/projects; on an empty DB the org seed loads
+                         # itself from reference/seed/seed_org_proten.sql.
+                         # Auth is built but off by default (pms.auth.enabled) —
+                         # the caller is the X-Caller-Person-Id header and it is
+                         # trusted, so do not expose this. Login works in both
+                         # modes: POST /api/auth/login with a seeded staff email
+                         # and proten1!.
+                         # The /mcp adapter still lives only in pms-old/.
 ```
 
 ## Way of working

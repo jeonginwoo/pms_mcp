@@ -1,8 +1,9 @@
 # Java / Spring Boot Conventions
 
-> Scope: both Boot apps — the PMS (`pms/`, with the embedded MCP server) and the
-> AI host (`host/`). Referenced from `host/CLAUDE.md` and `pms/CLAUDE.md`, so it
-> contains only rules that are "always true".
+> Scope: both Boot apps — the PMS (`pms/`, which is where the embedded MCP server
+> lives when the MCP dev promotes it) and the AI host (`host/`). Referenced from
+> `host/CLAUDE.md` and `pms/CLAUDE.md`, so it contains only rules that are
+> "always true".
 
 ## 1. Comments
 
@@ -71,8 +72,9 @@
 - **Use Boot-managed beans**: beans Boot auto-configures (`ObjectMapper`, `Clock`, ...) are injected, never instantiated inline — a hand-made instance silently drops the modules and settings Boot registered. Before `new`-ing a framework type, check whether a bean already exists.
 - **Caller identity in one place**: controllers obtain the authenticated caller via `@AuthenticationPrincipal` or a custom `HandlerMethodArgumentResolver` — hand-parsing `authentication.getName()` in each controller is forbidden (repetition is the smell).
 - **Token claim validation belongs to the decoder**: compose `OAuth2TokenValidator`s (`DelegatingOAuth2TokenValidator`) and attach them where the decoder is built. Decode-then-hand-check-claims with if-statements is forbidden — one codebase, one validation style.
-- **`@Transactional`**: on application services only (never controllers or repositories). Query services default to `@Transactional(readOnly = true)`.
-- **Never expose entities**: REST controllers and MCP adapters never return entities. Convert to record DTOs in the application layer. **MCP tool output feeds straight into the LLM** — include only the fields needed, and never accidentally ship internal identifiers or sensitive fields.
+- **`@Transactional`**: on the service layer only (never controllers or repositories). Query services default to `@Transactional(readOnly = true)`.
+- **Query before you mutate** (2026-08-21): inside a transaction, run repository queries — duplicate checks, existence checks — *before* changing any entity. A query on a dirty session makes JPA flush first, so one use case increments `@Version` twice and writes the change before its own validation has run. Observed live: a single project edit moved `version` 1 → 3.
+- **Never expose entities**: REST controllers and MCP adapters never return entities. Convert to record DTOs in the service layer. **MCP tool output feeds straight into the LLM** — include only the fields needed, and never accidentally ship internal identifiers or sensitive fields.
 - **Exception → HTTP mapping**: throw `ApiException` subtypes and map them in one place via `@RestControllerAdvice` into the §7 error envelope (`ErrorResponse` — `{error:{code,message,field,traceId}}`; the security chain's 401 writes the same envelope). MCP adapters use the same shared mapping (no ad-hoc try-catch conversion inside individual tools).
 
   | Situation | HTTP | MCP tool error message direction |
@@ -84,7 +86,7 @@
   | Input **format** violation (`@Valid` failure) | 400 | `VALIDATION_ERROR` — name the field |
   | Input **semantic/rule** violation (unknown enum value, role invariants, fixed targets) | 422 | explain the parameter error |
 
-    - **404 concealment principle**: a resource the requester may not view returns 404, not 403 — "does not exist" and "cannot see" must be indistinguishable. This judgment lives inside application services (structural principle 3).
+    - **404 concealment principle**: a resource the requester may not view returns 404, not 403 — "does not exist" and "cannot see" must be indistinguishable. This judgment lives inside the service layer (structural principle 3).
 - **Input validation**: request DTOs are validated declaratively with jakarta validation (`@Valid`, `@NotNull`, ...); failures map to **400 `VALIDATION_ERROR`** (PRD-pms §7). Semantic rule violations the annotations cannot express map to 422.
 - **traceId must trace**: the error envelope's `traceId` is written to the server log together with the failure it identifies — an identifier the user can report but no one can correlate with a log line is forbidden.
 - **Config binding**: prefer `@ConfigurationProperties` (record). `@Value` only for single values.
@@ -93,22 +95,36 @@
 
 > Applies to `pms/`. The `host/` app is a thin agent-loop application — its
 > internal structure is decided at M0.
-> Module list **confirmed at M0 scaffolding (2026-08-17, shared decision log)**:
-> identity · project · resource · maintenance · notification · common.
-> Supporting-module candidates chat(BFF) · mcpconfig are deferred (revisit at M1);
-> the `/mcp` adapter module is added by the MCP dev when promoting the mock.
+> One module per domain. Current list (**rebuild of 2026-08-21, shared decision
+> log** — supersedes the M0 list `identity · project · resource · maintenance ·
+> notification · common`): **person · project · common**. `identity` was renamed
+> `person` once accounts and authentication left its scope. resource ·
+> maintenance · notification and the `/mcp` adapter module are added by their
+> owner when the work starts — no empty modules ahead of time.
 
 ```
 kr.proten.pms
-└── project/                  # module root = public API (only what other modules may reference)
-    ├── ProjectApi.java       #   public service interfaces, public DTOs, domain events
-    └── internal/             # no references from outside the module (verified by Modulith)
-        ├── application/      #   use cases, transactions, visibility/404-concealment rules
-        ├── domain/           #   entities, VOs, domain services, repository interfaces
-        └── web/              #   REST controllers + MCP adapters (siblings)
+├── common/                   # cross-cutting only — no domain logic
+│   ├── config/               #   @NamedInterface — shared Spring configuration
+│   ├── exception/            #   @NamedInterface — exception types + error-envelope handler
+│   └── audit/                #   a cross-cutting concern with its own three layers
+│       ├── service/          #     @NamedInterface — contract + its vocabulary enums
+│       │   ├── impl/ dto/ entity/
+│       └── repository/       #     (2026-08-21: nesting keeps the layer rules intact)
+└── project/                  # module = one domain
+    ├── controller/           #   REST controllers + MCP adapters (siblings)
+    ├── service/              #   @NamedInterface — use-case interfaces (the module's contract)
+    │   ├── impl/             #     implementations + internal collaborators
+    │   ├── dto/              #     @NamedInterface — inputs/outputs the contract exchanges
+    │   └── entity/           #     JPA entities, VOs, enums
+    └── repository/           #   Spring Data repositories
 ```
 
-- **Inter-module communication**: call the other module's root public API or publish events. **Direct access to another module's repositories/internal is forbidden.**
+- **Three layers, one direction**: `controller → service → repository`. A layer never depends on one above it; `service` (the contract) never depends on `service/impl`. Enforced by `LayerRuleTest` (ArchUnit).
+- **The JPA entity is the domain model** (2026-08-21 decision — supersedes the former hexagonal `api→application→domain←infra` layout with a framework-free domain). Entity invariants live on the entity: protected no-arg constructor, no setters, intent-revealing methods, state rules in factories. A separate pure-domain model mapped back and forth to a `*Jpa` twin is **not** used — the round-trip mapping cost each field twice and bought little.
+- **Interface in `service/`, implementation in `service/impl/`.** The interface is what other modules and the controllers see; naming is `XxxService` / `XxxServiceImpl`. Internal collaborators (factories, resolvers, strategy implementations) live in `impl/` and stay package-private unless another package in the same module needs them.
+- **Persistence stays in `service/entity/` and `repository/`**: `jakarta.persistence` may only be imported there. Web concerns (`org.springframework.web`/`http`) belong to `controller/` and to common's error-envelope conversion. The entity must not depend on `dto/` — conversion runs one way, dto ← entity. All enforced by `LayerRuleTest`.
+- **Inter-module communication**: only through the packages the other module exposes with `@NamedInterface` — its `service` contract and `service/dto` values. `repository/`, `service/entity/`, and `service/impl/` are module-internal, so **entities and repositories cannot cross a module boundary** and links are by id (PRD-pms §0). Verified by `ModularityTest`.
 - These boundaries are enforced by the Modulith/ArchUnit tests — when a test breaks, fix the structure, not the test.
 
 ## 6. Code quality
@@ -128,9 +144,11 @@ kr.proten.pms
     - **Ubiquitous Language**: class and method names reflect domain terms as-is (가동률/utilization, 과부하/overbooked, 배정/assignment).
     - **Entity vs Value Object**: distinguished by identity → Entity; compared by value → VO (record).
     - **Aggregate**: group related objects into one unit and access them only through the aggregate root.
-    - **Repository**: abstracts persistence. The domain layer knows nothing about storage.
-    - **Domain Service**: the home of domain logic that belongs to neither an entity nor a VO.
-    - **Application Service**: orchestrates use cases and manages transactions. Contains no domain logic. **In this project, visibility, permissions, and 404 concealment are this layer's responsibility.**
+    - **Repository**: abstracts querying behind Spring Data derived queries. The abstraction that matters here is that nothing outside `repository/` and `service/entity/` writes SQL or imports `jakarta.persistence`.
+    - **Rules on the entity**: invariants and state rules live on the entity (factories, intent-revealing methods) — not in the service. `Project.create` deciding that a new project starts as 계약대기 is the shape to copy.
+    - **Domain component**: logic belonging to neither an entity nor a VO gets its own small class in `service/impl/` next to the use case (`OrgScopeResolver`, `ProjectRoleResolver`) — one judgment per class, so the use case reads as orchestration.
+    - **Service layer**: orchestrates use cases and manages transactions. **In this project, visibility, permissions, and 404 concealment are this layer's responsibility.**
+    - **Open for extension**: when a rule varies along an axis the product actually edits (visibility scope, per-project permission), model each case as an implementation of a narrow interface and inject the set — adding a case then adds a class instead of editing a switch.
 
 ## 8. TDD (Test-Driven Development)
 
