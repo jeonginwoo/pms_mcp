@@ -29,7 +29,7 @@ seed loader) that the rebuild deliberately left out. `verify.sh`/CI only look at
   the protected chain live in `auth/`. The dependency runs **auth → person**
   (login asks `PersonDirectoryService` whether the person is active); the other
   direction goes through an inverted port, because a direct call both ways is a
-  module cycle that `ModularityTest` rejects — **`person.service.spi.AccountPort`
+  module cycle that `ModularityTest` rejects — **`kr.proten.pms.person.AccountPort`
   is defined by person and implemented by auth**, so person never imports auth
   and the initial password / hashing stay inside auth.
 - **Layout per domain module**, three layers in one direction:
@@ -278,7 +278,7 @@ access-log masking are one unit — opening the route first leaks tokens into lo
 
 ## Audit (recording real · reading scaffolded)
 
-`common/audit` records every project-scoped change as one append-only row in
+`audit` records every project-scoped change as one append-only row in
 `audit_logs` (Flyway V3). One table is the whole store: the integrated log (G1-3)
 and the per-project history (G2-2) are two *read views* of the same rows, which is
 why `projectId` is a filter column filled even when `entityId` is an assignment.
@@ -293,11 +293,11 @@ why `projectId` is a filter column filled even when `entityId` is an assignment.
 - **`source`** comes from the request path (`/mcp` → MCP, else WEB), so the MCP
   adapter needs no audit wiring — verify that when it lands.
 - Rows join the caller's transaction: a rolled-back change leaves no history.
-- **Two views, two modules, one table** (2026-08-22): `AuditQueryService` in common
+- **Two views, two modules, one table** (2026-08-22): `AuditQueryService` in the audit module
   is a plain read with **no permission logic** — it cannot have any, because the
-  two views judge differently (manage-org flag vs project visibility) and common
+  two views judge differently (manage-org flag vs project visibility) and audit
   may not depend on person or project (that is a cycle). person's
-  `AuditViewService` (G1-3) and project's `ProjectAuditService` (G2-2) wrap it.
+  `AuditViewService` (G1-3) and project's `ProjectQueryService.listAudit` (G2-2) wrap it.
   Their **checks are implemented; only the fetch throws 501** — a 403/404 hole is
   not something to add later, and having the guard means the "no leak to a caller
   without the flag" property is under test from now on.

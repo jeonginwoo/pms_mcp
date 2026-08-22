@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import kr.proten.pms.common.config.CallerPersonId;
 import kr.proten.pms.common.web.ApiResponse;
-import kr.proten.pms.person.controller.dto.*;
+import kr.proten.pms.person.controller.dto.GradeRequest;
 import kr.proten.pms.person.service.GradeService;
 import kr.proten.pms.person.service.dto.GradeDetail;
 import kr.proten.pms.person.service.dto.ReferenceItem;
@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * 직급 API (PRD-pms §7 `/api/grades`) — US-E4.
  *
- * 조회는 등록 폼의 선택 목록(`ReferenceQueryService`), 쓰기는 관리 화면(`GradeService`)이라
+ * 조회는 등록 폼의 선택 목록(`ReferenceItem` 목록), 쓰기는 관리 화면(`GradeService`)이라
  * 서비스가 둘이다 — 응답 형태도 다르다(id·이름 vs 계수 포함).
  */
 @RestController

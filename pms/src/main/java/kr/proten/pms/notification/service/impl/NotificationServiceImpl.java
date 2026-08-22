@@ -1,7 +1,6 @@
 package kr.proten.pms.notification.service.impl;
 
 import kr.proten.pms.common.exception.NotImplementedException;
-import kr.proten.pms.notification.repository.NotificationRepository;
 import kr.proten.pms.notification.NotificationService;
 import kr.proten.pms.notification.NotificationType;
 import kr.proten.pms.notification.NotificationView;
@@ -19,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
  * - 적재는 `dedupeKey` 선검사 + 유니크 제약 두 겹으로 멱등이다 (F1-2)
  * - 회수는 조건부 삭제 한 문장이다 (F3-3) — 읽음 처리와 겹치면 먼저 커밋한 읽음이 이긴다
  *
+ * 저장소는 미리 주입하지 않는다 — 던지기만 하는 본문에 붙은 협력자는 없는 배선이다.
+ *
  * TODO(F1-1): 수신자를 정하려면 "이 인원과 같은 소속의 팀장 그룹 사용자"가 필요하다.
  *   person의 가시성 계약은 방향이 반대(화자→보이는 사람)라 그대로 쓸 수 없다.
  * TODO(F1-5): 수신자별 알림 설정(notifPrefs)은 auth의 `User`에 있고 아직 API가 없다
@@ -27,12 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 class NotificationServiceImpl implements NotificationService {
-    private final NotificationRepository notificationRepository;
-
-    NotificationServiceImpl(NotificationRepository notificationRepository) {
-        this.notificationRepository = notificationRepository;
-    }
-
     @Override
     @Transactional(readOnly = true)
     public Page<NotificationView> listMine(

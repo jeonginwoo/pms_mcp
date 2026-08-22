@@ -1,6 +1,5 @@
 package kr.proten.pms.common.exception;
 
-import org.springframework.http.HttpStatus;
 
 /**
  * 도메인·애플리케이션 예외의 공통 부모. PRD-pms §7 에러 표의 code를 담고 common의
@@ -24,10 +23,6 @@ public abstract class ApiException extends RuntimeException {
         super(message);
         this.code = code;
         this.field = field;
-    }
-
-    public HttpStatus status() {
-        return code.status();
     }
 
     public ErrorCode code() {

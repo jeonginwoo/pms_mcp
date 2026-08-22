@@ -81,7 +81,7 @@ class PersonCommandTest {
                 permissionGroupRepository,
                 accountPort,
                 orgVisibilityService,
-                orgPermissionService,
+                new OrgManagePermission(orgPermissionService),
                 requesterResolver,
                 personRefFactory,
                 personAuditRecorder);

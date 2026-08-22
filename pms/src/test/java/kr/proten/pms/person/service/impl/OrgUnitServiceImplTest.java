@@ -56,7 +56,10 @@ class OrgUnitServiceImplTest {
     @BeforeEach
     void setUp() {
         service = new OrgUnitServiceImpl(
-                orgUnitRepository, personRepository, orgPermissionService, personAuditRecorder);
+                orgUnitRepository,
+                personRepository,
+                new OrgManagePermission(orgPermissionService),
+                personAuditRecorder);
     }
 
     @Test

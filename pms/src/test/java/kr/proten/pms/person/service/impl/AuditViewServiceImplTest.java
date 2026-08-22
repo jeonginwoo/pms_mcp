@@ -42,7 +42,8 @@ class AuditViewServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        service = new AuditViewServiceImpl(auditQueryService, orgPermissionService);
+        service = new AuditViewServiceImpl(
+                auditQueryService, new OrgManagePermission(orgPermissionService));
     }
 
     @Test

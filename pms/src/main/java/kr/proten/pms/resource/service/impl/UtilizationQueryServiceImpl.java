@@ -2,8 +2,6 @@ package kr.proten.pms.resource.service.impl;
 
 import java.util.List;
 import kr.proten.pms.common.exception.NotImplementedException;
-import kr.proten.pms.person.OrgVisibilityService;
-import kr.proten.pms.resource.repository.CapacityRepository;
 import kr.proten.pms.resource.service.UtilizationQueryService;
 import kr.proten.pms.resource.service.dto.UtilizationQuery;
 import kr.proten.pms.resource.service.dto.UtilizationView;
@@ -19,6 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
  * - 분자: 그 달과 겹치는 `ACTIVE` 배정의 `monthlyMm` 합
  * - 과부하: 기본 > 100 (보정이 아니다 — C1-3)
  *
+ * 협력자를 미리 주입하지 않는다: 던지기만 하는 본문에 붙여 두면 모듈 의존 그래프에
+ * 없는 배선이 기록된다. 구현이 들어올 때 `CapacityRepository`·가시성 계약과 함께 받는다.
+ *
  * TODO(C1-1): 분자를 얻으려면 project 모듈이 "인원×월 배정 M/M"을 내주는 계약이
  *   필요하다. 지금 project가 공개한 것은 `ProjectQueryService`(목록·단건)와
  *   `AssignmentService`(쓰기)뿐이라 조회 경로가 없다. 배정 엔티티를 직접 읽는 것은
@@ -30,16 +31,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 class UtilizationQueryServiceImpl implements UtilizationQueryService {
-    private final CapacityRepository capacityRepository;
-    private final OrgVisibilityService orgVisibilityService;
-
-    UtilizationQueryServiceImpl(
-            CapacityRepository capacityRepository,
-            OrgVisibilityService orgVisibilityService) {
-        this.capacityRepository = capacityRepository;
-        this.orgVisibilityService = orgVisibilityService;
-    }
-
     @Override
     public List<UtilizationView> find(long callerPersonId, UtilizationQuery query) {
         throw new NotImplementedException("가동률 조회 (C1-1·C1-3·C1-5·C1-6)");

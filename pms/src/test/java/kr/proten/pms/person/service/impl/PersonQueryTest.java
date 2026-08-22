@@ -65,7 +65,7 @@ class PersonQueryTest {
                 permissionGroupRepository,
                 accountPort,
                 orgVisibilityService,
-                orgPermissionService,
+                new OrgManagePermission(orgPermissionService),
                 requesterResolver,
                 new PersonRefFactory(orgUnitRepository, gradeRepository),
                 personAuditRecorder);

@@ -7,6 +7,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.ErrorResponseException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -99,6 +102,25 @@ public class GlobalExceptionHandler {
         log.warn("매핑 없는 경로: {}", e.getResourcePath());
 
         return respond(ErrorCode.NOT_FOUND, "해당 데이터 없음", null);
+    }
+
+    /**
+     * 있는 경로에 잘못된 메서드·미디어 타입 — 405·415다.
+     *
+     * 위의 404·400 핸들러와 같은 계열의 구멍이었다(2026-08-22 리뷰 발견): 이것이 없으면
+     * `POST /api/me` 같은 요청이 catch-all에 걸려 **500**으로 나가, 호출자가 고칠 수 있는
+     * 요청 오류가 서버 장애로 보고된다. 스프링이 정한 상태를 그대로 쓴다.
+     */
+    @ExceptionHandler({
+            HttpRequestMethodNotSupportedException.class,
+            HttpMediaTypeNotSupportedException.class})
+    public ResponseEntity<ApiResponse<Void>> handleUnsupportedRequest(ErrorResponseException e) {
+        HttpStatusCode status = e.getStatusCode();
+        ApiError error = ApiError.of(ErrorCode.VALIDATION_ERROR,
+                "이 경로가 받을 수 없는 요청입니다", null);
+        log.warn("에러 봉투 {} {} traceId={}", status.value(), error.code(), error.traceId());
+
+        return ResponseEntity.status(status).body(ApiResponse.fail(error));
     }
 
     /** 그 밖의 미분류 예외 — 내부 정보 누출 없이 500, 스택은 traceId와 함께 로그로. */

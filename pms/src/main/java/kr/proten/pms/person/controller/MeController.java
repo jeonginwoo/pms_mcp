@@ -2,7 +2,6 @@ package kr.proten.pms.person.controller;
 
 import kr.proten.pms.common.config.CallerPersonId;
 import kr.proten.pms.common.web.ApiResponse;
-import kr.proten.pms.person.controller.dto.*;
 import kr.proten.pms.person.service.PersonService;
 import kr.proten.pms.person.service.dto.MeView;
 import org.springframework.web.bind.annotation.GetMapping;

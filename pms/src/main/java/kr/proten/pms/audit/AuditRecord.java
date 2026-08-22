@@ -2,8 +2,6 @@ package kr.proten.pms.audit;
 
 import java.time.Instant;
 import java.util.Map;
-import kr.proten.pms.audit.AuditAction;
-import kr.proten.pms.audit.AuditSource;
 
 /**
  * 조회로 나가는 감사 1행 (AC G1-3·G2-2).

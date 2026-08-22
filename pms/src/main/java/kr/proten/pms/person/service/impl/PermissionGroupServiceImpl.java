@@ -2,10 +2,7 @@ package kr.proten.pms.person.service.impl;
 
 import java.util.Comparator;
 import java.util.List;
-import kr.proten.pms.common.exception.ForbiddenException;
 import kr.proten.pms.common.exception.NotImplementedException;
-import kr.proten.pms.person.OrgPermission;
-import kr.proten.pms.person.OrgPermissionService;
 import kr.proten.pms.person.repository.PermissionGroupRepository;
 import kr.proten.pms.person.service.PermissionGroupService;
 import kr.proten.pms.person.service.dto.PermissionGroupCommand;
@@ -34,19 +31,19 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class PermissionGroupServiceImpl implements PermissionGroupService {
     private final PermissionGroupRepository permissionGroupRepository;
-    private final OrgPermissionService orgPermissionService;
+    private final OrgManagePermission orgManagePermission;
 
     public PermissionGroupServiceImpl(
             PermissionGroupRepository permissionGroupRepository,
-            OrgPermissionService orgPermissionService) {
+            OrgManagePermission orgManagePermission) {
         this.permissionGroupRepository = permissionGroupRepository;
-        this.orgPermissionService = orgPermissionService;
+        this.orgManagePermission = orgManagePermission;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ReferenceItem> list(long callerPersonId) {
-        requireManageOrg(callerPersonId);
+        orgManagePermission.require(callerPersonId);
 
         return permissionGroupRepository.findAll().stream()
                 .sorted(Comparator.comparing(PermissionGroup::getId))
@@ -56,28 +53,23 @@ public class PermissionGroupServiceImpl implements PermissionGroupService {
 
     @Override
     public PermissionGroupDetail create(long callerPersonId, PermissionGroupCommand command) {
-        requireManageOrg(callerPersonId);
+        orgManagePermission.require(callerPersonId);
 
         throw new NotImplementedException("권한 그룹 등록 (E5-1)");
     }
 
     @Override
     public PermissionGroupDetail update(long callerPersonId, PermissionGroupCommand command) {
-        requireManageOrg(callerPersonId);
+        orgManagePermission.require(callerPersonId);
 
         throw new NotImplementedException("권한 그룹 수정 (E5-2·E5-3)");
     }
 
     @Override
     public void delete(long callerPersonId, long groupId) {
-        requireManageOrg(callerPersonId);
+        orgManagePermission.require(callerPersonId);
 
         throw new NotImplementedException("권한 그룹 삭제 (E5-3·E5-4)");
     }
 
-    private void requireManageOrg(long callerPersonId) {
-        if (!orgPermissionService.has(callerPersonId, OrgPermission.MANAGE_ORG)) {
-            throw new ForbiddenException("사용자·조직 관리 권한이 없습니다");
-        }
-    }
 }

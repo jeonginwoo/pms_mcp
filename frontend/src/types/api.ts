@@ -140,7 +140,6 @@ export interface TokenResponse {
   refreshToken: string
 }
 
-/** §7 에러 봉투 — {error:{code,message,field,traceId}} */
 /**
  * 공통 응답 봉투 (2026-08-22) — 모든 응답이 `{success, data}` 또는 `{success, error}`다.
  * 예외는 `/api/auth/jwks` 하나(RFC 7517 표준 형태)이고 이 클라이언트는 부르지 않는다.

@@ -1,6 +1,5 @@
 package kr.proten.pms.audit;
 
-import kr.proten.pms.audit.AuditRecord;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

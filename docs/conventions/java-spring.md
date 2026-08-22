@@ -113,46 +113,41 @@
 >
 > **Cycles are the constraint that shapes the module graph.** When two modules
 > each need something from the other, the one that *needs* defines an interface
-> in its own `service/spi` (a `@NamedInterface`) and the other implements it —
-> `person.service.spi.AccountPort`, implemented by auth, is the worked example.
+> **in its own module root package** and the other implements it —
+> `kr.proten.pms.person.AccountPort`, implemented by auth, is the worked example.
 > Never satisfy a mutual need by having both sides import each other; that is
 > exactly what `ModularityTest` rejects.
 
 ```
 kr.proten.pms
-├── common/                   # cross-cutting wiring only — no domain logic, no entity
-│   ├── config/               #   @NamedInterface — caller identity · request path · security chains
-│   ├── exception/            #   @NamedInterface — ErrorCode + exception types + the one handler
-│   └── web/                  #   @NamedInterface — ApiResponse · ApiError · PageResponse
+├── common/                   # shared wiring — NOT a module (excluded from detection)
+│   ├── config/               #   caller identity · request path · security chains
+│   ├── exception/            #   ErrorCode + the exception types
+│   └── web/                  #   ApiResponse · ApiError · PageResponse + the one handler
 ├── audit/                    # its own module since 2026-08-22 — it owns an entity
-│   ├── service/              #   @NamedInterface — AuditTrail(write) · AuditQueryService(read)
-│   │   ├── impl/ dto/ entity/    #   dto is @NamedInterface too: AuditRecord crosses boundaries
-│   └── repository/
+│   ├── AuditTrail · AuditQueryService · AuditAction · AuditSource   # public contract
+│   ├── AuditEntry · AuditRecord                                     # public values
+│   ├── service/{impl,entity}/                                       # internal
+│   └── repository/                                                  # internal
 └── project/                  # module = one domain
+    ├── (root is empty)       #   nothing of project crosses the boundary
     ├── controller/           #   REST controllers + MCP adapters (siblings)
-    │   └── dto/              #     request·response records (2026-08-22)
-    ├── service/              #   @NamedInterface — use-case interfaces (the module's contract)
+    │   └── dto/              #     request·response records
+    ├── service/              #   use-case interfaces — internal, only this module calls them
     │   ├── impl/             #     implementations + internal collaborators
     │   │   └── scope/        #       a strategy family gets its own package
-    │   ├── dto/              #     @NamedInterface — inputs/outputs the contract exchanges
-    │   ├── spi/              #     @NamedInterface — ports this module needs FROM others
+    │   ├── dto/              #     inputs/outputs the contract exchanges
     │   └── entity/           #     JPA entities, VOs, enums
     └── repository/           #   Spring Data repositories
 ```
 
-`service` is what the module offers; `spi` is what it needs. Only add `spi` when
-a direct call would create a cycle — otherwise call the other module's `service`.
+The module root holds **only what crosses the boundary**, so that list *is* the
+contract and widening it is a visible act — a new file at the top of the module.
+Everything a module uses on its own stays in the layered sub-packages.
 
 - **Three layers, one direction**: `controller → service → repository`. A layer never depends on one above it; `service` (the contract) never depends on `service/impl`. Enforced by `LayerRuleTest` (ArchUnit).
 - **The JPA entity is the domain model** (2026-08-21 decision — supersedes the former hexagonal `api→application→domain←infra` layout with a framework-free domain). Entity invariants live on the entity: protected no-arg constructor, no setters, intent-revealing methods, state rules in factories. A separate pure-domain model mapped back and forth to a `*Jpa` twin is **not** used — the round-trip mapping cost each field twice and bought little.
-- **Interface in `service/`, implementation in `service/impl/`.** The interface is what other modules and the controllers see; naming is `XxxService` / `XxxServiceImpl`. Internal collaborators (factories, resolvers, strategy implementations) live in `impl/` and stay package-private unless another package in the same module needs them.
-- **`package-info.java` exists for exactly one reason**: `@NamedInterface`. It is what
-  Modulith reads to decide which packages other modules may import — delete one and
-  `ModularityTest` fails on the spot. Do not add a doc-only `package-info`, and do not
-  declare a named interface no other module consumes (six such were removed 2026-08-22).
-- **Group a folder by kind, not by count**: request records go to `controller/dto/`, a
-  strategy family to its own package under `impl/`. Many files of *one* kind in a
-  folder is a list; a folder that mixes kinds is what actually costs reading time.
+- **Interface in `service/`, implementation in `service/impl/`.** Naming is `XxxService` / `XxxServiceImpl`. A contract only other modules use goes to the module root instead (see below). Internal collaborators (factories, resolvers, strategy implementations) live in `impl/` and stay package-private unless another package in the same module needs them.
 - **No `package-info.java` — a module's public API is its root package.** Modulith's documented default is "the module base package is the API package; sub-packages are internal". Put the types other modules use *directly in the module root* and nothing else is needed. `package-info.java` exists only to carry `@NamedInterface`, whose whole job is to reopen a sub-package that the default had closed — i.e. to pay for having put the contract in the wrong place. All eight were deleted on 2026-08-22 by moving the seven person types and six audit types to their module roots; boundary verification is unchanged and still fails on a cycle or an internal reference. Before adding a `package-info` back, move the type to the module root instead.
 - **Shared wiring is not a module.** `common` (error model, response envelope, caller identity) is passed to `ApplicationModules.of(Class, DescribedPredicate)` as the ignore predicate. A module everything depends on encapsulates nothing; making it one only re-records that fact.
 - **Group a folder by kind, not by count.** Request/response records go to `controller/dto/`; a strategy family or a self-contained concept gets its own package under `impl/` (`impl/scope/` · `impl/requester/` · `impl/token/`). Many files of *one* kind in a folder is a list and reads fine; a folder that **mixes** kinds — use cases next to auth infrastructure next to a seed loader — is what actually costs reading time. Split on the mixing, not on the number.

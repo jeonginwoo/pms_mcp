@@ -6,13 +6,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import kr.proten.pms.common.exception.ConflictException;
 import kr.proten.pms.common.exception.ErrorCode;
-import kr.proten.pms.common.exception.ForbiddenException;
 import kr.proten.pms.common.exception.NotFoundException;
 import kr.proten.pms.common.exception.NotImplementedException;
 import kr.proten.pms.common.exception.UnprocessableException;
 import kr.proten.pms.common.exception.ValidationException;
-import kr.proten.pms.person.OrgPermission;
-import kr.proten.pms.person.OrgPermissionService;
 import kr.proten.pms.person.repository.OrgUnitRepository;
 import kr.proten.pms.person.repository.PersonRepository;
 import kr.proten.pms.person.service.OrgUnitService;
@@ -34,17 +31,17 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrgUnitServiceImpl implements OrgUnitService {
     private final OrgUnitRepository orgUnitRepository;
     private final PersonRepository personRepository;
-    private final OrgPermissionService orgPermissionService;
+    private final OrgManagePermission orgManagePermission;
     private final PersonAuditRecorder personAuditRecorder;
 
     public OrgUnitServiceImpl(
             OrgUnitRepository orgUnitRepository,
             PersonRepository personRepository,
-            OrgPermissionService orgPermissionService,
+            OrgManagePermission orgManagePermission,
             PersonAuditRecorder personAuditRecorder) {
         this.orgUnitRepository = orgUnitRepository;
         this.personRepository = personRepository;
-        this.orgPermissionService = orgPermissionService;
+        this.orgManagePermission = orgManagePermission;
         this.personAuditRecorder = personAuditRecorder;
     }
 
@@ -55,7 +52,7 @@ public class OrgUnitServiceImpl implements OrgUnitService {
      */
     @Transactional(readOnly = true)
     public List<OrgUnitView> list(long callerPersonId) {
-        requireManageOrg(callerPersonId);
+        orgManagePermission.require(callerPersonId);
 
         List<OrgUnit> units = orgUnitRepository.findAll();
         Map<Long, Long> memberCounts = personRepository.findByActiveTrue().stream()
@@ -76,7 +73,7 @@ public class OrgUnitServiceImpl implements OrgUnitService {
      * 만들면 부문 가시성 계산이 갈라지므로 거절한다(가시성은 root 직계 자식 기준 — §4-3).
      */
     public OrgUnitView create(long callerPersonId, Long parentId, String name) {
-        requireManageOrg(callerPersonId);
+        orgManagePermission.require(callerPersonId);
         requireText(name);
         requireValidParent(parentId);
 
@@ -94,15 +91,19 @@ public class OrgUnitServiceImpl implements OrgUnitService {
      * 저절로 따라온다(E3-2 — 비정규화 금지). 감사 action은 `UPDATE`이고, 회사(root)의
      * 이름도 같은 경로로 바꾼다.
      *
+     * 권한 판정은 골격 단계에서도 실제로 한다 — 없는 것은 로직이지 권한이 아니다.
+     *
      * TODO(E3-2): 같은 부모 아래 이름 중복을 막을지 미정 — AC에 문구가 없고, 시드에는
      *   중복이 없다. 막는다면 `409 DUPLICATE_*`이고 안 막는다면 그 판단을 여기 남긴다.
      */
     public OrgUnitView rename(long callerPersonId, long orgUnitId, String name) {
+        orgManagePermission.require(callerPersonId);
+
         throw new NotImplementedException("조직 노드 개명 (E3-2)");
     }
 
     public void delete(long callerPersonId, long orgUnitId) {
-        requireManageOrg(callerPersonId);
+        orgManagePermission.require(callerPersonId);
 
         OrgUnit target = orgUnitRepository.findById(orgUnitId).orElseThrow(NotFoundException::new);
         requireEmpty(orgUnitId);
@@ -120,12 +121,6 @@ public class OrgUnitServiceImpl implements OrgUnitService {
 
         return new OrgUnitView(unit.getId(), unit.getParentId(), unit.getName(), members, children,
                 members == 0 && children == 0);
-    }
-
-    private void requireManageOrg(long callerPersonId) {
-        if (!orgPermissionService.has(callerPersonId, OrgPermission.MANAGE_ORG)) {
-            throw new ForbiddenException("사용자·조직 관리 권한이 없습니다");
-        }
     }
 
     private void requireText(String name) {

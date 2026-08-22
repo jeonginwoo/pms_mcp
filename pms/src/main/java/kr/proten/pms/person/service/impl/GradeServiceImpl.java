@@ -2,10 +2,7 @@ package kr.proten.pms.person.service.impl;
 
 import java.util.Comparator;
 import java.util.List;
-import kr.proten.pms.common.exception.ForbiddenException;
 import kr.proten.pms.common.exception.NotImplementedException;
-import kr.proten.pms.person.OrgPermission;
-import kr.proten.pms.person.OrgPermissionService;
 import kr.proten.pms.person.repository.GradeRepository;
 import kr.proten.pms.person.service.GradeService;
 import kr.proten.pms.person.service.dto.GradeCommand;
@@ -36,19 +33,19 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class GradeServiceImpl implements GradeService {
     private final GradeRepository gradeRepository;
-    private final OrgPermissionService orgPermissionService;
+    private final OrgManagePermission orgManagePermission;
 
     public GradeServiceImpl(
             GradeRepository gradeRepository,
-            OrgPermissionService orgPermissionService) {
+            OrgManagePermission orgManagePermission) {
         this.gradeRepository = gradeRepository;
-        this.orgPermissionService = orgPermissionService;
+        this.orgManagePermission = orgManagePermission;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ReferenceItem> list(long callerPersonId) {
-        requireManageOrg(callerPersonId);
+        orgManagePermission.require(callerPersonId);
 
         return gradeRepository.findAll().stream()
                 .sorted(Comparator.comparing(Grade::getId))
@@ -58,28 +55,23 @@ public class GradeServiceImpl implements GradeService {
 
     @Override
     public GradeDetail create(long callerPersonId, GradeCommand command) {
-        requireManageOrg(callerPersonId);
+        orgManagePermission.require(callerPersonId);
 
         throw new NotImplementedException("직급 등록 (E4-1)");
     }
 
     @Override
     public GradeDetail update(long callerPersonId, GradeCommand command) {
-        requireManageOrg(callerPersonId);
+        orgManagePermission.require(callerPersonId);
 
         throw new NotImplementedException("직급 수정 (E4-2)");
     }
 
     @Override
     public void delete(long callerPersonId, long gradeId) {
-        requireManageOrg(callerPersonId);
+        orgManagePermission.require(callerPersonId);
 
         throw new NotImplementedException("직급 삭제 (E4-3)");
     }
 
-    private void requireManageOrg(long callerPersonId) {
-        if (!orgPermissionService.has(callerPersonId, OrgPermission.MANAGE_ORG)) {
-            throw new ForbiddenException("사용자·조직 관리 권한이 없습니다");
-        }
-    }
 }

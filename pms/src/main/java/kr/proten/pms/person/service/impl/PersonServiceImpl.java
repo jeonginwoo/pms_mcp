@@ -3,14 +3,11 @@ package kr.proten.pms.person.service.impl;
 import java.util.List;
 import kr.proten.pms.common.exception.ConflictException;
 import kr.proten.pms.common.exception.ErrorCode;
-import kr.proten.pms.common.exception.ForbiddenException;
 import kr.proten.pms.common.exception.NotFoundException;
 import kr.proten.pms.common.exception.NotImplementedException;
 import kr.proten.pms.common.exception.UnprocessableException;
 import kr.proten.pms.common.exception.ValidationException;
 import kr.proten.pms.person.AccountPort;
-import kr.proten.pms.person.OrgPermission;
-import kr.proten.pms.person.OrgPermissionService;
 import kr.proten.pms.person.OrgVisibility;
 import kr.proten.pms.person.OrgVisibilityService;
 import kr.proten.pms.person.PersonRef;
@@ -53,7 +50,7 @@ public class PersonServiceImpl implements PersonService {
     private final PermissionGroupRepository permissionGroupRepository;
     private final AccountPort accountPort;
     private final OrgVisibilityService orgVisibilityService;
-    private final OrgPermissionService orgPermissionService;
+    private final OrgManagePermission orgManagePermission;
     private final RequesterResolver requesterResolver;
     private final PersonRefFactory personRefFactory;
     private final PersonAuditRecorder personAuditRecorder;
@@ -65,7 +62,7 @@ public class PersonServiceImpl implements PersonService {
             PermissionGroupRepository permissionGroupRepository,
             AccountPort accountPort,
             OrgVisibilityService orgVisibilityService,
-            OrgPermissionService orgPermissionService,
+            OrgManagePermission orgManagePermission,
             RequesterResolver requesterResolver,
             PersonRefFactory personRefFactory,
             PersonAuditRecorder personAuditRecorder) {
@@ -75,7 +72,7 @@ public class PersonServiceImpl implements PersonService {
         this.permissionGroupRepository = permissionGroupRepository;
         this.accountPort = accountPort;
         this.orgVisibilityService = orgVisibilityService;
-        this.orgPermissionService = orgPermissionService;
+        this.orgManagePermission = orgManagePermission;
         this.requesterResolver = requesterResolver;
         this.personRefFactory = personRefFactory;
         this.personAuditRecorder = personAuditRecorder;
@@ -147,7 +144,7 @@ public class PersonServiceImpl implements PersonService {
      * person이 알 일이 아니고, 같은 트랜잭션에 참여하므로 원자성은 그대로다.
      */
     public PersonRef create(long callerPersonId, CreatePersonCommand command) {
-        requireManageOrg(callerPersonId);
+        orgManagePermission.require(callerPersonId);
         requireText(command.name(), "name");
         requireText(command.email(), "email");
         requireReferences(command.orgUnitId(), command.gradeId(), command.groupId());
@@ -184,7 +181,7 @@ public class PersonServiceImpl implements PersonService {
      *   같은 역할을 `PersonAuditRecorder`가 해야 하는데 지금은 생성·비활성만 안다.
      */
     public PersonRef update(long callerPersonId, UpdatePersonCommand command) {
-        requireManageOrg(callerPersonId);
+        orgManagePermission.require(callerPersonId);
 
         throw new NotImplementedException("인력 수정 (E2-2)");
     }
@@ -203,13 +200,13 @@ public class PersonServiceImpl implements PersonService {
      *   알림(EPIC F)으로 보낼지 미정. AC 문구가 경로를 지정하지 않는다.
      */
     public PersonRef moveOrgUnit(long callerPersonId, long personId, long orgUnitId) {
-        requireManageOrg(callerPersonId);
+        orgManagePermission.require(callerPersonId);
 
         throw new NotImplementedException("소속 조직 이동 (E1-1)");
     }
 
     public void deactivate(long callerPersonId, long personId) {
-        requireManageOrg(callerPersonId);
+        orgManagePermission.require(callerPersonId);
 
         Person target = personRepository.findByIdAndActiveTrue(personId)
                 .orElseThrow(NotFoundException::new);
@@ -217,12 +214,6 @@ public class PersonServiceImpl implements PersonService {
 
         target.deactivate();
         personAuditRecorder.personDeactivated(callerPersonId, personRepository.saveAndFlush(target));
-    }
-
-    private void requireManageOrg(long callerPersonId) {
-        if (!orgPermissionService.has(callerPersonId, OrgPermission.MANAGE_ORG)) {
-            throw new ForbiddenException("사용자·조직 관리 권한이 없습니다");
-        }
     }
 
     private void requireText(String value, String field) {

@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import kr.proten.pms.common.config.CallerPersonId;
 import kr.proten.pms.common.web.ApiResponse;
-import kr.proten.pms.person.controller.dto.*;
+import kr.proten.pms.person.controller.dto.PermissionGroupRequest;
 import kr.proten.pms.person.service.PermissionGroupService;
 import kr.proten.pms.person.service.dto.PermissionGroupDetail;
 import kr.proten.pms.person.service.dto.ReferenceItem;
