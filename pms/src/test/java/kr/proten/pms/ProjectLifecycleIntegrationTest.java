@@ -1,35 +1,30 @@
 package kr.proten.pms;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
-import kr.proten.pms.common.audit.repository.AuditLogRepository;
-import kr.proten.pms.common.audit.service.AuditAction;
-import kr.proten.pms.common.audit.service.AuditSource;
-import kr.proten.pms.common.audit.service.entity.AuditLog;
+import kr.proten.pms.audit.AuditAction;
+import kr.proten.pms.audit.AuditSource;
+import kr.proten.pms.audit.repository.AuditLogRepository;
+import kr.proten.pms.audit.service.entity.AuditLog;
 import kr.proten.pms.common.exception.ConflictException;
+import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.ForbiddenException;
 import kr.proten.pms.common.exception.NotFoundException;
 import kr.proten.pms.common.exception.UnprocessableException;
+import kr.proten.pms.person.OrgPermission;
 import kr.proten.pms.person.repository.GradeRepository;
 import kr.proten.pms.person.repository.OrgUnitRepository;
 import kr.proten.pms.person.repository.PermissionGroupRepository;
 import kr.proten.pms.person.repository.PersonRepository;
-import kr.proten.pms.person.service.dto.OrgPermission;
 import kr.proten.pms.person.service.entity.Grade;
 import kr.proten.pms.person.service.entity.PersonFixtures;
 import kr.proten.pms.person.service.entity.VisibilityScope;
 import kr.proten.pms.project.service.AssignmentService;
-import kr.proten.pms.project.service.ProgressUpdateService;
 import kr.proten.pms.project.service.ProjectCommandService;
-import kr.proten.pms.project.service.ProjectCompletionService;
-import kr.proten.pms.project.service.ProjectDeleteService;
-import kr.proten.pms.project.service.ProjectEditService;
+import kr.proten.pms.project.service.ProjectLifecycleService;
 import kr.proten.pms.project.service.ProjectQueryService;
-import kr.proten.pms.project.service.ProjectRoleService;
 import kr.proten.pms.project.service.dto.AssignmentSpec;
 import kr.proten.pms.project.service.dto.AssignmentView;
 import kr.proten.pms.project.service.dto.CreateAssignmentCommand;
@@ -83,19 +78,11 @@ class ProjectLifecycleIntegrationTest extends PostgresTestBase {
     @Autowired
     private ProjectCommandService projectCommandService;
     @Autowired
-    private ProjectEditService projectEditService;
-    @Autowired
-    private ProjectCompletionService projectCompletionService;
-    @Autowired
     private ProjectQueryService projectQueryService;
     @Autowired
-    private ProgressUpdateService progressUpdateService;
+    private ProjectLifecycleService projectLifecycleService;
     @Autowired
     private AssignmentService assignmentService;
-    @Autowired
-    private ProjectRoleService projectRoleService;
-    @Autowired
-    private ProjectDeleteService projectDeleteService;
 
     @BeforeAll
     void seedFixture() {
@@ -122,12 +109,12 @@ class ProjectLifecycleIntegrationTest extends PostgresTestBase {
         ProjectDetail created = createProject("생애주기 관통");
 
         // 계약대기 → 수주확정 → 진행중 (A5-1: 순방향 한 칸씩만)
-        ProjectDetail confirmed = projectEditService.edit(PM_ID,
+        ProjectDetail confirmed = projectCommandService.edit(PM_ID,
                 editCommand(created.id(), "생애주기 관통", ProjectStatus.ORDER_CONFIRMED,
                         created.version()));
         assertThat(confirmed.status()).isEqualTo(ProjectStatus.ORDER_CONFIRMED);
 
-        ProjectDetail started = projectEditService.edit(PM_ID,
+        ProjectDetail started = projectCommandService.edit(PM_ID,
                 editCommand(created.id(), "생애주기 관통", ProjectStatus.IN_PROGRESS,
                         confirmed.version()));
         assertThat(started.status()).isEqualTo(ProjectStatus.IN_PROGRESS);
@@ -137,16 +124,16 @@ class ProjectLifecycleIntegrationTest extends PostgresTestBase {
         assertThat(started.version()).isEqualTo(confirmed.version() + 1);
 
         // 진척률 100 — 상태는 그대로이고 완료 처리 가능만 알린다 (A2-3)
-        var progress = progressUpdateService.update(PM_ID,
+        var progress = projectLifecycleService.updateProgress(PM_ID,
                 new UpdateProgressCommand(created.id(), 100, started.version(), true));
         assertThat(progress.completable()).isTrue();
 
         // 완료 처리 (A7-1) → 재개 (A7-3: 진척률 90 복귀)
-        ProjectDetail completed = projectCompletionService.complete(
+        ProjectDetail completed = projectLifecycleService.complete(
                 PM_ID, created.id(), progress.version());
         assertThat(completed.status()).isEqualTo(ProjectStatus.COMPLETED);
 
-        ProjectDetail reopened = projectCompletionService.reopen(
+        ProjectDetail reopened = projectLifecycleService.reopen(
                 PM_ID, created.id(), completed.version());
         assertThat(reopened.status()).isEqualTo(ProjectStatus.IN_PROGRESS);
         assertThat(reopened.progress()).isEqualTo(90);
@@ -158,7 +145,7 @@ class ProjectLifecycleIntegrationTest extends PostgresTestBase {
         ProjectDetail created = createProject("감사 기록 확인");
         // 진척률은 진행중에서만 수정되므로(2026-08-22) 전이 두 칸이 먼저 쌓인다
         ProjectDetail started = advanceToInProgress(created);
-        progressUpdateService.update(PM_ID,
+        projectLifecycleService.updateProgress(PM_ID,
                 new UpdateProgressCommand(created.id(), 30, started.version(), true));
 
         List<AuditLog> logs = auditOf(created.id());
@@ -234,7 +221,7 @@ class ProjectLifecycleIntegrationTest extends PostgresTestBase {
                 .isThrownBy(() -> assignmentService.assign(PM_ID, new CreateAssignmentCommand(
                         created.id(), NEW_MEMBER_ID, ProjectRole.PARTICIPANT, null, null, 0.4)))
                 .satisfies(thrown ->
-                        assertThat(thrown.code()).isEqualTo("DUPLICATE_ASSIGNMENT"));
+                        assertThat(thrown.code()).isEqualTo(ErrorCode.DUPLICATE_ASSIGNMENT));
 
         assignmentService.close(PM_ID, first.id());
 
@@ -248,11 +235,11 @@ class ProjectLifecycleIntegrationTest extends PostgresTestBase {
     void permissions_differPerActionForParticipant() {
         ProjectDetail created = createProject("권한 경계 확인");
         ProjectDetail started = advanceToInProgress(created);
-        var progress = progressUpdateService.update(MEMBER_ID,
+        var progress = projectLifecycleService.updateProgress(MEMBER_ID,
                 new UpdateProgressCommand(created.id(), 100, started.version(), true));
 
         assertThatExceptionOfType(ForbiddenException.class)
-                .isThrownBy(() -> projectEditService.edit(MEMBER_ID, editCommand(
+                .isThrownBy(() -> projectCommandService.edit(MEMBER_ID, editCommand(
                         created.id(), "권한 경계 확인", ProjectStatus.IN_PROGRESS,
                         progress.version())));
         assertThatExceptionOfType(ForbiddenException.class)
@@ -260,7 +247,7 @@ class ProjectLifecycleIntegrationTest extends PostgresTestBase {
                         created.id(), NEW_MEMBER_ID, ProjectRole.PARTICIPANT, null, null, 0.1)));
 
         // 완료 처리는 배정 전원에게 열려 있다 (§4 COMPLETE_REOPEN)
-        ProjectDetail completed = projectCompletionService.complete(
+        ProjectDetail completed = projectLifecycleService.complete(
                 MEMBER_ID, created.id(), progress.version());
         assertThat(completed.status()).isEqualTo(ProjectStatus.COMPLETED);
     }
@@ -272,7 +259,7 @@ class ProjectLifecycleIntegrationTest extends PostgresTestBase {
 
         assertThatExceptionOfType(NotFoundException.class)
                 .isThrownBy(() ->
-                        projectCompletionService.complete(OUTSIDER_ID, created.id(), 0L));
+                        projectLifecycleService.complete(OUTSIDER_ID, created.id(), 0L));
         assertThatExceptionOfType(NotFoundException.class)
                 .isThrownBy(() -> assignmentService.assign(OUTSIDER_ID,
                         new CreateAssignmentCommand(created.id(), NEW_MEMBER_ID,
@@ -291,7 +278,7 @@ class ProjectLifecycleIntegrationTest extends PostgresTestBase {
 
         assertThatExceptionOfType(UnprocessableException.class)
                 .isThrownBy(() -> assignmentService.close(PM_ID, managerAssignmentId))
-                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo("INVALID_ROLE"));
+                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo(ErrorCode.INVALID_ROLE));
     }
 
     @Test
@@ -300,7 +287,7 @@ class ProjectLifecycleIntegrationTest extends PostgresTestBase {
         ProjectDetail created = createProject("PM 교체 관통");
 
         // 미배정 인원(303)을 PM으로 → 배정이 함께 생기고 직전 PM은 참여자가 된다
-        ProjectDetail handed = projectRoleService.changeManager(
+        ProjectDetail handed = projectLifecycleService.changeManager(
                 PM_ID, created.id(), NEW_MEMBER_ID, created.version());
 
         assertThat(handed.managerId()).isEqualTo(NEW_MEMBER_ID);
@@ -315,7 +302,7 @@ class ProjectLifecycleIntegrationTest extends PostgresTestBase {
 
         // 직전 PM은 이제 참여자라 배정 권한이 없다 (§4-2)
         assertThatExceptionOfType(ForbiddenException.class)
-                .isThrownBy(() -> projectRoleService.changeManager(
+                .isThrownBy(() -> projectLifecycleService.changeManager(
                         PM_ID, created.id(), MEMBER_ID, handed.version()));
 
         // 교체는 UPDATE 이력이다 (A6-1 — STATE_CHANGE는 §5 전이 전용)
@@ -331,7 +318,7 @@ class ProjectLifecycleIntegrationTest extends PostgresTestBase {
     void delete_removesFromListAndRecordsAudit() {
         ProjectDetail created = createProject("삭제 관통");
 
-        projectDeleteService.delete(PM_ID, created.id());
+        projectCommandService.delete(PM_ID, created.id());
 
         assertThat(projectQueryService.listVisible(PM_ID, PageRequest.of(0, 50)).getContent())
                 .extracting(ProjectSummary::id)
@@ -351,7 +338,7 @@ class ProjectLifecycleIntegrationTest extends PostgresTestBase {
         ProjectDetail created = createProject("삭제 권한 확인");
 
         assertThatExceptionOfType(ForbiddenException.class)
-                .isThrownBy(() -> projectDeleteService.delete(MEMBER_ID, created.id()));
+                .isThrownBy(() -> projectCommandService.delete(MEMBER_ID, created.id()));
     }
 
     private ProjectDetail createProject(String name) {
@@ -369,10 +356,10 @@ class ProjectLifecycleIntegrationTest extends PostgresTestBase {
     }
 
     private ProjectDetail advanceToInProgress(ProjectDetail created) {
-        ProjectDetail confirmed = projectEditService.edit(PM_ID, editCommand(
+        ProjectDetail confirmed = projectCommandService.edit(PM_ID, editCommand(
                 created.id(), created.name(), ProjectStatus.ORDER_CONFIRMED, created.version()));
 
-        return projectEditService.edit(PM_ID, editCommand(
+        return projectCommandService.edit(PM_ID, editCommand(
                 created.id(), created.name(), ProjectStatus.IN_PROGRESS, confirmed.version()));
     }
 

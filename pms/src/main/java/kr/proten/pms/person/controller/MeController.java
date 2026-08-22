@@ -1,7 +1,9 @@
 package kr.proten.pms.person.controller;
 
 import kr.proten.pms.common.config.CallerPersonId;
-import kr.proten.pms.person.service.MeQueryService;
+import kr.proten.pms.common.web.ApiResponse;
+import kr.proten.pms.person.controller.dto.*;
+import kr.proten.pms.person.service.PersonService;
 import kr.proten.pms.person.service.dto.MeView;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,14 +17,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/me")
 class MeController {
-    private final MeQueryService meQueryService;
+    private final PersonService personService;
 
-    MeController(MeQueryService meQueryService) {
-        this.meQueryService = meQueryService;
+    MeController(PersonService personService) {
+        this.personService = personService;
     }
 
     @GetMapping
-    MeView me(@CallerPersonId long callerPersonId) {
-        return meQueryService.me(callerPersonId);
+    ApiResponse<MeView> me(@CallerPersonId long callerPersonId) {
+        return ApiResponse.ok(personService.me(callerPersonId));
     }
 }

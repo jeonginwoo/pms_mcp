@@ -9,7 +9,23 @@
 2. `pms/` 안에서도 `/mcp` 어댑터 모듈은 MCP 담당 소유 — 서비스 계층 API 변경은 공용 결정 기록 경유
 3. 구 구현은 `pms-old/`에 참고용 보존 — 게이트 M0 산출물(`/mcp` 어댑터·인증 체인·시드 적재기)이 거기 있다
 
-## 현재 상태 (2026-08-21)
+
+## 현재 상태 (2026-08-22 — auth 분리 + 모듈 골격 확장)
+
+- **auth 모듈 분리 완료**(사용자 선택 — 공용 결정 기록 2026-08-22 1행): `person/service/impl` 26개 중 **인증 인프라 7개**(AuthKeyConfig·AuthProperties·TokenProvider·NimbusTokenProvider·TokenClaimValidators·PasswordHasher·BCryptPasswordHasher)와 `User`·`UserRepository`·`AuthService`·`AuthController`·`ApiSecurityConfig`를 **`auth/`** 로 옮겼다. PRD §3의 개명 근거("identity는 계정·인증이 범위에서 빠진다")가 코드에서도 성립한다. **순환 회피가 이 분리의 핵심 설계 지점**: 로그인은 인원 활성 여부를 person에 물어야 하고(`PersonDirectoryService.existsActive`) 인력 등록(E2-1)은 계정을 함께 만들어야 해서 서로 부르면 `ModularityTest`가 막는다 → **person이 `service/spi/AccountPort`를 정의하고 auth가 구현**(의존 auth → person 한 방향, 초기 비밀번호·해시는 auth 안에 잔류). `PersonSeedLoader`의 계정 섹션 검사도 이 포트를 탄다
+- **골격 신설**(로직 없음 — 미구현 유스케이스는 `NotImplementedException` → **501 `NOT_IMPLEMENTED`**, 각 자리에 `TODO(<AC>)`): **resource**(`GET /api/utilization` · `Capacity` 엔티티 = 월별 예외, 기본값은 `Person.capacity`) · **notification**(`GET /api/notifications`·`PATCH /{id}/read` · 멱등은 `(recipient_id, dedupe_key)` 유니크 제약으로 스키마에 박음) · **EPIC E 쓰기 5종**(E1-1·E2-2·E3-2·E4·E5 — `ReferenceController`를 자원별 `GradeController`·`PermissionGroupController`로 분리) · **감사 조회 2뷰**(G1-3·G2-2). Flyway **V7**(capacities·notifications). `PageResponse`는 원 주석의 예고대로 `common/web`으로 승격
+- **골격에서도 권한·가시성 판정은 실구현**: `AuditViewService`(G1-3 — 관리 플래그 없으면 403, 조회 위임 안 함) · `ProjectAuditService`(G2-2·G2-3 — 가시성 밖은 403이 아니라 404, 관문은 상세 조회와 같은 `requireVisible`). 403/404는 보안 의미를 갖는 동작이라 나중에 얹을 것이 아니고, 판정이 서 있으면 "플래그 없는 호출자에게 이력이 새지 않는다"를 지금부터 테스트할 수 있다 — 단위 테스트 4건 신설
+- **서비스 계약 통합 완료**(사용자 지시 — 공용 결정 기록 2026-08-22 1행): project **9 → 4**(`ProjectQueryService`·`ProjectCommandService`·**`ProjectLifecycleService` 신설**·`AssignmentService`), person **11 → 8**(`PersonService`로 조회·명령·내 계정 통합, `ReferenceQueryService`는 Grade/PermissionGroup에 흡수). cross-module 3종은 소비자가 서로 달라 그대로 둔다. 서비스 반환 타입은 Spring `Page`로 통일하고 §7 봉투는 컨트롤러에서만 씌운다. **`/mcp` 접점 영향**: 어댑터가 바인딩할 project 계약이 4종으로 줄고 진척률 쓰기가 `ProjectLifecycleService.updateProgress`로 이름이 바뀜 — MCP 담당 확인 대상
+- **audit 모듈 분리 + 공통 응답 봉투 + ErrorCode + 패키지 정리 완료**(사용자 지시 — 공용 결정 기록 2026-08-22 1행): ①`common/audit` → 최상위 `audit` 모듈(모듈 7종). 서블릿 의존은 `common/config/RequestPathResolver`로 내렸다 ②모든 응답이 `{success,data}`/`{success,error}` — 본문 없는 성공은 200 + `{success:true}`, **예외는 `/api/auth/jwks` 하나**(RFC 7517) ③`ErrorCode` 열거가 §7 에러 표의 유일한 정의이고 HTTP 상태도 함께 갖는다 ④`package-info` 6개 제거·`controller/dto/`·`service/impl/scope/`로 묶음. 프런트 `api.ts`는 `unwrap` 한 곳에서 봉투를 벗긴다(tsc 통과)
+- **package-info 전량 제거 + 폴더 2차 정리**(사용자 지적 — 공용 결정 기록 2026-08-22 1행): `@NamedInterface`는 실제 Modulith API지만 **기본 규약은 "모듈 루트 = 공개 API"** 여서, 계약을 `service/`에 둔 배치가 package-info를 필요하게 만들고 있었다. 공개 타입을 모듈 루트로 옮겨 **8개 → 0개**. `common`은 모듈에서 제외(ignore 술어) → 모듈 6종. 폴더: `auth/service/impl/token/` · `person/seed/` · `GlobalExceptionHandler` → `common/web`
+- **Codex 리뷰 P2 5건 + P3 3건 수정 완료**(공용 결정 기록 2026-08-22 1행): notification 계약을 모듈 루트로 · **골격의 403 선행**(`ScaffoldAuthorizationTest` 신설 — 없는 것은 로직이지 권한이 아니다) · 알림 회수를 **조건부 삭제 한 문장**으로(읽음 경쟁에서 먼저 커밋한 읽음이 이긴다) · 프런트 `unwrap`이 `success`를 검증 · `field` undefined → null 정규화 · 구 204 계약 문서 일괄 정정 · 501 로그를 INFO로
+- **부수 결함 1건 수정 — 타입 틀린 요청 값이 500으로 나가고 있었다**: `?month=2026-8-1`, `/api/projects/abc` 같은 요청이 `MethodArgumentTypeMismatchException`으로 전역 핸들러의 catch-all에 걸려 **500**이 됐다(2026-08-22 "매핑 없는 경로 500"과 같은 계열의 구멍이고, 골격 라우트의 바인딩 테스트를 쓰다 드러났다). 400 `VALIDATION_ERROR`(field=파라미터명)로 매핑 + 필수 파라미터 누락도 같이 처리 + 회귀 테스트
+- **검증**: `verify.sh pms` PASS — 테스트 **268개**. auth 분리·계약 통합 뒤에도 기존 검증(로그인·시드 관통·인증 ON 경로·프로젝트 관통)이 그대로 통과한다
+- **미해결 (공용 결정 필요) — resource가 배정 데이터를 읽을 경로가 없다**: 가동률 분자(Σ 월별 배정 M/M)를 얻으려면 project가 "인원×월 배정"을 내주는 서비스 계약이 필요한데 지금 공개된 것은 `ProjectQueryService`(목록·단건)·`AssignmentService`(쓰기)뿐이다. 배정 엔티티 직접 접근은 모듈 경계 위반이므로 **애플리케이션 서비스 API 추가**로 풀어야 하고, 그것은 공용 결정 기록 경유 사항이라 임의로 만들지 않았다(`UtilizationQueryServiceImpl` TODO)
+- **다음 작업:** ①골격 채우기 우선순위 정하기(resource가 가장 크고 위 접점 결정이 선행) ②남은 project AC — A6-3(역할 지정) → A8(권한 커스텀) ③`?phase=` 목록 필터
+- **차단 요소:** 없음. 다만 `pms-old/`의 게이트 M0 산출물 승격 시점·방식은 MCP 담당 결정 사항
+
+## 이전 상태 (2026-08-21 — 재구축 · 시드 · 인증 · 감사 기록 · 프론트 실연동)
 
 - **pms 앱 재구축 완료**(사용자 지시 — 공용 결정 기록 2026-08-21 2행): 구 `pms/` → `pms-old/` 이동 후 새 `pms/`를 **도메인별 모듈 + 3계층** 으로 신규 작성. 최종 배치는 `도메인/{controller, service{impl,dto,entity}, repository}` + `common/{config,exception}`(참조 프로젝트 검토 후 사용자 지시 확정)이고, 모듈 밖에 여는 것만 `@NamedInterface`로 명시해 **엔티티·리포지토리가 모듈 경계를 넘지 못함을 `ModularityTest`가 검증**한다. 스키마는 **Flyway 소유·단일 스키마**(`db/migration/V1__init.sql`·`ddl-auto=none`), H2 제거로 DB 테스트 전량 Testcontainers PG. 모듈 `person`(구 identity 개명)·`project`·`common`, **JPA 엔티티 = 도메인 모델**(구 순수 도메인 record ↔ `*Jpa` 매핑 왕복 제거). 구현 AC: person 가시성·인력 조회 전량 + project **A1·A2·A3**. `DomainPurityTest` → `LayerRuleTest`(계층 방향·계약↔구현·영속/웹 격리·엔티티↔dto 7종) 교체. **범위 밖(의도)**: 인증·`/mcp` 어댑터·시드 적재기·AuditLog·도메인 이벤트·A4~A8·EPIC B. verify.sh pms PASS — 테스트 83개(경계 2·계층 7·스모크 1·Testcontainers PG 관통 9 포함)
 - **모듈 간 계약**: project → person은 person이 공개한 서비스 인터페이스 3종(`PersonDirectoryService`·`OrgVisibilityService`·`OrgPermissionService`)과 dto만 참조, 연결은 id로만. `/mcp` port 5종이 붙을 자리가 이 서비스 계층이다
@@ -48,6 +64,13 @@
 - 미해결: <다음 세션으로 넘기는 것>
 - 다음 작업: <구체적으로>
 ```
+
+### 2026-08-22 — auth 모듈 분리 + resource·notification·EPIC E 쓰기·감사 조회 골격
+- 완료: ①**auth 분리** — 계정·토큰·비밀번호를 person에서 떼어 6번째 모듈로. 순환은 **person이 SPI(`AccountPort`)를 정의하고 auth가 구현**하는 방향 역전으로 풀었다(auth → person 단방향) ②**골격 신설** — resource(EPIC C)·notification(EPIC F)·EPIC E 쓰기 5종·감사 조회 2뷰, 미구현은 `501 NOT_IMPLEMENTED`에 `TODO(<AC>)` ③`PageResponse` → `common/web` 승격 ④Flyway V7(capacities·notifications) ⑤**감사 조회의 권한·가시성 판정은 실구현**(403/404는 나중에 얹을 것이 아니다) ⑥**부수 결함 수정** — 타입 틀린 요청 값(`?month=2026-8-1`·`/api/projects/abc`)이 500으로 나가던 것을 400 VALIDATION_ERROR로. 검증: `verify.sh pms` PASS, 테스트 268개(신규 6)
+- 사용자 결정 근거: "ttt/pms에서 큰 틀만 가져오고 핵심 로직은 남겨놓는 방향" + "person/service에 서비스가 너무 많다" → 실측해 보니 계약 8개는 과하지 않았고(3개는 project가 실제로 쓰는 cross-module 계약) 붐비는 곳은 impl 26개였으며 그중 7개가 성격이 다른 인증 인프라였다 — 그래서 하위 패키지 정리가 아니라 모듈 분리를 골랐다
+- 미해결: **resource ↔ project 접점**(가동률 분자를 얻을 서비스 계약이 없다 — 공용 결정 필요) · 골격 5개 영역의 로직 · SSE 라우트(토큰 마스킹과 한 묶음)
+- 추가 완료(같은 세션): **서비스 계약 통합** — project 9→4·person 11→8. 근거는 실측(단일 메서드 6개·소비자 1개 8개·협력자 집합 동일)이고, 구현은 판단 하나당 클래스 하나로 계속 쪼갠 채 둔다
+- 다음 작업: 접점 결정 → resource 채우기 / 또는 project A6-3·A8 먼저
 
 ### 2026-08-22 — 상태 전이를 상세 화면 전용 버튼으로 (화면 결정)
 - 완료: 상태 행위를 **한 줄로 모았다**(`ProjectActions` — 상태마다 버튼 하나: 계약대기→`수주확정으로 →` · 수주확정→`진행중으로 →` · 진행중→`완료 처리` · 완료→`재개` · 유지보수중→없음). 전이는 **확인 카드**(`StatusAdvance`)를 거친다. **계약대기·수주확정에서는 진척률 섹션을 그리지 않는다**(그 단계엔 기록할 진척이 없고 A2-9로 서버도 거절한다 — 못 만지는 편집기가 할 일을 흐렸다). 헤더는 뱃지·정보 수정·삭제만 남겼다 — 다음 한 칸만 노출(계약대기→수주확정→진행중, 서버 `next()`와 같은 표), 확인 카드에 "되돌릴 수 없다"와 전이 후 효과(진행중이면 진척률 수정 가능)를 적었다. 정보 수정 폼에서 **status 선택을 제거** — 되돌릴 수 없는 변경이 "정보 저장"에 섞이지 않게 입구를 하나로 모았다. 전체 치환 PUT의 본문 조립은 `projectBody.ts` 한 곳(폼·전이 버튼이 공유)

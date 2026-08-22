@@ -2,9 +2,10 @@ package kr.proten.pms.project.service.impl;
 
 import java.util.Map;
 import kr.proten.pms.common.exception.ConflictException;
+import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.NotFoundException;
 import kr.proten.pms.common.exception.UnprocessableException;
-import kr.proten.pms.person.service.PersonDirectoryService;
+import kr.proten.pms.person.PersonDirectoryService;
 import kr.proten.pms.project.repository.ProjectAssignmentRepository;
 import kr.proten.pms.project.service.AssignmentService;
 import kr.proten.pms.project.service.dto.AssignmentView;
@@ -115,14 +116,14 @@ public class AssignmentServiceImpl implements AssignmentService {
      */
     private void requireAssignableRole(ProjectRole role) {
         if (role == ProjectRole.PM) {
-            throw new UnprocessableException("INVALID_ROLE",
+            throw new UnprocessableException(ErrorCode.INVALID_ROLE,
                     "PM 지정은 PM 교체 경로로만 가능합니다");
         }
     }
 
     private void requireKnownPerson(Long personId) {
         if (!personDirectoryService.existsActive(personId)) {
-            throw new UnprocessableException("REF_NOT_FOUND", "없는 인원입니다: " + personId);
+            throw new UnprocessableException(ErrorCode.REF_NOT_FOUND, "없는 인원입니다: " + personId);
         }
     }
 
@@ -132,7 +133,7 @@ public class AssignmentServiceImpl implements AssignmentService {
                 projectId, personId, AssignmentStatus.ACTIVE);
 
         if (assigned) {
-            throw new ConflictException("DUPLICATE_ASSIGNMENT", "이미 배정된 인원입니다");
+            throw new ConflictException(ErrorCode.DUPLICATE_ASSIGNMENT, "이미 배정된 인원입니다");
         }
     }
 
@@ -142,7 +143,7 @@ public class AssignmentServiceImpl implements AssignmentService {
      */
     private void requireNotManager(ProjectAssignment assignment) {
         if (assignment.isManager()) {
-            throw new UnprocessableException("INVALID_ROLE",
+            throw new UnprocessableException(ErrorCode.INVALID_ROLE,
                     "PM 배정은 종료할 수 없습니다 — PM을 교체한 뒤 종료하세요");
         }
     }

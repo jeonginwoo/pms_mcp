@@ -14,17 +14,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.time.LocalDate;
 import java.util.List;
 import kr.proten.pms.common.exception.ConflictException;
+import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.ForbiddenException;
 import kr.proten.pms.common.exception.NotFoundException;
 import kr.proten.pms.common.exception.StaleVersionException;
 import kr.proten.pms.common.exception.UnprocessableException;
-import kr.proten.pms.project.service.ProgressUpdateService;
 import kr.proten.pms.project.service.ProjectCommandService;
-import kr.proten.pms.project.service.ProjectCompletionService;
-import kr.proten.pms.project.service.ProjectEditService;
-import kr.proten.pms.project.service.ProjectDeleteService;
+import kr.proten.pms.project.service.ProjectLifecycleService;
 import kr.proten.pms.project.service.ProjectQueryService;
-import kr.proten.pms.project.service.ProjectRoleService;
 import kr.proten.pms.project.service.dto.AssignmentView;
 import kr.proten.pms.project.service.dto.CreateProjectCommand;
 import kr.proten.pms.project.service.dto.EditProjectCommand;
@@ -36,6 +33,8 @@ import kr.proten.pms.project.service.entity.Engagement;
 import kr.proten.pms.project.service.entity.ProjectPhase;
 import kr.proten.pms.project.service.entity.ProjectRole;
 import kr.proten.pms.project.service.entity.ProjectStatus;
+import org.assertj.core.api.Assertions;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -46,8 +45,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.assertj.core.api.Assertions;
-import org.hamcrest.Matchers;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -67,17 +64,9 @@ class ProjectControllerTest {
     @MockitoBean
     private ProjectCommandService projectCommandService;
     @MockitoBean
-    private ProjectEditService projectEditService;
-    @MockitoBean
-    private ProjectCompletionService projectCompletionService;
-    @MockitoBean
-    private ProjectRoleService projectRoleService;
-    @MockitoBean
-    private ProjectDeleteService projectDeleteService;
-    @MockitoBean
     private ProjectQueryService projectQueryService;
     @MockitoBean
-    private ProgressUpdateService progressUpdateService;
+    private ProjectLifecycleService projectLifecycleService;
 
     @Test
     @DisplayName("생성 — 201 + 생성된 상세, 요청 본문이 명령으로 옮겨진다")
@@ -103,9 +92,9 @@ class ProjectControllerTest {
                                 }
                                 """))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status").value("CONTRACT_PENDING"))
-                .andExpect(jsonPath("$.phase").value("SALES"))
-                .andExpect(jsonPath("$.version").value(0));
+                .andExpect(jsonPath("$.data.status").value("CONTRACT_PENDING"))
+                .andExpect(jsonPath("$.data.phase").value("SALES"))
+                .andExpect(jsonPath("$.data.version").value(0));
     }
 
     @Test
@@ -190,7 +179,7 @@ class ProjectControllerTest {
     @DisplayName("생성 — PM 미지정은 422 PM_REQUIRED 봉투")
     void create_withoutPm_isUnprocessable() throws Exception {
         when(projectCommandService.create(anyLong(), any(CreateProjectCommand.class)))
-                .thenThrow(new UnprocessableException("PM_REQUIRED", "PM을 1명 지정해야 합니다"));
+                .thenThrow(new UnprocessableException(ErrorCode.PM_REQUIRED, "PM을 1명 지정해야 합니다"));
 
         mockMvc.perform(post("/api/projects")
                         .header(CALLER_HEADER, "102")
@@ -204,7 +193,7 @@ class ProjectControllerTest {
     @DisplayName("생성 — 중복 이름은 409 DUPLICATE_NAME 봉투")
     void create_duplicateName_isConflict() throws Exception {
         when(projectCommandService.create(anyLong(), any(CreateProjectCommand.class)))
-                .thenThrow(new ConflictException("DUPLICATE_NAME", "같은 이름의 프로젝트가 있습니다"));
+                .thenThrow(new ConflictException(ErrorCode.DUPLICATE_NAME, "같은 이름의 프로젝트가 있습니다"));
 
         mockMvc.perform(post("/api/projects")
                         .header(CALLER_HEADER, "102")
@@ -230,12 +219,12 @@ class ProjectControllerTest {
                         .param("page", "1")
                         .param("size", "2"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.length()").value(1))
-                .andExpect(jsonPath("$.content[0].managerName").value("이피엠"))
-                .andExpect(jsonPath("$.page").value(1))
-                .andExpect(jsonPath("$.size").value(2))
-                .andExpect(jsonPath("$.totalElements").value(5))
-                .andExpect(jsonPath("$.totalPages").value(3));
+                .andExpect(jsonPath("$.data.content.length()").value(1))
+                .andExpect(jsonPath("$.data.content[0].managerName").value("이피엠"))
+                .andExpect(jsonPath("$.data.page").value(1))
+                .andExpect(jsonPath("$.data.size").value(2))
+                .andExpect(jsonPath("$.data.totalElements").value(5))
+                .andExpect(jsonPath("$.data.totalPages").value(3));
     }
 
     @Test
@@ -256,15 +245,15 @@ class ProjectControllerTest {
 
         mockMvc.perform(get("/api/projects/" + PROJECT_ID).header(CALLER_HEADER, "102"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.assignments.length()").value(1))
-                .andExpect(jsonPath("$.assignments[0].personName").value("이피엠"))
-                .andExpect(jsonPath("$.phase").value("SALES"));
+                .andExpect(jsonPath("$.data.assignments.length()").value(1))
+                .andExpect(jsonPath("$.data.assignments[0].personName").value("이피엠"))
+                .andExpect(jsonPath("$.data.phase").value("SALES"));
     }
 
     @Test
     @DisplayName("진척률 — 확인 전 요약 요청은 committed=false로 돌아온다")
     void updateProgress_notConfirmed_returnsSummary() throws Exception {
-        when(progressUpdateService.update(anyLong(), any(UpdateProgressCommand.class)))
+        when(projectLifecycleService.updateProgress(anyLong(), any(UpdateProgressCommand.class)))
                 .thenReturn(new ProgressUpdateResult(
                         PROJECT_ID, "포털 재구축", 90, 95, false, false, 3L));
 
@@ -273,15 +262,15 @@ class ProjectControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"progress\": 95, \"version\": 3, \"confirmed\": false}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.committed").value(false))
-                .andExpect(jsonPath("$.currentProgress").value(90))
-                .andExpect(jsonPath("$.requestedProgress").value(95));
+                .andExpect(jsonPath("$.data.committed").value(false))
+                .andExpect(jsonPath("$.data.currentProgress").value(90))
+                .andExpect(jsonPath("$.data.requestedProgress").value(95));
     }
 
     @Test
     @DisplayName("진척률 — 경로의 프로젝트 id가 명령에 실린다")
     void updateProgress_usesPathVariableAsTarget() throws Exception {
-        when(progressUpdateService.update(
+        when(projectLifecycleService.updateProgress(
                 103L, new UpdateProgressCommand(PROJECT_ID, 100, 3L, true)))
                 .thenReturn(new ProgressUpdateResult(
                         PROJECT_ID, "포털 재구축", 100, 100, true, true, 4L));
@@ -291,9 +280,9 @@ class ProjectControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"progress\": 100, \"version\": 3, \"confirmed\": true}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.committed").value(true))
-                .andExpect(jsonPath("$.completable").value(true))
-                .andExpect(jsonPath("$.version").value(4));
+                .andExpect(jsonPath("$.data.committed").value(true))
+                .andExpect(jsonPath("$.data.completable").value(true))
+                .andExpect(jsonPath("$.data.version").value(4));
     }
 
     @Test
@@ -307,13 +296,13 @@ class ProjectControllerTest {
                 .andExpect(jsonPath("$.error.code").value("VALIDATION_ERROR"))
                 .andExpect(jsonPath("$.error.field").value("progress"));
 
-        verify(progressUpdateService, never()).update(anyLong(), any());
+        verify(projectLifecycleService, never()).updateProgress(anyLong(), any());
     }
 
     @Test
     @DisplayName("진척률 — version 충돌은 409 STALE_VERSION, 최신 값이 메시지에 담긴다")
     void updateProgress_staleVersion_isConflict() throws Exception {
-        when(progressUpdateService.update(anyLong(), any(UpdateProgressCommand.class)))
+        when(projectLifecycleService.updateProgress(anyLong(), any(UpdateProgressCommand.class)))
                 .thenThrow(new StaleVersionException("최신 진척률 90%, version 3"));
 
         mockMvc.perform(put("/api/projects/" + PROJECT_ID + "/progress")
@@ -329,7 +318,7 @@ class ProjectControllerTest {
     @Test
     @DisplayName("수정 — 200 + 경로의 id와 본문이 명령으로 옮겨진다 (A5)")
     void edit_validRequest_passesCommandToService() throws Exception {
-        when(projectEditService.edit(anyLong(), any(EditProjectCommand.class)))
+        when(projectCommandService.edit(anyLong(), any(EditProjectCommand.class)))
                 .thenReturn(detail());
 
         mockMvc.perform(put("/api/projects/" + PROJECT_ID)
@@ -337,11 +326,11 @@ class ProjectControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(editBody("ORDER_CONFIRMED")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(PROJECT_ID));
+                .andExpect(jsonPath("$.data.id").value(PROJECT_ID));
 
         ArgumentCaptor<EditProjectCommand> captor =
                 ArgumentCaptor.forClass(EditProjectCommand.class);
-        verify(projectEditService).edit(Mockito.eq(104L), captor.capture());
+        verify(projectCommandService).edit(Mockito.eq(104L), captor.capture());
         Assertions.assertThat(captor.getValue().projectId()).isEqualTo(PROJECT_ID);
         Assertions.assertThat(captor.getValue().status())
                 .isEqualTo(ProjectStatus.ORDER_CONFIRMED);
@@ -366,14 +355,14 @@ class ProjectControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error.code").value("VALIDATION_ERROR"))
                 .andExpect(jsonPath("$.error.field").value("status"));
-        verify(projectEditService, never()).edit(anyLong(), any());
+        verify(projectCommandService, never()).edit(anyLong(), any());
     }
 
     @Test
     @DisplayName("수정 — 전이 위반은 409 INVALID_TRANSITION 봉투")
     void edit_invalidTransition_isConflict() throws Exception {
-        when(projectEditService.edit(anyLong(), any(EditProjectCommand.class)))
-                .thenThrow(new ConflictException("INVALID_TRANSITION", "진행중에서 계약대기로는 바꿀 수 없습니다"));
+        when(projectCommandService.edit(anyLong(), any(EditProjectCommand.class)))
+                .thenThrow(new ConflictException(ErrorCode.INVALID_TRANSITION, "진행중에서 계약대기로는 바꿀 수 없습니다"));
 
         mockMvc.perform(put("/api/projects/" + PROJECT_ID)
                         .header(CALLER_HEADER, "104")
@@ -386,7 +375,7 @@ class ProjectControllerTest {
     @Test
     @DisplayName("수정 — 참여자의 정보 수정은 403 FORBIDDEN 봉투 (A5-3)")
     void edit_participant_isForbidden() throws Exception {
-        when(projectEditService.edit(anyLong(), any(EditProjectCommand.class)))
+        when(projectCommandService.edit(anyLong(), any(EditProjectCommand.class)))
                 .thenThrow(new ForbiddenException("담당자만 가능"));
 
         mockMvc.perform(put("/api/projects/" + PROJECT_ID)
@@ -400,22 +389,22 @@ class ProjectControllerTest {
     @Test
     @DisplayName("완료 처리 — 200 + version이 서비스로 전달된다 (A7-1)")
     void complete_validRequest_passesVersion() throws Exception {
-        when(projectCompletionService.complete(103L, PROJECT_ID, 3L)).thenReturn(detail());
+        when(projectLifecycleService.complete(103L, PROJECT_ID, 3L)).thenReturn(detail());
 
         mockMvc.perform(post("/api/projects/" + PROJECT_ID + "/complete")
                         .header(CALLER_HEADER, "103")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"version\": 3}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(PROJECT_ID));
-        verify(projectCompletionService).complete(103L, PROJECT_ID, 3L);
+                .andExpect(jsonPath("$.data.id").value(PROJECT_ID));
+        verify(projectLifecycleService).complete(103L, PROJECT_ID, 3L);
     }
 
     @Test
     @DisplayName("완료 처리 — 진척률 미달은 409 PROGRESS_INCOMPLETE 봉투 (A7-2)")
     void complete_progressIncomplete_isConflict() throws Exception {
-        when(projectCompletionService.complete(anyLong(), anyLong(), anyLong()))
-                .thenThrow(new ConflictException("PROGRESS_INCOMPLETE",
+        when(projectLifecycleService.complete(anyLong(), anyLong(), anyLong()))
+                .thenThrow(new ConflictException(ErrorCode.PROGRESS_INCOMPLETE,
                         "진척률 100%에서만 완료 처리할 수 있습니다 (현재 90%)"));
 
         mockMvc.perform(post("/api/projects/" + PROJECT_ID + "/complete")
@@ -435,40 +424,40 @@ class ProjectControllerTest {
                         .content("{}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error.code").value("VALIDATION_ERROR"));
-        verify(projectCompletionService, never()).complete(anyLong(), anyLong(), anyLong());
+        verify(projectLifecycleService, never()).complete(anyLong(), anyLong(), anyLong());
     }
 
     @Test
     @DisplayName("재개 — 200, 전용 경로로만 들어온다 (A7-3)")
     void reopen_validRequest_delegatesToService() throws Exception {
-        when(projectCompletionService.reopen(103L, PROJECT_ID, 5L)).thenReturn(detail());
+        when(projectLifecycleService.reopen(103L, PROJECT_ID, 5L)).thenReturn(detail());
 
         mockMvc.perform(post("/api/projects/" + PROJECT_ID + "/reopen")
                         .header(CALLER_HEADER, "103")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"version\": 5}"))
                 .andExpect(status().isOk());
-        verify(projectCompletionService).reopen(103L, PROJECT_ID, 5L);
+        verify(projectLifecycleService).reopen(103L, PROJECT_ID, 5L);
     }
 
     @Test
     @DisplayName("PM 교체 — 200 + 대상 인원과 version이 서비스로 전달된다 (A6-1)")
     void changeManager_passesPersonAndVersion() throws Exception {
-        when(projectRoleService.changeManager(13L, PROJECT_ID, 105L, 3L)).thenReturn(detail());
+        when(projectLifecycleService.changeManager(13L, PROJECT_ID, 105L, 3L)).thenReturn(detail());
 
         mockMvc.perform(put("/api/projects/" + PROJECT_ID + "/pm")
                         .header(CALLER_HEADER, "13")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"personId\": 105, \"version\": 3}"))
                 .andExpect(status().isOk());
-        verify(projectRoleService).changeManager(13L, PROJECT_ID, 105L, 3L);
+        verify(projectLifecycleService).changeManager(13L, PROJECT_ID, 105L, 3L);
     }
 
     @Test
     @DisplayName("PM 교체 — 이미 PM인 사람을 다시 지정하면 422 INVALID_ROLE 봉투")
     void changeManager_samePerson_isUnprocessable() throws Exception {
-        when(projectRoleService.changeManager(anyLong(), anyLong(), anyLong(), anyLong()))
-                .thenThrow(new UnprocessableException("INVALID_ROLE", "이미 이 프로젝트의 PM입니다"));
+        when(projectLifecycleService.changeManager(anyLong(), anyLong(), anyLong(), anyLong()))
+                .thenThrow(new UnprocessableException(ErrorCode.INVALID_ROLE, "이미 이 프로젝트의 PM입니다"));
 
         mockMvc.perform(put("/api/projects/" + PROJECT_ID + "/pm")
                         .header(CALLER_HEADER, "13")
@@ -479,19 +468,19 @@ class ProjectControllerTest {
     }
 
     @Test
-    @DisplayName("삭제 — 204, 본문 없이 경로 id만으로 처리한다 (A4-1)")
+    @DisplayName("삭제 — 200 + success:true, 본문 없이 경로 id만으로 처리한다 (A4-1)")
     void delete_returnsNoContent() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/projects/" + PROJECT_ID)
                         .header(CALLER_HEADER, "13"))
-                .andExpect(status().isNoContent());
-        verify(projectDeleteService).delete(13L, PROJECT_ID);
+                .andExpect(status().isOk());
+        verify(projectCommandService).delete(13L, PROJECT_ID);
     }
 
     @Test
     @DisplayName("삭제 — 권한 없음은 403 FORBIDDEN 봉투 (A4-2)")
     void delete_withoutPermission_isForbidden() throws Exception {
         Mockito.doThrow(new ForbiddenException("담당자만 가능"))
-                .when(projectDeleteService).delete(anyLong(), anyLong());
+                .when(projectCommandService).delete(anyLong(), anyLong());
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/projects/" + PROJECT_ID)
                         .header(CALLER_HEADER, "105"))

@@ -3,18 +3,17 @@ package kr.proten.pms;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import kr.proten.pms.auth.repository.UserRepository;
+import kr.proten.pms.auth.service.AuthService;
+import kr.proten.pms.person.PersonRef;
 import kr.proten.pms.person.repository.GradeRepository;
 import kr.proten.pms.person.repository.OrgUnitRepository;
 import kr.proten.pms.person.repository.PermissionGroupRepository;
 import kr.proten.pms.person.repository.PersonRepository;
-import kr.proten.pms.person.repository.UserRepository;
-import kr.proten.pms.person.service.AuthService;
 import kr.proten.pms.person.service.OrgUnitService;
-import kr.proten.pms.person.service.PersonCommandService;
-import kr.proten.pms.person.service.PersonQueryService;
+import kr.proten.pms.person.service.PersonService;
 import kr.proten.pms.person.service.dto.CreatePersonCommand;
 import kr.proten.pms.person.service.dto.OrgUnitView;
-import kr.proten.pms.person.service.dto.PersonRef;
 import kr.proten.pms.person.service.entity.Grade;
 import kr.proten.pms.person.service.entity.OrgUnit;
 import kr.proten.pms.person.service.entity.Person;
@@ -56,11 +55,9 @@ class PersonSeedLoadIntegrationTest {
     @Autowired
     private PersonRepository personRepository;
     @Autowired
-    private PersonQueryService personQueryService;
+    private PersonService personService;
     @Autowired
     private OrgUnitService orgUnitService;
-    @Autowired
-    private PersonCommandService personCommandService;
     @Autowired
     private AuthService authService;
     @Autowired
@@ -150,7 +147,7 @@ class PersonSeedLoadIntegrationTest {
         assertThat(personRepository.findAll()).filteredOn(Person::isSystem).singleElement()
                 .satisfies(account -> assertThat(account.getName()).isEqualTo("시스템관리자"));
         // 관리자(전사 scope)로 조회해도 시스템 계정은 보이지 않는다
-        assertThat(personQueryService.listVisible(1L)).map(PersonRef::name)
+        assertThat(personService.listVisible(1L)).map(PersonRef::name)
                 .doesNotContain("시스템관리자")
                 .hasSize(43);
     }
@@ -159,15 +156,15 @@ class PersonSeedLoadIntegrationTest {
     @DisplayName("가시성 관통 — 팀장은 자기 팀만, 부문장은 부문 subtree, 대표는 전사")
     void visibility_worksOnRealSeed() {
         // 배성수(26) = CS사업팀 팀장 → CS사업팀 4명
-        assertThat(personQueryService.listVisible(26L)).map(PersonRef::name)
+        assertThat(personService.listVisible(26L)).map(PersonRef::name)
                 .containsExactlyInAnyOrder("배성수", "김민환", "남진식", "이은지");
         // 김문수(16) = AX솔루션사업부 부문장 → 부문 + 산하 3팀 = 본인 1 + 4 + 4 + 4
-        assertThat(personQueryService.listVisible(16L)).hasSize(14);
+        assertThat(personService.listVisible(16L)).hasSize(14);
         // 남진식(28) = CS사업팀 팀원 → 팀 전체 (2026-08-22 결정: 팀원 scope SELF→TEAM)
-        assertThat(personQueryService.listVisible(28L)).map(PersonRef::name)
+        assertThat(personService.listVisible(28L)).map(PersonRef::name)
                 .containsExactlyInAnyOrder("배성수", "김민환", "남진식", "이은지");
         // 박재완(1) = 관리자(전사)
-        assertThat(personQueryService.listVisible(1L)).hasSize(43);
+        assertThat(personService.listVisible(1L)).hasSize(43);
     }
 
     @Test
@@ -189,7 +186,7 @@ class PersonSeedLoadIntegrationTest {
     @Test
     @DisplayName("E2-1 — 등록한 인원은 시드 계정과 같은 규칙으로 로그인할 수 있다")
     void createPerson_canLogInWithInitialPassword() {
-        PersonRef created = personCommandService.create(1L, new CreatePersonCommand(
+        PersonRef created = personService.create(1L, new CreatePersonCommand(
                 "시드신규", PersonFixtures.SI_TEAM_ID, 1L, 4L, "seed-new@proten.co.kr"));
 
         assertThat(created.id()).isGreaterThan(44L);
@@ -206,7 +203,7 @@ class PersonSeedLoadIntegrationTest {
     @Test
     @DisplayName("조직명·직급명이 채워진다 — 참조가 실제로 이어졌다는 증거")
     void loads_resolvesNamesOnQuery() {
-        assertThat(personQueryService.getPerson(1L, 26L))
+        assertThat(personService.getPerson(1L, 26L))
                 .satisfies(ref -> {
                     assertThat(ref.name()).isEqualTo("배성수");
                     assertThat(ref.orgUnit()).isEqualTo("CS사업팀");

@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.LocalDate;
 import kr.proten.pms.common.exception.ConflictException;
+import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.ForbiddenException;
 import kr.proten.pms.common.exception.NotFoundException;
 import kr.proten.pms.common.exception.UnprocessableException;
@@ -34,7 +35,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 /**
  * 배정 API 웹 슬라이스 테스트 — EPIC B의 HTTP 경계.
- * 상태 코드(201/200/204)·경로 id가 명령에 실리는지·서비스 예외 → §7 에러 봉투
+ * 상태 코드(201/200)·경로 id가 명령에 실리는지·서비스 예외 → §7 에러 봉투
  * (403/404/409/422)만 본다. 권한·가시성 규칙은 서비스 단위 테스트의 몫이다.
  */
 @WebMvcTest(AssignmentController.class)
@@ -66,8 +67,8 @@ class AssignmentControllerTest {
                                 }
                                 """))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(ASSIGNMENT_ID))
-                .andExpect(jsonPath("$.personName").value("김참여"));
+                .andExpect(jsonPath("$.data.id").value(ASSIGNMENT_ID))
+                .andExpect(jsonPath("$.data.personName").value("김참여"));
 
         ArgumentCaptor<CreateAssignmentCommand> captor =
                 ArgumentCaptor.forClass(CreateAssignmentCommand.class);
@@ -112,7 +113,7 @@ class AssignmentControllerTest {
     @DisplayName("배정 — 중복 배정은 409 DUPLICATE_ASSIGNMENT 봉투 (B1-2)")
     void assign_duplicate_isConflict() throws Exception {
         when(assignmentService.assign(anyLong(), any(CreateAssignmentCommand.class)))
-                .thenThrow(new ConflictException("DUPLICATE_ASSIGNMENT", "이미 배정된 인원입니다"));
+                .thenThrow(new ConflictException(ErrorCode.DUPLICATE_ASSIGNMENT, "이미 배정된 인원입니다"));
 
         mockMvc.perform(post("/api/projects/" + PROJECT_ID + "/assignments")
                         .header(CALLER_HEADER, "13")
@@ -126,7 +127,7 @@ class AssignmentControllerTest {
     @DisplayName("배정 — role=PM은 422 INVALID_ROLE 봉투 (A6-7)")
     void assign_managerRole_isUnprocessable() throws Exception {
         when(assignmentService.assign(anyLong(), any(CreateAssignmentCommand.class)))
-                .thenThrow(new UnprocessableException("INVALID_ROLE",
+                .thenThrow(new UnprocessableException(ErrorCode.INVALID_ROLE,
                         "PM 지정은 PM 교체 경로로만 가능합니다"));
 
         mockMvc.perform(post("/api/projects/" + PROJECT_ID + "/assignments")
@@ -169,7 +170,7 @@ class AssignmentControllerTest {
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(ASSIGNMENT_ID));
+                .andExpect(jsonPath("$.data.id").value(ASSIGNMENT_ID));
 
         ArgumentCaptor<UpdateAssignmentCommand> captor =
                 ArgumentCaptor.forClass(UpdateAssignmentCommand.class);
@@ -206,18 +207,18 @@ class AssignmentControllerTest {
     }
 
     @Test
-    @DisplayName("종료 — 204, 본문 없이 배정 id만으로 처리한다 (B2-1)")
+    @DisplayName("종료 — 200 + success:true, 본문 없이 배정 id만으로 처리한다 (B2-1)")
     void close_validRequest_returnsNoContent() throws Exception {
         mockMvc.perform(delete("/api/assignments/" + ASSIGNMENT_ID)
                         .header(CALLER_HEADER, "13"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk());
         verify(assignmentService).close(13L, ASSIGNMENT_ID);
     }
 
     @Test
     @DisplayName("종료 — PM 배정 종료 거절은 422 INVALID_ROLE 봉투")
     void close_managerAssignment_isUnprocessable() throws Exception {
-        Mockito.doThrow(new UnprocessableException("INVALID_ROLE",
+        Mockito.doThrow(new UnprocessableException(ErrorCode.INVALID_ROLE,
                         "PM 배정은 종료할 수 없습니다 — PM을 교체한 뒤 종료하세요"))
                 .when(assignmentService).close(anyLong(), anyLong());
 

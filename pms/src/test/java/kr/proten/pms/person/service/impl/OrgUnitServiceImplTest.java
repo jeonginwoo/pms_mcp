@@ -11,19 +11,20 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
-import org.assertj.core.groups.Tuple;
 import kr.proten.pms.common.exception.ConflictException;
+import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.ForbiddenException;
 import kr.proten.pms.common.exception.NotFoundException;
 import kr.proten.pms.common.exception.UnprocessableException;
 import kr.proten.pms.common.exception.ValidationException;
+import kr.proten.pms.person.OrgPermission;
+import kr.proten.pms.person.OrgPermissionService;
 import kr.proten.pms.person.repository.OrgUnitRepository;
 import kr.proten.pms.person.repository.PersonRepository;
-import kr.proten.pms.person.service.OrgPermissionService;
-import kr.proten.pms.person.service.dto.OrgPermission;
 import kr.proten.pms.person.service.dto.OrgUnitView;
 import kr.proten.pms.person.service.entity.OrgUnit;
 import kr.proten.pms.person.service.entity.PersonFixtures;
+import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -125,7 +126,7 @@ class OrgUnitServiceImplTest {
         // When · Then
         assertThatExceptionOfType(UnprocessableException.class)
                 .isThrownBy(() -> service.create(ADMIN_ID, 99L, "새팀"))
-                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo("REF_NOT_FOUND"));
+                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo(ErrorCode.REF_NOT_FOUND));
         assertThatExceptionOfType(ValidationException.class)
                 .isThrownBy(() -> service.create(ADMIN_ID, 99L, " "));
         verify(orgUnitRepository, never()).save(any());
@@ -142,7 +143,7 @@ class OrgUnitServiceImplTest {
         // When · Then
         assertThatExceptionOfType(ConflictException.class)
                 .isThrownBy(() -> service.create(ADMIN_ID, null, "다른회사"))
-                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo("DUPLICATE_ROOT"));
+                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo(ErrorCode.DUPLICATE_ROOT));
     }
 
     @Test
@@ -178,7 +179,7 @@ class OrgUnitServiceImplTest {
         // When · Then
         assertThatExceptionOfType(ConflictException.class)
                 .isThrownBy(() -> service.delete(ADMIN_ID, PersonFixtures.SI_TEAM_ID))
-                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo("IN_USE"));
+                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo(ErrorCode.IN_USE));
         verify(orgUnitRepository, never()).delete(any());
     }
 

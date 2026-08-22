@@ -1,19 +1,21 @@
 package kr.proten.pms.person.service.impl;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Comparator;
 import java.util.stream.Collectors;
 import kr.proten.pms.common.exception.ConflictException;
+import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.ForbiddenException;
 import kr.proten.pms.common.exception.NotFoundException;
+import kr.proten.pms.common.exception.NotImplementedException;
 import kr.proten.pms.common.exception.UnprocessableException;
 import kr.proten.pms.common.exception.ValidationException;
+import kr.proten.pms.person.OrgPermission;
+import kr.proten.pms.person.OrgPermissionService;
 import kr.proten.pms.person.repository.OrgUnitRepository;
 import kr.proten.pms.person.repository.PersonRepository;
-import kr.proten.pms.person.service.OrgPermissionService;
 import kr.proten.pms.person.service.OrgUnitService;
-import kr.proten.pms.person.service.dto.OrgPermission;
 import kr.proten.pms.person.service.dto.OrgUnitView;
 import kr.proten.pms.person.service.entity.OrgUnit;
 import kr.proten.pms.person.service.entity.Person;
@@ -85,6 +87,20 @@ public class OrgUnitServiceImpl implements OrgUnitService {
         return new OrgUnitView(saved.getId(), saved.getParentId(), saved.getName(), 0, 0, true);
     }
 
+    /**
+     * 노드 개명 — **골격만 있고 로직은 아직 없다** (2026-08-22).
+     *
+     * 이미 정해져 있는 것: 이름을 복사해 둔 컬럼이 없으므로 소속 인원·프로젝트의 표시는
+     * 저절로 따라온다(E3-2 — 비정규화 금지). 감사 action은 `UPDATE`이고, 회사(root)의
+     * 이름도 같은 경로로 바꾼다.
+     *
+     * TODO(E3-2): 같은 부모 아래 이름 중복을 막을지 미정 — AC에 문구가 없고, 시드에는
+     *   중복이 없다. 막는다면 `409 DUPLICATE_*`이고 안 막는다면 그 판단을 여기 남긴다.
+     */
+    public OrgUnitView rename(long callerPersonId, long orgUnitId, String name) {
+        throw new NotImplementedException("조직 노드 개명 (E3-2)");
+    }
+
     public void delete(long callerPersonId, long orgUnitId) {
         requireManageOrg(callerPersonId);
 
@@ -126,7 +142,7 @@ public class OrgUnitServiceImpl implements OrgUnitService {
         }
 
         if (!orgUnitRepository.existsById(parentId)) {
-            throw new UnprocessableException("REF_NOT_FOUND", "없는 상위 조직입니다: " + parentId);
+            throw new UnprocessableException(ErrorCode.REF_NOT_FOUND, "없는 상위 조직입니다: " + parentId);
         }
     }
 
@@ -134,7 +150,7 @@ public class OrgUnitServiceImpl implements OrgUnitService {
         boolean rootExists = orgUnitRepository.findAll().stream().anyMatch(OrgUnit::isRoot);
 
         if (rootExists) {
-            throw new ConflictException("DUPLICATE_ROOT",
+            throw new ConflictException(ErrorCode.DUPLICATE_ROOT,
                     "회사(root) 노드는 하나뿐입니다 — 상위 조직을 지정하세요");
         }
     }
@@ -144,7 +160,7 @@ public class OrgUnitServiceImpl implements OrgUnitService {
         long children = orgUnitRepository.countByParentId(orgUnitId);
 
         if (members > 0 || children > 0) {
-            throw new ConflictException("IN_USE",
+            throw new ConflictException(ErrorCode.IN_USE,
                     "소속 인원 %d명·하위 조직 %d개가 있어 삭제할 수 없습니다".formatted(
                             members, children));
         }

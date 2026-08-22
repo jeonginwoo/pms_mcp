@@ -4,11 +4,10 @@ import java.util.List;
 import kr.proten.pms.person.service.dto.OrgUnitView;
 
 /**
- * 조직 트리 관리 유스케이스 — AC E3-3 (+ 관리 화면이 쓰는 목록).
+ * 조직 트리 관리 유스케이스 — AC E3-1~E3-3 (+ 관리 화면이 쓰는 목록).
  *
  * EPIC E 전체가 "사용자/조직/권한 관리" 플래그 전용이라(기본 그룹 중 관리자만)
  * 목록도 같은 판정을 거친다 — 조직 편집 화면 밖에서 쓰이는 목록이 아니다.
- * 신설·이름 변경(E3-1·E3-2)은 아직 범위 밖이다.
  */
 public interface OrgUnitService {
 
@@ -17,6 +16,13 @@ public interface OrgUnitService {
 
     /** 노드를 만든다 (AC E3-1) — 임의 깊이 허용, parentId가 null이면 회사(root)다. */
     OrgUnitView create(long callerPersonId, Long parentId, String name);
+
+    /**
+     * 노드 이름을 바꾼다 (AC E3-2).
+     * 소속 인원·프로젝트는 orgUnitId로 참조하므로 표시가 저절로 따라온다 —
+     * 이름을 복사해 둔 컬럼이 없는 것이 이 AC가 성립하는 이유다.
+     */
+    OrgUnitView rename(long callerPersonId, long orgUnitId, String name);
 
     /** 빈 노드를 삭제한다 — 소속 인원이나 하위 노드가 있으면 거절한다 (AC E3-3). */
     void delete(long callerPersonId, long orgUnitId);

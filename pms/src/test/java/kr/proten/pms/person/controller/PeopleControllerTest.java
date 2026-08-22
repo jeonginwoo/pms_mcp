@@ -10,9 +10,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.List;
 import kr.proten.pms.common.exception.NotFoundException;
-import kr.proten.pms.person.service.PersonCommandService;
-import kr.proten.pms.person.service.PersonQueryService;
-import kr.proten.pms.person.service.dto.PersonRef;
+import kr.proten.pms.person.PersonRef;
+import kr.proten.pms.person.service.PersonService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,40 +31,38 @@ class PeopleControllerTest {
     @Autowired
     private MockMvc mockMvc;
     @MockitoBean
-    private PersonQueryService personQueryService;
-    @MockitoBean
-    private PersonCommandService personCommandService;
+    private PersonService personService;
 
     @Test
     @DisplayName("목록 — 호출자 헤더의 personId로 서비스에 위임한다")
     void list_delegatesWithCallerFromHeader() throws Exception {
-        when(personQueryService.listVisible(102L)).thenReturn(List.of(
+        when(personService.listVisible(102L)).thenReturn(List.of(
                 new PersonRef(102L, "팀장", "SI팀", "수석"),
                 new PersonRef(103L, "팀원", "SI팀", "주임")));
 
         mockMvc.perform(get("/api/people").header(CALLER_HEADER, "102"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].name").value("팀장"))
-                .andExpect(jsonPath("$[1].orgUnit").value("SI팀"));
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andExpect(jsonPath("$.data[0].name").value("팀장"))
+                .andExpect(jsonPath("$.data[1].orgUnit").value("SI팀"));
     }
 
     @Test
     @DisplayName("단건 — 경로 변수와 호출자를 함께 넘긴다")
     void get_passesPathVariableAndCaller() throws Exception {
-        when(personQueryService.getPerson(102L, 103L))
+        when(personService.getPerson(102L, 103L))
                 .thenReturn(new PersonRef(103L, "팀원", "SI팀", "주임"));
 
         mockMvc.perform(get("/api/people/103").header(CALLER_HEADER, "102"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(103))
-                .andExpect(jsonPath("$.grade").value("주임"));
+                .andExpect(jsonPath("$.data.id").value(103))
+                .andExpect(jsonPath("$.data.grade").value("주임"));
     }
 
     @Test
     @DisplayName("단건 — 404 은닉이 §7 에러 봉투로 나간다")
     void get_notFound_returnsErrorEnvelope() throws Exception {
-        when(personQueryService.getPerson(102L, 999L)).thenThrow(new NotFoundException());
+        when(personService.getPerson(102L, 999L)).thenThrow(new NotFoundException());
 
         mockMvc.perform(get("/api/people/999").header(CALLER_HEADER, "102"))
                 .andExpect(status().isNotFound())
@@ -81,7 +78,7 @@ class PeopleControllerTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error.code").value("UNAUTHENTICATED"));
 
-        verify(personQueryService, never()).listVisible(anyLong());
+        verify(personService, never()).listVisible(anyLong());
     }
 
     @Test

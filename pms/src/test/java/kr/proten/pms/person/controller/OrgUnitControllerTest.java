@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.List;
 import kr.proten.pms.common.exception.ConflictException;
+import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.ForbiddenException;
 import kr.proten.pms.person.service.OrgUnitService;
 import kr.proten.pms.person.service.dto.OrgUnitView;
@@ -42,9 +43,11 @@ class OrgUnitControllerTest {
 
         mockMvc.perform(get("/api/org-units").header(CALLER_HEADER, "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[1].name").value("빈팀"))
-                .andExpect(jsonPath("$[1].deletable").value(true));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.error").doesNotExist())
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andExpect(jsonPath("$.data[1].name").value("빈팀"))
+                .andExpect(jsonPath("$.data[1].deletable").value(true));
     }
 
     @Test
@@ -55,21 +58,23 @@ class OrgUnitControllerTest {
 
         mockMvc.perform(get("/api/org-units").header(CALLER_HEADER, "103"))
                 .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.data").doesNotExist())
                 .andExpect(jsonPath("$.error.code").value("FORBIDDEN"));
     }
 
     @Test
-    @DisplayName("삭제 — 204")
+    @DisplayName("삭제 — 200 + success:true (본문 없는 성공도 같은 봉투다)")
     void delete_returnsNoContent() throws Exception {
         mockMvc.perform(delete("/api/org-units/99").header(CALLER_HEADER, "1"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk());
         verify(orgUnitService).delete(1L, 99L);
     }
 
     @Test
     @DisplayName("삭제 — 비어 있지 않은 노드는 409 IN_USE 봉투 (E3-3)")
     void delete_nonEmptyUnit_isConflict() throws Exception {
-        doThrow(new ConflictException("IN_USE", "소속 인원 4명·하위 조직 0개가 있어 삭제할 수 없습니다"))
+        doThrow(new ConflictException(ErrorCode.IN_USE, "소속 인원 4명·하위 조직 0개가 있어 삭제할 수 없습니다"))
                 .when(orgUnitService).delete(anyLong(), anyLong());
 
         mockMvc.perform(delete("/api/org-units/3").header(CALLER_HEADER, "1"))

@@ -2,8 +2,8 @@ package kr.proten.pms.person.service.impl;
 
 import java.util.Collection;
 import java.util.List;
-import kr.proten.pms.person.service.PersonDirectoryService;
-import kr.proten.pms.person.service.dto.PersonRef;
+import kr.proten.pms.person.PersonDirectoryService;
+import kr.proten.pms.person.PersonRef;
 import kr.proten.pms.person.repository.PersonRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
