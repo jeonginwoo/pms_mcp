@@ -6,8 +6,8 @@ import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 import kr.proten.pms.common.exception.ForbiddenException;
-import kr.proten.pms.person.service.OrgPermissionService;
-import kr.proten.pms.person.service.dto.OrgPermission;
+import kr.proten.pms.person.OrgPermission;
+import kr.proten.pms.person.OrgPermissionService;
 import kr.proten.pms.project.service.entity.ProjectAction;
 import kr.proten.pms.project.service.entity.ProjectRole;
 import org.junit.jupiter.api.BeforeEach;

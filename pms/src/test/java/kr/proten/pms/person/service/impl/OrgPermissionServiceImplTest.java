@@ -1,14 +1,15 @@
 package kr.proten.pms.person.service.impl;
 
+import kr.proten.pms.person.service.impl.requester.RequesterResolver;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
-import kr.proten.pms.person.service.dto.OrgPermission;
-import kr.proten.pms.person.service.entity.PermissionGroup;
+import kr.proten.pms.person.OrgPermission;
 import kr.proten.pms.person.repository.PermissionGroupRepository;
-import kr.proten.pms.person.service.entity.PersonFixtures;
 import kr.proten.pms.person.repository.PersonRepository;
+import kr.proten.pms.person.service.entity.PermissionGroup;
+import kr.proten.pms.person.service.entity.PersonFixtures;
 import kr.proten.pms.person.service.entity.VisibilityScope;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

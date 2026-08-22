@@ -5,7 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import kr.proten.pms.person.service.MeQueryService;
+import kr.proten.pms.person.service.PersonService;
 import kr.proten.pms.person.service.dto.MeView;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,22 +24,22 @@ class MeControllerTest {
     @Autowired
     private MockMvc mockMvc;
     @MockitoBean
-    private MeQueryService meQueryService;
+    private PersonService personService;
 
     @Test
     @DisplayName("내 계정 — 신원과 권한 그룹 플래그가 함께 나간다")
     void me_returnsIdentityAndFlags() throws Exception {
-        when(meQueryService.me(1L)).thenReturn(new MeView(
+        when(personService.me(1L)).thenReturn(new MeView(
                 1L, "박재완", "경영관리팀", "대표이사", "관리자", "COMPANY",
                 true, true, true, true));
 
         mockMvc.perform(get("/api/me").header(CALLER_HEADER, "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("박재완"))
-                .andExpect(jsonPath("$.group").value("관리자"))
-                .andExpect(jsonPath("$.visibilityScope").value("COMPANY"))
-                .andExpect(jsonPath("$.createProject").value(true))
-                .andExpect(jsonPath("$.manageOrg").value(true));
+                .andExpect(jsonPath("$.data.name").value("박재완"))
+                .andExpect(jsonPath("$.data.group").value("관리자"))
+                .andExpect(jsonPath("$.data.visibilityScope").value("COMPANY"))
+                .andExpect(jsonPath("$.data.createProject").value(true))
+                .andExpect(jsonPath("$.data.manageOrg").value(true));
     }
 
     @Test

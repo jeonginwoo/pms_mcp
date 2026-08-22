@@ -1,38 +1,36 @@
 package kr.proten.pms;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-
 import java.time.LocalDate;
 import java.util.List;
 import kr.proten.pms.common.exception.ConflictException;
+import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.ForbiddenException;
 import kr.proten.pms.common.exception.NotFoundException;
-import kr.proten.pms.person.service.dto.OrgPermission;
-import kr.proten.pms.person.service.dto.PersonRef;
-import kr.proten.pms.person.service.entity.Grade;
+import kr.proten.pms.person.OrgPermission;
+import kr.proten.pms.person.PersonRef;
 import kr.proten.pms.person.repository.GradeRepository;
 import kr.proten.pms.person.repository.OrgUnitRepository;
 import kr.proten.pms.person.repository.PermissionGroupRepository;
-import kr.proten.pms.person.service.entity.PersonFixtures;
 import kr.proten.pms.person.repository.PersonRepository;
+import kr.proten.pms.person.service.PersonService;
+import kr.proten.pms.person.service.entity.Grade;
+import kr.proten.pms.person.service.entity.PersonFixtures;
 import kr.proten.pms.person.service.entity.VisibilityScope;
-import kr.proten.pms.person.service.PersonQueryService;
-import kr.proten.pms.project.service.entity.Engagement;
-import kr.proten.pms.project.service.entity.ProjectRole;
-import kr.proten.pms.project.service.entity.ProjectStatus;
+import kr.proten.pms.project.service.ProjectCommandService;
+import kr.proten.pms.project.service.ProjectLifecycleService;
+import kr.proten.pms.project.service.ProjectQueryService;
 import kr.proten.pms.project.service.dto.AssignmentSpec;
 import kr.proten.pms.project.service.dto.AssignmentView;
 import kr.proten.pms.project.service.dto.CreateProjectCommand;
-import kr.proten.pms.project.service.dto.ProgressUpdateResult;
-import kr.proten.pms.project.service.ProgressUpdateService;
-import kr.proten.pms.project.service.ProjectCommandService;
-import kr.proten.pms.project.service.ProjectEditService;
 import kr.proten.pms.project.service.dto.EditProjectCommand;
+import kr.proten.pms.project.service.dto.ProgressUpdateResult;
 import kr.proten.pms.project.service.dto.ProjectDetail;
-import kr.proten.pms.project.service.ProjectQueryService;
 import kr.proten.pms.project.service.dto.ProjectSummary;
 import kr.proten.pms.project.service.dto.UpdateProgressCommand;
+import kr.proten.pms.project.service.entity.Engagement;
+import kr.proten.pms.project.service.entity.ProjectRole;
+import kr.proten.pms.project.service.entity.ProjectStatus;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -68,15 +66,13 @@ class ProjectFlowIntegrationTest extends PostgresTestBase {
     @Autowired
     private PersonRepository personRepository;
     @Autowired
-    private PersonQueryService personQueryService;
+    private PersonService personService;
     @Autowired
     private ProjectCommandService projectCommandService;
     @Autowired
     private ProjectQueryService projectQueryService;
     @Autowired
-    private ProgressUpdateService progressUpdateService;
-    @Autowired
-    private ProjectEditService projectEditService;
+    private ProjectLifecycleService projectLifecycleService;
 
     private long visibleProjectId;
 
@@ -144,7 +140,7 @@ class ProjectFlowIntegrationTest extends PostgresTestBase {
 
         assertThatExceptionOfType(ConflictException.class)
                 .isThrownBy(() -> projectCommandService.create(SI_LEAD_ID, duplicate))
-                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo("DUPLICATE_NAME"));
+                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo(ErrorCode.DUPLICATE_NAME));
     }
 
     @Test
@@ -228,29 +224,29 @@ class ProjectFlowIntegrationTest extends PostgresTestBase {
         long version = advanceToInProgress(projectId);
 
         // 확인 전 — 요약만, DB 미변경
-        ProgressUpdateResult summary = progressUpdateService.update(
+        ProgressUpdateResult summary = projectLifecycleService.updateProgress(
                 SI_MEMBER_ID, new UpdateProgressCommand(projectId, 40, version, false));
         assertThat(summary.committed()).isFalse();
         assertThat(projectQueryService.getProject(SI_MEMBER_ID, projectId).progress()).isZero();
 
         // 확인 후 — 커밋 + version 증가
-        ProgressUpdateResult committed = progressUpdateService.update(
+        ProgressUpdateResult committed = projectLifecycleService.updateProgress(
                 SI_MEMBER_ID, new UpdateProgressCommand(projectId, 40, version, true));
         assertThat(committed.committed()).isTrue();
         assertThat(committed.version()).isGreaterThan(version);
 
         // 지나간 version으로 재시도 — 409
         assertThatExceptionOfType(ConflictException.class)
-                .isThrownBy(() -> progressUpdateService.update(
+                .isThrownBy(() -> projectLifecycleService.updateProgress(
                         SI_MEMBER_ID, new UpdateProgressCommand(projectId, 60, version, true)))
-                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo("STALE_VERSION"));
+                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo(ErrorCode.STALE_VERSION));
     }
 
     @Test
     @DisplayName("A2-4 — 미배정 화자는 가시성 안이면 403, 밖이면 404")
     void updateProgress_unassignedCaller_distinguishesForbiddenAndHidden() {
         assertThatExceptionOfType(ForbiddenException.class)
-                .isThrownBy(() -> progressUpdateService.update(SI_LEAD_ID,
+                .isThrownBy(() -> projectLifecycleService.updateProgress(SI_LEAD_ID,
                         new UpdateProgressCommand(visibleProjectId, 50, 0L, true)));
 
         long hiddenProjectId = projectCommandService.create(ADMIN_ID, new CreateProjectCommand(
@@ -265,17 +261,17 @@ class ProjectFlowIntegrationTest extends PostgresTestBase {
                         null, null, 0.3)))).id();
 
         assertThatExceptionOfType(NotFoundException.class)
-                .isThrownBy(() -> progressUpdateService.update(SI_MEMBER_ID,
+                .isThrownBy(() -> projectLifecycleService.updateProgress(SI_MEMBER_ID,
                         new UpdateProgressCommand(hiddenProjectId, 50, 0L, true)));
     }
 
     /** 계약대기 → 수주확정 → 진행중 — 진척률 경로의 전제를 만든다. 최신 version을 준다. */
     private long advanceToInProgress(long projectId) {
-        ProjectDetail confirmed = projectEditService.edit(ADMIN_ID,
+        ProjectDetail confirmed = projectCommandService.edit(ADMIN_ID,
                 editCommand(projectId, ProjectStatus.ORDER_CONFIRMED,
                         projectQueryService.getProject(ADMIN_ID, projectId).version()));
 
-        return projectEditService.edit(ADMIN_ID,
+        return projectCommandService.edit(ADMIN_ID,
                 editCommand(projectId, ProjectStatus.IN_PROGRESS, confirmed.version())).version();
     }
 
@@ -290,8 +286,8 @@ class ProjectFlowIntegrationTest extends PostgresTestBase {
     @Test
     @DisplayName("인력 조회 — 팀장은 팀 subtree만, 관리자는 전사가 보인다")
     void listVisiblePeople_perCallerScope() {
-        List<PersonRef> leadView = personQueryService.listVisible(SI_LEAD_ID);
-        List<PersonRef> adminView = personQueryService.listVisible(ADMIN_ID);
+        List<PersonRef> leadView = personService.listVisible(SI_LEAD_ID);
+        List<PersonRef> adminView = personService.listVisible(ADMIN_ID);
 
         assertThat(leadView).map(PersonRef::name)
                 .containsExactlyInAnyOrder("에스아이팀장", "에스아이팀원");

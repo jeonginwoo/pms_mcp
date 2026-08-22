@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatNoException;
 
 import java.time.LocalDate;
 import kr.proten.pms.common.exception.ConflictException;
+import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.StaleVersionException;
 import kr.proten.pms.common.exception.ValidationException;
 import org.junit.jupiter.api.DisplayName;
@@ -83,7 +84,7 @@ class ProjectTest {
 
         assertThatExceptionOfType(ConflictException.class)
                 .isThrownBy(() -> project.advanceStatusTo(ProjectStatus.IN_PROGRESS))
-                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo("INVALID_TRANSITION"));
+                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo(ErrorCode.INVALID_TRANSITION));
         assertThat(project.getStatus()).isEqualTo(ProjectStatus.CONTRACT_PENDING);
     }
 
@@ -94,7 +95,7 @@ class ProjectTest {
 
         assertThatExceptionOfType(ConflictException.class)
                 .isThrownBy(() -> project.advanceStatusTo(ProjectStatus.ORDER_CONFIRMED))
-                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo("INVALID_TRANSITION"));
+                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo(ErrorCode.INVALID_TRANSITION));
     }
 
     @Test
@@ -127,7 +128,7 @@ class ProjectTest {
 
         assertThatExceptionOfType(ConflictException.class)
                 .isThrownBy(project::complete)
-                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo("PROGRESS_INCOMPLETE"));
+                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo(ErrorCode.PROGRESS_INCOMPLETE));
         assertThat(project.getStatus()).isEqualTo(ProjectStatus.IN_PROGRESS);
     }
 
@@ -139,7 +140,7 @@ class ProjectTest {
 
         assertThatExceptionOfType(ConflictException.class)
                 .isThrownBy(pending::complete)
-                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo("INVALID_TRANSITION"));
+                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo(ErrorCode.INVALID_TRANSITION));
         assertThatExceptionOfType(ConflictException.class)
                 .isThrownBy(completed()::complete);
     }
@@ -163,7 +164,7 @@ class ProjectTest {
 
         assertThatExceptionOfType(ConflictException.class)
                 .isThrownBy(maintenance::reopen)
-                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo("INVALID_TRANSITION"));
+                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo(ErrorCode.INVALID_TRANSITION));
         assertThatExceptionOfType(ConflictException.class)
                 .isThrownBy(inProgress(100)::reopen);
     }

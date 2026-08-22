@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.time.LocalDate;
 import kr.proten.pms.common.exception.ConflictException;
+import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.StaleVersionException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -55,7 +56,7 @@ class ProjectAssignmentTest {
 
         assertThatExceptionOfType(ConflictException.class)
                 .isThrownBy(assignment::close)
-                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo("INVALID_TRANSITION"));
+                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo(ErrorCode.INVALID_TRANSITION));
     }
 
     @Test

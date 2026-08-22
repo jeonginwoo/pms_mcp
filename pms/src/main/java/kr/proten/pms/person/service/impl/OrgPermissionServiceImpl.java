@@ -1,8 +1,9 @@
 package kr.proten.pms.person.service.impl;
 
-import kr.proten.pms.person.service.OrgPermissionService;
-import kr.proten.pms.person.service.dto.OrgPermission;
+import kr.proten.pms.person.OrgPermission;
+import kr.proten.pms.person.OrgPermissionService;
 import kr.proten.pms.person.service.entity.PermissionGroup;
+import kr.proten.pms.person.service.impl.requester.RequesterResolver;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

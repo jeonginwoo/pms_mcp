@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import kr.proten.pms.person.service.dto.PersonRef;
-import kr.proten.pms.person.service.entity.Grade;
+import kr.proten.pms.person.PersonRef;
 import kr.proten.pms.person.repository.GradeRepository;
-import kr.proten.pms.person.service.entity.OrgUnit;
 import kr.proten.pms.person.repository.OrgUnitRepository;
+import kr.proten.pms.person.service.entity.Grade;
+import kr.proten.pms.person.service.entity.OrgUnit;
 import kr.proten.pms.person.service.entity.Person;
 import org.springframework.stereotype.Component;
 

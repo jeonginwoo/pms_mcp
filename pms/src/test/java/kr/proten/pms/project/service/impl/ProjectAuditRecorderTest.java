@@ -5,9 +5,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.util.Map;
-import kr.proten.pms.common.audit.service.AuditAction;
-import kr.proten.pms.common.audit.service.AuditTrail;
-import kr.proten.pms.common.audit.service.dto.AuditEntry;
+import kr.proten.pms.audit.AuditAction;
+import kr.proten.pms.audit.AuditEntry;
+import kr.proten.pms.audit.AuditTrail;
 import kr.proten.pms.project.service.entity.Project;
 import kr.proten.pms.project.service.entity.ProjectAssignment;
 import kr.proten.pms.project.service.entity.ProjectFixtures;

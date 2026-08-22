@@ -140,9 +140,26 @@ export interface TokenResponse {
   refreshToken: string
 }
 
-/** §7 에러 봉투 — {error:{code,message,field,traceId}} */
-export interface ErrorEnvelope {
-  error: { code: string; message: string; field: string | null; traceId: string }
+/**
+ * 공통 응답 봉투 (2026-08-22) — 모든 응답이 `{success, data}` 또는 `{success, error}`다.
+ * 예외는 `/api/auth/jwks` 하나(RFC 7517 표준 형태)이고 이 클라이언트는 부르지 않는다.
+ */
+export interface ApiEnvelope<T> {
+  success: boolean
+  data?: T
+  error?: ApiErrorBody
+}
+
+/**
+ * 실패 응답 본문. `field`가 **선택**인 이유: 서버가 NON_NULL로 직렬화하므로 필드와
+ * 무관한 오류(401·404·500)에서는 키 자체가 오지 않는다. 클라이언트는 이것을 null로
+ * 정규화해서 `undefined`라는 세 번째 상태가 화면까지 새지 않게 한다.
+ */
+export interface ApiErrorBody {
+  code: string
+  message: string
+  field?: string | null
+  traceId: string
 }
 
 // ── 요청 본문 ──
