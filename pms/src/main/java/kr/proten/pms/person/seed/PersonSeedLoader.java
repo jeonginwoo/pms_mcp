@@ -17,6 +17,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
@@ -34,6 +35,8 @@ import org.springframework.stereotype.Component;
  * 오연결을 막는다.
  */
 @Component
+// 프로젝트 시드(ProjectSeedLoader)가 이 뒤에 돈다 — 배정이 인원을 참조한다
+@Order(0)
 class PersonSeedLoader implements ApplicationRunner {
     private static final String SEED_FILE = "seed_org_proten.sql";
 
