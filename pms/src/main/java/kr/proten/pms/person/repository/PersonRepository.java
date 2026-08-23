@@ -37,6 +37,9 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
     /** 조직별 인원 집계용 — 참조 데이터 44행 규모라 한 번에 올린다(OrgUnitServiceImpl 주석). */
     List<Person> findByActiveTrue();
 
+    /** 이름으로 활성 인원 — 동명이인이면 여러 행이라 호출자가 유일성을 판정한다. */
+    List<Person> findByNameAndActiveTrue(String name);
+
     /** 조직 노드 삭제 가능 판정 (AC E3-3) — 빈 노드만 지울 수 있다. */
     long countByOrgUnitIdAndActiveTrue(Long orgUnitId);
 }

@@ -8,7 +8,7 @@
 |------|-------|--------|-----------|
 | `seed_org_proten.sql` | ✅ **인원 정본** | (주)프로텐 **실제** 조직·직급·권한 그룹·인원 44명 + 계정 | `person/seed/PersonSeedLoader` |
 | `projects.json` | ✅ **프로젝트 정본** | 프로젝트 382건 + `assigneeIds` | `project/seed/ProjectSeedLoader` |
-| `maintenance.json` | ✅ | 유지보수 계약·사이트·이슈 (2026 시트 전량 전사) | 미구현 — EPIC D 착수 시 |
+| `maintenance.json` | ✅ | 유지보수 계약 105·사이트 157·연락처·이슈 14 (2026 시트 전량 전사) | `maintenance/seed/MaintenanceSeedLoader` |
 | `people.json` | ❌ **쓰지 않는다** | 구 **익명** 인원 명부 44명 | 없음 |
 
 ## ⚠ `people.json`은 인원 정본이 아니다
@@ -37,6 +37,9 @@
 |------|------|------|
 | `projects.json` `engagement=OFFSITE` 32건 | → `REMOTE` | OFFSITE 폐지 (2026-08-09 ③⑥) |
 | `projects.json` `status=완료`인데 `progress<100` 13건 | → `progress=100` | 완료의 전제가 100% (AC A7-2 · 2026-08-23) |
+| `maintenance.json` 계약 `status` `자동연장`·`갱신` 2건 | → `유지` | 모델·MCP 도구가 4종 (2026-08-23) |
+| `maintenance.json` 계약 #72 `endDate="2027-11-31"` | → `2027-11-30` | 11월은 30일까지 — 그 달 말일 (2026-08-23) |
+| `maintenance.json` 계약 레벨 `serverSpec` | → 사이트로 내림 | 값이 사이트 하나를 가리킨다("태광그룹- …") (2026-08-23) |
 
 ## 적재 켜는 법
 
