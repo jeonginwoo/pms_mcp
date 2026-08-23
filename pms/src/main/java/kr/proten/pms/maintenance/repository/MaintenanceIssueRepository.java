@@ -66,4 +66,11 @@ public interface MaintenanceIssueRepository extends JpaRepository<MaintenanceIss
             group by i.status
             """)
     List<Object[]> countByStatus(@Param("siteIds") Collection<Long> siteIds);
+
+    /**
+     * 다음 id — 시드가 원본 이슈 번호(230~496)를 쓰므로 새 이슈는 그 위에서 시작한다.
+     * 계약 id 공간(1~105)과 겹치지 않는 것이 도구의 id 해석 전제다(2026-08-23 결정).
+     */
+    @Query("select coalesce(max(i.id), 0) + 1 from MaintenanceIssue i")
+    long nextId();
 }

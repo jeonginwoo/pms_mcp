@@ -3,7 +3,7 @@
 | 항목 | 내용 |
 |------|------|
 | 문서 | PMS 본체 구현명세 (코딩 에이전트용) · **소유: pms 트랙** |
-| 버전 / 상태 | v2.12 · **확정** (게이트 P 통과 2026-08-09. v2.6 = 가동률 의미 재정의 + 시드 정책 완결(2026-08-10 — MCP 담당 확인 완료). v2.7 = M-1 카탈로그 공백 2건 해소의 PMS 측 반영(2026-08-11 결정 기록, 2026-08-12 MCP 담당 확인 완료 — 양측 합의 성립·host 반영 완료). 이슈→계약 링크 기준 = 사이트명 포함 확정(2026-08-14 — 부록 B·결정 기록). v2.8 = 재구축·골격 확장 이후의 문서↔코드 정합(2026-08-23 — 결정 기록). v2.9 = 모듈 간 계약 2종 신설(가동률 분자·분모) + B2-1 종료일 규칙(2026-08-23 — MCP 담당 확인 요청). v2.10 = 프로젝트 시드 적재 + 인원 정본 확정(`seed_org_proten.sql`). v2.11 = 감사 조회 2뷰 실구현(G1-3·G2-2). **v2.12 = maintenance 모듈 신설(EPIC D 조회분) + 시드↔모델 괴리 결정 7건 — 2026-08-23 결정 기록**) |
+| 버전 / 상태 | v2.13 · **확정** (게이트 P 통과 2026-08-09. v2.6 = 가동률 의미 재정의 + 시드 정책 완결(2026-08-10 — MCP 담당 확인 완료). v2.7 = M-1 카탈로그 공백 2건 해소의 PMS 측 반영(2026-08-11 결정 기록, 2026-08-12 MCP 담당 확인 완료 — 양측 합의 성립·host 반영 완료). 이슈→계약 링크 기준 = 사이트명 포함 확정(2026-08-14 — 부록 B·결정 기록). v2.8 = 재구축·골격 확장 이후의 문서↔코드 정합(2026-08-23 — 결정 기록). v2.9 = 모듈 간 계약 2종 신설(가동률 분자·분모) + B2-1 종료일 규칙(2026-08-23 — MCP 담당 확인 요청). v2.10 = 프로젝트 시드 적재 + 인원 정본 확정(`seed_org_proten.sql`). v2.11 = 감사 조회 2뷰 실구현(G1-3·G2-2). v2.12 = maintenance 모듈 신설(EPIC D 조회분) + 시드↔모델 괴리 결정 7건. **v2.13 = 도메인 루트 계약 3종 승격(안 ② 이행) + 조직 id·시드 원본 id — 2026-08-23 결정 기록**) |
 | 작성일 | 2026-08-02 — 구 "PMS — AI 구현용 PRD" v1.0(2026-06-21, 전사본 `reference/PMS_구현용_PRD_v1.0.md`) 현행화 이관 |
 | 범위 | 프로텐 전사 1차 |
 | 규모 | 약 40명(시드 기준 44명) · 2인 개발(MCP 담당 + PMS 담당) |
@@ -161,14 +161,17 @@ B2-1 자연어 검증(2026-08-10)이 실증한 도구 카탈로그 공백 2건�
 
   | 계약 | 소유 | 소비자 | 무엇을 |
   |------|------|--------|--------|
-  | `PersonDirectoryService` · `PersonRef` | person | project | 배정에 붙일 인원 참조(이름·조직명·직급명) |
+  | `PersonDirectoryService` · `PersonRef` | person | project · maintenance | 배정·이슈에 붙일 인원 참조. **`division` 추가**(2026-08-23) — 프로젝트 응답의 팀·부문이 PM 소속에서 나오고, 부문은 가시성 DIVISION scope와 같은 해석(`OrgTree.topDivisionIdOf`)이다. `findIdByExactName`은 시드가 사람을 이름으로 적어 둔 경우의 창구 |
   | `OrgVisibilityService` · `OrgVisibility` | person | project · resource | 가시 인원 집합(scope 4단 판정 결과) |
   | `OrgPermissionService` · `OrgPermission` | person | project · auth | 프로젝트 밖 행위의 그룹 플래그 |
   | `AccountPort` | person(정의) | auth(구현) | 인력 등록 시 계정 생성 — 순환 회피의 방향 역전 |
-  | **`WorkforceDirectoryService` · `WorkforceProfile`** | person | resource | **가동률의 분모·모집단·계수**(capacity·billable·gradeCoeff)와 team·division, 조직 subtree 인원 (2026-08-23 신설) |
+  | **`WorkforceDirectoryService` · `WorkforceProfile`** | person | resource · `mcp` | **가동률의 분모·모집단·계수**(capacity·billable·gradeCoeff) · team·division **이름과 조직 id 2종**(2026-08-23 추가 — 웹은 `?orgUnitId=`를 받지만 챗은 화자로부터 유도해야 하고 `org_units.name`에 유니크 제약이 없다) · 조직 subtree 인원 |
   | **`AssignmentDirectoryService` · `MonthlyAssignment`** | project | resource | **가동률의 분자** — 그 달과 겹치는 배정 행(personId·projectId·projectName·**projectStatus**·monthlyMm) (2026-08-23 신설) |
   | `AuditQueryService` · `AuditRecord` 등 | audit | person · project | 감사 조회(권한 판정 없는 순수 조회) |
   | `NotificationService` · `NotifyCommand` 등 | notification | project · resource | 알림 적재 요청 |
+  | **`ProjectLookupService` · `ProjectBrief`·`ProjectDetailBrief`** | project | `mcp` | **`search_projects`** — 가시성 판정 포함(404 은닉), 팀·부문은 **PM 소속 파생** (2026-08-23 신설) |
+  | **`ProgressCommandService` · `ProgressResult`** | project | `mcp` | **`update_progress`** — 2단계 확인은 내부 유스케이스가 갖는다(구조 원칙 5). 밖으로 여는 유일한 쓰기 (2026-08-23 신설) |
+  | **`MaintenanceLookupService` · `ContractBrief`·`ContractIssues`·`IssueBrief`·`CommentBrief`** | maintenance | `mcp` | **`search_maintenance`·`list_maintenance_logs`** — 가시성 판정 없음(D4-3 전사 공개). 계약 우선 해석 (2026-08-23 신설) |
   | `PersonDirectoryService`에 **`findIdByExactName`** 추가 | person | maintenance | 시드가 사람을 이름으로 적어 둔 경우(유지보수 영업대표 3명). **정확히 한 명일 때만** 답한다 — 동명이인이면 이름은 식별자가 아니고 그때 조용히 틀린 사람을 가리킨다 (2026-08-23 신설) |
 
   신설 2종의 설계 근거: **`ProjectStatus`를 모듈 루트로 올려 배정 행에 함께 싣는다** — 가동률 모집단은 "진행중 프로젝트의 배정만"인데(2026-08-10 결정. 완료·수주확정까지 세면 시드 실측에서 정태휘가 **1171%** 로 왜곡된다) 그 규칙은 EPIC C의 것이므로 project는 상태라는 **사실만** 내주고 판정은 resource가 한다. project가 걸러 버리면 모집단 정의가 두 모듈에 나뉜다. **행 단위로 내준다**(합계가 아니라) — 과부하 응답이 원인을 프로젝트별로 보여 주므로(`Cause(projectName, mm)`) 합계만 주면 같은 행을 두 번 읽는다. **인원 명단을 받는다**(orgUnitId가 아니라) — 가시성·billable 판정은 person·resource의 몫이고 project는 조직을 알지 못한다. **`PersonRef`를 확장하지 않고 나눴다** — 그것은 project가 쓰는 표시용 참조라, capacity·billable을 얹으면 resource의 관심사가 project의 컴파일 면에 올라온다(conventions §5).
@@ -188,10 +191,10 @@ B2-1 자연어 검증(2026-08-10)이 실증한 도구 카탈로그 공백 2건�
   - `ProjectPermissionOverride`(projectId·role{PL,PARTICIPANT}·action{EDIT_INFO,ASSIGN,PROGRESS,COMPLETE_REOPEN}·allowed) — **기본값(상위 PRD §4-2 표)과 다른 셀만 저장**, 행 부재 = 기본값. PM 열·조회·삭제·이관은 저장 대상이 아니다(고정 — 상위 §4-2). 완료 처리·재개는 `COMPLETE_REOPEN` 단일 action(묶음 규칙). 낙관적 락은 `Project.version` 공용 (2026-08-06 — US-A8)
 - **resource**: `Capacity`(personId·month·availableMM). 가동률은 배정 합산으로 계산(저장 엔티티 아님).
 - **maintenance** (2026-08-06 재설계 — 계약/사이트/이슈 3층):
-  - `MaintenanceContract`(sourceProjectId — **nullable**, 이관 생성 시 1:1·OEM 직접 등록은 null · 계약사 · 계약명 · 상태{예정,신규,유지,종료} · 계약일 + **contractDateNote**(비날짜 원문 보존) · 시작/종료일 · 계약금액 · 월간금액 · 영업대표 personId · **sheetSection**(원본 시트 섹션 — status에서 파생되지 않는다, 2026-08-23) · **category**(대분류 검색엔진\|인프라)·**targetInfra**(라이선스·제품 사양 "검색엔진 3Copy+추천모듈") — 둘 다 계약 레벨이다: 다중 사이트 계약에서도 계약당 한 값이고 라이선스 수량은 상거래 조건이다(2026-08-23 결정) · 정기점검(정보 텍스트 — 일정 엔진·자동 이슈 없음) · 비고 · version)
+  - `MaintenanceContract`(**id = 시드 원본 계약 id**(부록 B) · sourceProjectId — **nullable**, 이관 생성 시 1:1·OEM 직접 등록은 null · 계약사 · 계약명 · 상태{예정,신규,유지,종료} · 계약일 + **contractDateNote**(비날짜 원문 보존) · 시작/종료일 · 계약금액 · 월간금액 · 영업대표 personId · **sheetSection**(원본 시트 섹션 — status에서 파생되지 않는다, 2026-08-23) · **category**(대분류 검색엔진\|인프라)·**targetInfra**(라이선스·제품 사양 "검색엔진 3Copy+추천모듈") — 둘 다 계약 레벨이다: 다중 사이트 계약에서도 계약당 한 값이고 라이선스 수량은 상거래 조건이다(2026-08-23 결정) · 정기점검(정보 텍스트 — 일정 엔진·자동 이슈 없음) · 비고 · version)
   - `MaintenanceSite`(contractId · 고객사명 · **channel{OEM,ENT} — nullable**(OEM 채널 계약은 원천 프로젝트가 없다는 US-D2 근거, 2026-08-23) · **serverSpec** — 서버는 사이트마다 다르다(시드는 계약 행에 적어 두었지만 값이 45사이트 중 한 곳을 가리킨다, 2026-08-23 결정) · **engineerId — 담당 엔지니어의 정본(사이트 단위), nullable**: 신규 예정·종료 섹션의 사이트는 미배정이고 그 상태를 "미배정 이슈" 필터(D3-4)가 드러낸다) — 계약:사이트 **1:N** (실측: 가온아이 1계약 45사이트, 다만 105계약 중 103건은 사이트 1개다)
   - `MaintenanceContact`(siteId · 구분{계약사,고객사} · 이름 · 직급 · 전화 · 이메일 + **raw**(시트 원문 보존)) — 구 시트 "담당자 정보" 텍스트 블롭의 정규화. 원문 형식이 불규칙해(4필드 완비 / 전화만 / 회사명 접두 / 이름에 괄호 주석) **전화·이메일만 파싱하고 나머지는 원문이 답한다**(2026-08-23 결정 — 파싱 실패가 정보 유실로 이어지지 않게)
-  - `MaintenanceIssue`(siteId — **nullable** · type{장애,문의,요청} · 제목 · 상태{접수,처리중,고객확인대기,완료} · assigneeId — **기본값 = 사이트 engineerId** · 접수일 · 완료일 · version) · `IssueComment`(issueId · 작성자 personId · 내용, **append-only** — 구 `MaintenanceLog` 불변식 계승. 수정·삭제 경로도 version도 없다)
+  - `MaintenanceIssue`(**id = 시드 원본 이슈 번호**(부록 B) · siteId — **nullable** · type{장애,문의,요청} · 제목 · 상태{접수,처리중,고객확인대기,완료} · assigneeId — **기본값 = 사이트 engineerId** · 접수일 · 완료일 · version) · `IssueComment`(issueId · 작성자 personId · 내용, **append-only** — 구 `MaintenanceLog` 불변식 계승. 수정·삭제 경로도 version도 없다)
     - **siteId가 nullable인 이유 (2026-08-23)**: 이슈를 사이트에 잇는 것은 **사이트명 일치만** 인정한다. 링크 기준 3종(계약명·계약사·사이트명 — 2026-08-14)은 "어느 **계약**인가"를 찾는 기준이고, 이슈가 갖는 것은 siteId이므로 계약 단위 매칭으로는 어느 사이트인지 정할 수 없다. 실측: 시드 이슈 14건 중 태그가 `[전력거래소, 사이버다임]`인 6건은 전력거래소가 실제 고객이고 사이버다임은 벤더(계약사)라, 계약사로 붙이면 그 계약사의 여러 계약 중 하나의 첫 사이트에 매달린다 — 모르는 것을 아는 척하는 것이다. 결과: **연결 7건(한국거래소 → 계약 101) · 미연결 7건**(부록 B "미연결 실데이터 그대로 둠", host 2026-08-12 실측과 일치)
   - 프로젝트:계약 = **1:1**(이관 경로) · 프로젝트 없는 계약 존재(직접 등록 — US-D2). MCP `list_maintenance_logs` 접점 영향은 PROGRESS 결정 기록 참조(확인 완료 2026-08-06)
 - **notification**: `Notification`(recipientId·type·refType·refId·message·read·createdAt)
@@ -543,6 +546,7 @@ POST /api/chat    POST /api/chat/feedback        # chat BFF — AI 호스트 프
 - **engagement OFFSITE 32건 → REMOTE 일괄 변환 — 확정(2026-08-09 ③⑥)**: 적재 시 변환(원본 JSON은 무수정)
 - **`status=완료`인데 `progress<100`인 13건 → 100 일괄 보정 — 확정(2026-08-23)**: 적재 시 보정(원본 JSON은 무수정 — OFFSITE와 같은 형태). 시트에서 상태 칸만 완료로 바꾸고 진척률 칸을 갱신하지 않은 자국이고, 완료의 전제가 진척률 100%다(AC A7-2 — 상태 머신을 실제로 통과시켜 적재하므로 보정 없이는 `complete()`가 거절한다). 상태를 진행중으로 내리는 쪽은 위 "완료 319 · 진행중 34" 기대값을 깨뜨리므로 택하지 않았다
 - **유지보수 적재 시 보정 3종 — 확정(2026-08-23)** (원본 JSON 무수정, 보정 원문은 계약 `note`에 남긴다): ①계약 상태 **자동연장·갱신 2건 → 유지**(모델·MCP 도구가 4종이고 둘 다 `sheet="2026 계약"`의 살아있는 계약이다. 늘리면 도구 description·목업 검증 문구·eval이 한 세트로 따라온다 — 상위 PRD §6) ②**잘못된 날짜 1건 → 그 달 말일**(계약 #72 `endDate="2027-11-31"` — 11월은 30일까지. 31을 적은 사람은 "그 달 말"을 뜻했고, null로 두면 연·월까지 잃어 종료일 정렬·`endedBefore` 필터에서 빠진다) ③계약 레벨 `serverSpec` **→ 사이트로 내림**(접두가 사이트명과 겹치면 그 사이트, 사이트가 하나면 그 사이트). 그 밖에 `salesRep`은 이름 문자열이라 person에 **정확히 한 명일 때만** 물어 id로 바꾸고(동명이인이면 비운다), 계약 단위 `clientRep`은 사이트가 하나뿐인 계약에서만 그 사이트의 고객사 연락처로 붙인다
+- **유지보수 계약·이슈 id = 시드 원본 번호 — 확정(2026-08-23)**: 계약은 `id`(1~105), 이슈는 **`no`**(230~496)를 그대로 쓴다(`@GeneratedValue` 없는 명시 id — `Person`·`OrgUnit` 선례. 하드 삭제가 없으므로(D2-2) 새 행은 `max(id)+1`). 두 이유가 있다. ①**eval 앵커가 우연에 기대지 않게** — C-01~C-03이 계약 **101**(한국거래소)을 앵커로 쓰는데, identity 생성이면 시드 파일에 한 줄이 끼거나 순서가 바뀌는 순간 조용히 어긋난다 ②**`list_maintenance_logs`의 id 해석이 성립하게** — 도구는 "계약 id **또는** 이슈 id"를 한 파라미터로 받고 계약을 우선 해석한다(목업과 동일). identity로 이슈에 1~14를 주면 계약 id 1~105에 전부 가려 **ISSUE 갈래에 도달할 수 없다**(2026-08-23 실측·해소). 원본 번호는 두 공간이 겹치지 않아 그 모호성이 사라진다
 - 배정의 **월별 M/M — 부여 규칙 확정(2026-08-10, 배정 M/M=실투입 계획 재정의와 함께)**: ①**실무자** = PM 외 참여자, **없으면 PM 본인**(시드 실측: 진행중 34건 중 다수가 assigneeIds=[PM]뿐인 1인 프로젝트 — 이때 PM이 실무자) ②실무자 배정의 각 월 M/M = `contractMm ÷ 프로젝트 개월수 ÷ 실무자수`(소수 2자리 반올림, 개월수 = max(1, round(기간일수/30.4))) — 실투입 데이터가 없는 시드에서의 근사일 뿐, 운영 입력은 PM의 실투입 계획(B1-5) ③실무자가 따로 있는 프로젝트의 PM 배정 = **0**(A6-7 기본값 그대로 — 체크 역할은 부하 없음) ④상한 없음: 합이 100%를 넘는 달이 자연 발생해 오버부킹 시연 확보(아래 검증 케이스)
 - 배정의 **role** — **확정(2026-08-03)**: `managerId` → `role=PM`(382건 전부, 누락 0건), 나머지 `assigneeIds` → `role=PARTICIPANT`. **`role=PL`은 아무도 지정하지 않는다** — 시드에 근거 데이터가 없어 임의 지정 금지. 필요 시 진행중 34건 중 참여자 2명 이상인 9건에 한해 수동 지정
 - `Capacity`(월별 가용 MM) — 기본 1.0 적재로 시작

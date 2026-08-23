@@ -23,6 +23,9 @@ public interface IssueQueryService {
     /** 이슈 단건 — 코멘트를 함께 싣는다. 없으면 404. */
     IssueView getIssue(long issueId);
 
+    /** 있으면 이슈, 없으면 빈 값 — 예외로 갈래를 가르지 않는 호출자를 위한 것. */
+    java.util.Optional<IssueView> findIssue(long issueId);
+
     /** 계약에 속한 이슈 — 사이트를 거쳐 모은다. {@code type}은 선택 필터. */
     List<IssueView> listByContract(long contractId, IssueType type, Pageable pageable);
 }

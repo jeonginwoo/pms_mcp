@@ -83,7 +83,7 @@ class ProjectQueryServiceImplTest {
         when(projectRepository.findByIdInAndDeletedFalse(Set.of(PROJECT_ID), pageable))
                 .thenReturn(new PageImpl<>(List.of(project), pageable, 1));
         when(personDirectoryService.findRefs(anyCollection()))
-                .thenReturn(List.of(new PersonRef(PM_ID, "이피엠", "SI팀", "책임")));
+                .thenReturn(List.of(new PersonRef(PM_ID, "이피엠", "SI팀", "SI부문", "책임")));
 
         // When
         var page = service.listVisible(TEAM_LEAD_ID, pageable);
@@ -154,8 +154,8 @@ class ProjectQueryServiceImplTest {
                         ProjectFixtures.assignment(
                                 2L, PROJECT_ID, OTHER_TEAM_MEMBER_ID, ProjectRole.PARTICIPANT)));
         when(personDirectoryService.findRefs(anyCollection())).thenReturn(List.of(
-                new PersonRef(PM_ID, "이피엠", "SI팀", "책임"),
-                new PersonRef(OTHER_TEAM_MEMBER_ID, "타부문원", "AX사업기획부", "주임")));
+                new PersonRef(PM_ID, "이피엠", "SI팀", "SI부문", "책임"),
+                new PersonRef(OTHER_TEAM_MEMBER_ID, "타부문원", "AX사업기획부", "AX사업기획부", "주임")));
 
         // When
         ProjectDetail detail = service.getProject(OTHER_TEAM_MEMBER_ID, PROJECT_ID);

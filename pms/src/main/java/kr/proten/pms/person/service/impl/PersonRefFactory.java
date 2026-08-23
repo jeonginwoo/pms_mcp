@@ -8,6 +8,7 @@ import kr.proten.pms.person.PersonRef;
 import kr.proten.pms.person.repository.GradeRepository;
 import kr.proten.pms.person.repository.OrgUnitRepository;
 import kr.proten.pms.person.service.entity.Grade;
+import kr.proten.pms.person.service.entity.OrgTree;
 import kr.proten.pms.person.service.entity.OrgUnit;
 import kr.proten.pms.person.service.entity.Person;
 import org.springframework.stereotype.Component;
@@ -32,8 +33,11 @@ class PersonRefFactory {
             return List.of();
         }
 
-        Map<Long, String> orgUnitNames = orgUnitRepository.findAll().stream()
+        List<OrgUnit> units = orgUnitRepository.findAll();
+        Map<Long, String> orgUnitNames = units.stream()
                 .collect(Collectors.toMap(OrgUnit::getId, OrgUnit::getName));
+        // 부문은 가시성 DIVISION scope와 같은 해석으로 읽는다(root 직계 자식)
+        OrgTree tree = OrgTree.of(units);
         Map<Long, String> gradeNames = gradeNamesOf(people);
 
         return people.stream()
@@ -41,6 +45,7 @@ class PersonRefFactory {
                         person.getId(),
                         person.getName(),
                         orgUnitNames.get(person.getOrgUnitId()),
+                        orgUnitNames.get(tree.topDivisionIdOf(person.getOrgUnitId())),
                         gradeNames.get(person.getGradeId())))
                 .toList();
     }

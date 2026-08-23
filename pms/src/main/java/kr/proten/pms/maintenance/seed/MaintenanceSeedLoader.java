@@ -155,6 +155,7 @@ class MaintenanceSeedLoader implements ApplicationRunner {
 
     private MaintenanceContract toContract(SeedContract record, Long salesRepId) {
         return MaintenanceContract.of(new ContractProfile(
+                record.id(),
                 null,
                 record.contractor(),
                 record.name(),
@@ -261,6 +262,7 @@ class MaintenanceSeedLoader implements ApplicationRunner {
             }
 
             saved.add(MaintenanceIssue.of(new IssueProfile(
+                    issue.no(),
                     siteId,
                     issue.typeValue(),
                     issue.title(),

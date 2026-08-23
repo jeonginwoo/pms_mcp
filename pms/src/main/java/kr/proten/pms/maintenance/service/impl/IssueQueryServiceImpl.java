@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import kr.proten.pms.common.exception.NotFoundException;
 import kr.proten.pms.maintenance.repository.IssueCommentRepository;
@@ -81,6 +82,13 @@ class IssueQueryServiceImpl implements IssueQueryService {
                 issueRepository.findById(issueId).orElseThrow(NotFoundException::new);
 
         return toViews(List.of(issue)).getFirst();
+    }
+
+
+    @Override
+    public Optional<IssueView> findIssue(long issueId) {
+        return issueRepository.findById(issueId)
+                .map(issue -> toViews(List.of(issue)).getFirst());
     }
 
     @Override

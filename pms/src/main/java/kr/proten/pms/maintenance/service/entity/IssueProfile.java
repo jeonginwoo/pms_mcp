@@ -8,6 +8,7 @@ import java.time.LocalDate;
  * 인자 나열로는 순서가 바뀌어도 컴파일이 통과하므로 이름을 붙여 받는다.
  */
 public record IssueProfile(
+        Long id,
         Long siteId,
         IssueType type,
         String title,

@@ -4,8 +4,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
@@ -26,7 +24,6 @@ import java.time.LocalDate;
 @Table(name = "maintenance_issues")
 public class MaintenanceIssue {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(name = "site_id")
     private Long siteId;
@@ -51,6 +48,7 @@ public class MaintenanceIssue {
     }
 
     private MaintenanceIssue(IssueProfile profile) {
+        this.id = profile.id();
         this.siteId = profile.siteId();
         this.type = profile.type();
         this.title = profile.title();

@@ -13,6 +13,7 @@ import java.time.LocalDate;
  * 컨트롤러·서비스 dto와 달리 밖으로 나가지 않는다.
  */
 public record ContractProfile(
+        Long id,
         Long sourceProjectId,
         String contractor,
         String name,

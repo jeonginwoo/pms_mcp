@@ -68,6 +68,8 @@ class WorkforceDirectoryServiceImpl implements WorkforceDirectoryService {
                         person.getName(),
                         unitNames.get(person.getOrgUnitId()),
                         unitNames.get(tree.topDivisionIdOf(person.getOrgUnitId())),
+                        person.getOrgUnitId(),
+                        tree.topDivisionIdOf(person.getOrgUnitId()),
                         person.getCapacity(),
                         person.isBillable(),
                         coeffs.getOrDefault(person.getGradeId(), 1.0)))
