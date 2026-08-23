@@ -119,9 +119,11 @@ docker compose -f pms/docker-compose.yml up -d
                          # and proten1!.
                          # MCP: POST /mcp (Streamable HTTP) — always requires a
                          # login access token regardless of pms.auth.enabled
-                         # (principle 4). 8 tools listed; only whoami and
-                         # find_person answer with real data, the other 6 return
-                         # the FR-AI-26 503 until their domain lands.
+                         # (principle 4). 8 tools listed; 4 answer with real
+                         # data (whoami, find_person, search_maintenance,
+                         # list_maintenance_logs), the other 4 (project 2,
+                         # utilization 2) return the FR-AI-26 503 — project's
+                         # contracts have landed, only the adapter wiring is left.
 ```
 
 ## Way of working

@@ -180,12 +180,103 @@ class McpAdapterIntegrationTest {
         assertThat(body).doesNotContain("박재완");
     }
 
+    // --- 유지보수 실연결 (eval C류 앵커) -------------------------------------
+
+    @Test
+    @DisplayName("eval C류 — 사용자가 부르는 고객사 이름이 사이트명으로만 계약에 도달한다")
+    void searchMaintenance_reachesContractThroughSiteName() {
+        String body = mcp.call(accessToken(MEMBER_EMAIL), McpHttp.searchMaintenance("가천대길병원"));
+
+        // 계약명("그룹웨어 유지보수")·계약사("㈜가온아이")에 없는 문자열이다 —
+        // 45사이트 계약이 걸린 근거를 matchedSites가 보여 준다
+        assertThat(body).contains("가온아이").contains("가천대길병원");
+        assertThat(body).doesNotContain(ERROR_FLAG);
+        // 화자를 가리지 않는다: 유지보수는 전사 공개다(AC D4-3) — 팀원 토큰으로도 나온다
+    }
+
+    @Test
+    @DisplayName("eval C류 — search_maintenance가 준 계약 id로 이슈 7건이 열린다 (id 확보 경로)")
+    void listMaintenanceLogs_followsContractIdFromSearch() {
+        String token = accessToken(ADMIN_EMAIL);
+        String found = mcp.call(token, McpHttp.searchMaintenance("한국거래소"));
+        int contractId = McpHttp.intFieldOf(found, "contractId");
+
+        String logs = mcp.call(token, McpHttp.listMaintenanceLogs(contractId));
+
+        // 2026-08-11 결정 ④가 뚫으려던 공백이 이 두 줄이다: 도구가 준 id가
+        // 다른 도구의 입력으로 실제로 쓰인다
+        assertThat(logs).contains("CONTRACT");
+        assertThat(logs).contains("한국거래소");
+        assertThat(logs).doesNotContain(ERROR_FLAG);
+        // 계약 101 앵커 — 이슈 7건(MaintenanceSeedLoadIntegrationTest가 고정한 수)
+        assertThat(McpHttp.intFieldOf(logs, "contractId")).isEqualTo(contractId);
+        assertThat(countOf(logs, "\\\"receivedAt\\\"")).isEqualTo(7);
+    }
+
+    @Test
+    @DisplayName("이슈 유형 필터가 목록을 좁힌다 — 라벨은 화면과 같은 한국어다")
+    void listMaintenanceLogs_filtersByType() {
+        String token = accessToken(ADMIN_EMAIL);
+        int contractId = McpHttp.intFieldOf(
+                mcp.call(token, McpHttp.searchMaintenance("한국거래소")), "contractId");
+
+        String all = mcp.call(token, McpHttp.listMaintenanceLogs(contractId));
+        String filtered = mcp.call(token, McpHttp.listMaintenanceLogs(contractId, "장애"));
+
+        assertThat(filtered).doesNotContain(ERROR_FLAG);
+        assertThat(countOf(filtered, "\\\"receivedAt\\\""))
+                .isLessThan(countOf(all, "\\\"receivedAt\\\""));
+    }
+
+    @Test
+    @DisplayName("이슈 id 갈래 — 계약 id 공간과 겹치지 않아 이슈로 해석된다 (eval C-04 전제)")
+    void listMaintenanceLogs_readsIssueIdSpace() {
+        String token = accessToken(ADMIN_EMAIL);
+        int contractId = McpHttp.intFieldOf(
+                mcp.call(token, McpHttp.searchMaintenance("한국거래소")), "contractId");
+        // 계약의 이슈 목록에서 이슈 id를 얻는다 — 모델이 밟는 경로와 같다
+        int issueId = McpHttp.firstIssueIdOf(
+                mcp.call(token, McpHttp.listMaintenanceLogs(contractId)));
+
+        String body = mcp.call(token, McpHttp.listMaintenanceLogs(issueId));
+
+        // 이슈 id(230~496)가 계약 id(1~105)에 가려지지 않는다 — PR #25의 시드 id
+        // 재부여가 이 단정을 가능하게 했다. eval C-04는 이슈 id 직접 제공형이라
+        // 이 갈래가 죽어 있으면 치명 케이스에서 막힌다
+        assertThat(body).contains("ISSUE");
+        assertThat(body).doesNotContain(ERROR_FLAG);
+        assertThat(McpHttp.firstIssueIdOf(body)).isEqualTo(issueId);
+        // 이슈 한 건만 실린다
+        assertThat(countOf(body, "\\\"receivedAt\\\"")).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("모르는 상태 라벨은 422로 유효 값을 알려 준다 — 조용히 무시하지 않는다")
+    void searchMaintenance_rejectsUnknownStatusLabel() {
+        String body = mcp.call(accessToken(ADMIN_EMAIL), McpHttp.searchMaintenanceByStatus("진행중"));
+
+        assertThat(body).contains("[422 VALIDATION]").contains("예정/신규/유지/종료");
+    }
+
+    @Test
+    @DisplayName("없는 id는 404 은닉 정본 문구로 수렴한다 — 계약도 이슈도 아닌 id")
+    void listMaintenanceLogs_concealsMissingId() {
+        String body = mcp.call(accessToken(ADMIN_EMAIL), McpHttp.listMaintenanceLogs(999_999));
+
+        assertThat(body).contains("[404 NOT_FOUND]").contains("조회 가능한 범위");
+    }
+
     @Test
     @DisplayName("미구현 포트는 FR-AI-26 표준 오류를 반환한다 — 도구는 노출된 채로")
     void unimplementedPort_returnsStandardUnavailableError() {
         String body = mcp.call(accessToken(ADMIN_EMAIL), McpHttp.SEARCH_PROJECTS);
 
         assertThat(body).contains("[503 UNAVAILABLE]").contains("준비 중");
+    }
+
+    /** 응답에 그 필드가 몇 번 실렸는가 — 이슈 건수를 파서 없이 센다. */
+    private static int countOf(String body, String token) {
+        return body.split(java.util.regex.Pattern.quote(token), -1).length - 1;
     }
 
     private String accessToken(String email) {

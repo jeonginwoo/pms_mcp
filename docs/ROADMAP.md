@@ -5,7 +5,7 @@
 ## P단계 — 기획 (완료 — 게이트 P 통과 2026-08-09)
 
 > 아래 항목은 **P단계 당시의 산출 기록**이므로 버전 표기도 그때 값이다. 산출물의
-> **현행 버전**(2026-08-23 실측): 상위 PRD v1.0 · PRD-host v2.4 · PRD-pms v2.8 ·
+> **현행 버전**(2026-08-23 실측): 상위 PRD v1.0 · PRD-host **v2.5** · PRD-pms **v2.13** ·
 > 기술_선택_근거 v2.0 · 구현 노트 **v1.1** · 유저 시나리오 v1.4 · eval-cases v1.6.
 
 - [x] **PRD-host v2.0** (2026-08-02 작성 → `docs/PRD-host.md` + 공유 정의는 상위 `docs/PRD.md`로 승격, 게이트 P 통과 2026-08-09) — 구 PRD(v1.2) 기반 재작성: 허점 6종 수정(측정 불가 기준·요구 충돌·version 반환 구멍·용어 정의 누락·열린 질문 처리·시효 정보), 2026-07-31 결정 반영(`scope=ME`·version 반환·오류/점검 FR·기준 모델·get_project 조건 명시). 시스템 프롬프트 전문·마일스톤 표·비용 모델은 PRD에서 분리(소유권: 프롬프트→구현 노트, 마일스톤→이 문서, 비용→기술 근거)
@@ -37,7 +37,7 @@
 ## M1 — 조회 전용 → M2 — 안전한 쓰기 → M3 — 프롬프트·외부
 
 - 큰 줄기: 조회 6도구 + whoami → eval 게이트(**G1**) → `update_progress` 2단계 쓰기 → 운영 검증(**G2**) → 프롬프트·확장(**G3**: 모델·단가·학습 조항 최종 확인) (조회 6도구 = 2026-08-11 결정 ④ 8종화 반영)
-- **G1의 임계경로는 pms 쪽이다**(2026-08-23 실측): 도구 8종 중 person 2종(`whoami`·`find_person`)은 실연결됐고, 진척률 쓰기는 도메인 구현(`ProjectLifecycleService.updateProgress`)은 있으나 계약이 모듈 루트에 없어 어댑터가 부를 수 없고, project는 그 위에 **시드 미적재**이며, 가동률·유지보수는 **골격/미착수**다. 아래 pms 절이 곧 G1의 선행 조건이다.
+- **G1의 잔여 임계경로는 EPIC C 하나다**(2026-08-23 갱신 — 같은 날 pms 3건이 머지되며 좁혀졌다): 도구 8종 중 **4종 실연결**(person 2 + maintenance 2). 남은 4종의 선행이 갈린다 — `search_projects`·`update_progress`는 계약도 시드도 도착해 **어댑터 배선만** 남았고(PR #25 — host 절 항목), 가동률 2종은 **EPIC C 실구현**이 없어 계약만으로는 답을 만들 수 없다.
 
 ### M1 — pms 트랙 (owner: PMS 담당)
 
@@ -64,7 +64,7 @@
 - [x] **person 포트 실연결** — **2026-08-23 완료**. `person/PersonLookupService`(+`PersonIdentity`) 루트 승격 → `whoami`·`find_person`이 실 DB 응답. 가시성 판정은 `PersonService`를 그대로 불러 **챗과 화면이 같은 답**을 내게 했고, `whoami`의 부문은 person 안에서 조직 트리를 올라가 채운다(`MeView`에 없는 값). 권한 플래그는 담지 않는다(FR-AI-16)
 - [ ] **project 포트 실연결** (`search_projects`·`update_progress`) — **선행: project 조회·진척률 계약의 루트 승격이 아직 없다.** PR #19(2026-08-23 머지)가 올린 `AssignmentDirectoryService`는 **가동률용**이고, 이 두 도구가 쓸 `ProjectQueryService`(가시성 조회·404 은닉)와 `ProjectLifecycleService.updateProgress`(2단계 확인·낙관적 락·완료 규칙)는 여전히 `project/service/`(internal)에 있다 — 별도 승격 필요(공용 결정 기록 경유). 그 위에 projects 시드 적재가 데이터 전제다(pms 절 ③ — **PR #20이 main에 미도달**, 미해결 이슈 참조)
 - [ ] **resource 포트 실연결** (`get_utilization`·`list_overbooked`) — **계약은 도착했다**(PR #19: `AssignmentDirectoryService`·`WorkforceDirectoryService`, 응답 9필드 전부 채워짐을 확인). 남은 것은 EPIC C 실구현 + **조직 id 후속 1건**: 두 계약이 조직을 이름으로만 주므로 `scope=MY_TEAM`·`DIVISION`을 화자로부터 유도할 수 없다(미해결 이슈)
-- [ ] **maintenance 포트 실연결** (`search_maintenance`·`list_maintenance_logs`) — EPIC D(모듈 신설 + maintenance 시드)가 선행
+- [x] **maintenance 포트 실연결** (`search_maintenance`·`list_maintenance_logs`) — **2026-08-23 완료**. 도메인 계약은 PR #25가 올렸고(`maintenance.MaintenanceLookupService`) 이 항목은 **어댑터 배선**이다: 503 제거 · 절단 50건과 404 문구를 어댑터가 든다(도구 description·`ToolError`가 이 모듈 소관) · `contractId`를 nullable로 정정(계약 미연결 이슈를 0으로 내보내던 자리). **화자를 넘기지 않는 유일한 도구 묶음**이다(전사 공개 AC D4-3). eval C류 앵커를 **도구 관통으로** 고정: 사이트명으로만 45사이트 계약 도달 · `search_maintenance`가 준 계약 id로 이슈 7건 · **그 이슈 id로 ISSUE 갈래 도달**(eval C-04 전제 — #25의 시드 원본 id 재부여가 열었다)
 - [ ] **eval 코퍼스 시드 재앵커** — `reference/seed/people.json`과 실제 적재본 `seed_org_proten.sql`이 **서로 다른 익명화 데이터**다(2026-08-23 실측: 각 44명, **이름 교집합 0명**, id별 일치 0건). eval-cases v1.6·유저_시나리오 v1.4의 화자·기대값이 전부 people.json 기준이라 **실 서버에 없는 인물**을 가리킨다. G1 실행 전 재앵커 필수
 - [ ] **host 앱 실서버 전환** — `pms.mcp.base-url` 8090(목업) → 8080 + 로그인 access 토큰으로 관통 실측. 목업은 카탈로그 실험장으로 존치
 - [ ] **감사 `source=MCP` 실측** — 경로 접두사로 판정하므로 어댑터에 배선이 없다(`AuditSourceResolver`). 쓰기 도구 실연결 후 실제로 MCP로 잡히는지 확인(pms/CLAUDE.md가 남긴 확인 항목)
