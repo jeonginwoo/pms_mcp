@@ -137,7 +137,7 @@ B2-1 자연어 검증(2026-08-10)이 실증한 도구 카탈로그 공백 2건�
 ```
 
 - Frontend=화면·검증·표시(권한은 UI노출만) / Backend=단일앱 모듈러 모놀리식 / DB=단일PG·단일스키마(Flyway 소유 — §0) / 인증=자체 로그인+JWT(stateless) / 알림=SSE 즉시 푸시(⑥) / 스케줄러=일1회(마감알림)만 / 파일저장소 없음.
-- **모듈 목록(2026-08-21 재구축에서 갱신 — 공용 결정 기록. 구 2026-08-17 PMS-M0 확정 6종을 대체)**: 현재 **person · project · common 3종**. `identity`는 계정·인증이 범위에서 빠지며 담는 것이 사람·조직·직급·권한 그룹뿐이 되어 **`person`으로 개명**. `resource`·`maintenance`·`notification`과 `/mcp` 어댑터 모듈(MCP 담당 소유 — 구현은 `pms-old/`에 보존)은 **해당 작업 착수 시 담당이 추가**한다(빈 모듈 선생성 금지). 지원 모듈 후보(chat BFF·mcpconfig)는 미생성 유보 — 챗 연동 시점 M1에 재론. 베이스 패키지 = `kr.proten.pms`. "모듈 고정"은 해제 상태 유지(증설은 열림).
+- **모듈 목록(2026-08-22 골격 확장에서 갱신 — 공용 결정 기록. 구 2026-08-21 재구축 3종을 대체)**: 현재 **person · auth · project · resource · notification · audit 6종**. `audit`는 2026-08-22에 `common`에서 승격했다(쓰임은 횡단이지만 자기 엔티티·저장소·유스케이스를 가진 도메인이다). **`common`은 모듈이 아니다** — 에러 모델·응답 봉투·호출자 식별 같은 공용 배선이라 `ModularityTest`가 Modulith 탐지에서 제외한다. **모듈의 공개 API = 모듈 루트 패키지**(Modulith 기본 규약)이므로 밖으로 나가는 타입만 루트에 두고 `package-info.java`는 쓰지 않는다. `identity`는 계정·인증이 범위에서 빠지며 담는 것이 사람·조직·직급·권한 그룹뿐이 되어 **`person`으로 개명**했고, 2026-08-22에 그 계정·인증이 실제로 **`auth`** 모듈로 나갔다(의존은 auth → person 한 방향, 반대 방향은 person이 모듈 루트에 정의한 `AccountPort`를 auth가 구현 — 직접 상호 호출은 모듈 순환이라 `ModularityTest`가 막는다). `resource`·`notification`은 **로직보다 골격을 먼저 세웠다**(사용자 지시 — 미구현 유스케이스는 `501 NOT_IMPLEMENTED`). `maintenance`와 `/mcp` 어댑터 모듈(MCP 담당 소유 — 구현은 `pms-old/`에 보존)은 **해당 작업 착수 시 담당이 추가**한다. 지원 모듈 후보(chat BFF·mcpconfig)는 미생성 유보 — 챗 연동 시점 M1에 재론. 베이스 패키지 = `kr.proten.pms`. "모듈 고정"은 해제 상태 유지(증설은 열림).
 - `/mcp` 어댑터가 호출하는 애플리케이션 서비스는 EPIC A(조회·진척률)·C(가동률)·D(이력)·H(`/api/me` = `whoami`)와 동일 — 도구 카탈로그 대응은 PRD-host §4-2. 서비스 API 변경은 공용 결정 기록 경유(2인 협업 경계).
 
 ## 4. 도메인 모델
@@ -208,7 +208,7 @@ B2-1 자연어 검증(2026-08-10)이 실증한 도구 카탈로그 공백 2건�
 - A3-3 Given 타 팀 프로젝트에 배정된 사용자 When 그 프로젝트 상세조회 Then `200` + 해당 프로젝트의 배정 레코드(타 팀 인원 포함) 노출. 단 그 인원의 **다른 프로젝트·개인 전체 가동률은 조직 가시성 규칙을 그대로 따른다**(프로젝트 컨텍스트 한정)
 
 **US-A4 PM으로서 프로젝트를 소프트 삭제한다** [PM]
-- A4-1 When `DELETE /projects/{id}` Then `204`, deleted=true, 목록·중복검사 제외, AuditLog DELETE
+- A4-1 When `DELETE /projects/{id}` Then `200` + `{success:true}`(2026-08-22 공통 봉투 — 구 `204`), deleted=true, 목록·중복검사 제외, AuditLog DELETE
 - A4-2 Given PL 또는 참여자 토큰 When 삭제 Then `403` — 단 **"프로젝트 생성" 플래그 보유자는 PM이 아니어도 삭제 가능**(2026-08-22 결정 — 상위 PRD §4-2 삭제 행 확장. 판정 = PM 역할 OR 생성 플래그)
 
 **US-A5 프로젝트 정보 수정은 PM·PL만, 상태는 정의된 전이만 허용된다** [PM·PL] — 프로토타입 수정 폼의 status 자유 편집 대비 서버 강제 (2026-08-02)
@@ -296,7 +296,7 @@ B2-1 자연어 검증(2026-08-10)이 실증한 도구 카탈로그 공백 2건�
 **US-E2 관리자로서 사용자를 등록·수정·삭제한다** (2026-08-02 채택 — 프로토타입 기구현)
 - E2-1 When `POST /api/people {name, orgUnit, grade, group}` Then `201` + AuditLog CREATE — User 계정은 부록 B 규칙(email·초기 비밀번호)으로 생성
 - E2-2 When `PUT /api/people/{id}` Then `200` — 이름·소속 조직·직급(coeff)·**권한 그룹**(2026-08-09 ⑦ — 그룹 부여는 이 경로) 변경, AuditLog UPDATE
-- E2-3 When `DELETE /api/people/{id}` Then `204` — soft 비활성(로그인 차단·목록 제외), 과거 배정·감사·집계는 보존
+- E2-3 When `DELETE /api/people/{id}` Then `200` + `{success:true}`(구 `204`) — soft 비활성(로그인 차단·목록 제외), 과거 배정·감사·집계는 보존
 - E2-4 Given "사용자/조직/권한 관리" 플래그 없는 토큰 When 위 요청 Then `403`
 - E2-5 Given 시스템 관리자 계정(`Person.system` — admin@proten.co.kr) When `PUT`/`DELETE` Then `422 IMMUTABLE_ACCOUNT`, 아무것도 안 바뀜 — 감사 actor·수습 주체 보존 (2026-08-09 ④. 목록 제외는 §4 `Person.system` 정의)
 
@@ -322,7 +322,7 @@ B2-1 자연어 검증(2026-08-10)이 실증한 도구 카탈로그 공백 2건�
 **US-F1 이벤트를 구독해 인앱 알림을 적재하고 SSE로 푸시한다**
 - F1-1 Given `OverbookingDetected` Then 해당 인원과 같은 소속 조직의 팀장 그룹 사용자(구 orgRole=TEAM_LEAD — 기본 그룹 매핑)에게 Notification 생성
 - F1-2 Given 동일 이벤트 중복 Then 알림 1건만(멱등)
-- F1-3 When `GET /notifications?read=false` Then 본인 미읽음만, `PATCH /{id}/read` → `204`
+- F1-3 When `GET /notifications?read=false` Then 본인 미읽음만, `PATCH /{id}/read` → `200` + `{success:true}`(구 `204`)
 - F1-4 Given 알림 생성 When 수신자가 SSE 연결 중 Then 즉시 푸시. 미연결이면 재연결·재조회 시 반영 (⑥ — 구 2026-07-13 SSE 채택 결정)
 - F1-5 Given 수신자의 알림 설정(notifPrefs — H1-4)이 해당 유형 꺼짐 Then 적재·푸시하지 않음
 
@@ -359,9 +359,11 @@ B2-1 자연어 검증(2026-08-10)이 실증한 도구 카탈로그 공백 2건�
 
 - **인증**: `Authorization: Bearer <JWT>` 필수, 없으면 `401`. (`/mcp` 경유 호출도 사용자 토큰 패스스루 — 별도 서비스 계정 없음, 구조 원칙 4)
 - **JWT 정책 (2026-08-06 확정)**: access **1시간** · refresh **14일**(사용 시 회전 — `POST /api/auth/refresh`). 2주 이상 미사용 시 재로그인. 구현 노트 §1의 BFF 위임 토큰(5분)과 층 구분
-- **응답(비대칭)**: 단건=원본 / 목록=page 봉투(content,page,size,totalElements,totalPages) / 에러=`{error:{code,message,field,traceId}}`.
+- **응답(공통 봉투 — 2026-08-22 변경, 결정 기록)**: 모든 응답이 `{success, data}` 또는 `{success, error}` 한 형태다. 목록은 `data`에 page 봉투(content,page,size,totalElements,totalPages)가 들어가고(바깥=성공/실패, 안쪽=페이지 메타), 에러 본문은 `{code,message,field,traceId}` 그대로다. 본문 없는 성공(삭제·읽음 처리)은 **204가 아니라 200 + `{success:true}`** — 호출자가 상태 코드로 응답 형태를 먼저 갈라야 하는 상황을 없앤다. **유일한 예외는 `GET /api/auth/jwks`**: RFC 7517이 형태를 정한 표준 문서라 봉투로 감싸면 표준 디코더가 읽지 못한다. (구 계약: 단건=원본 / 목록=page 봉투 / 에러만 봉투)
+  - **`/mcp` 어댑터는 영향 없음** — 어댑터는 HTTP가 아니라 애플리케이션 서비스를 직접 호출한다(구조 원칙 3).
+- **에러 code는 `ErrorCode` 열거가 유일한 정의** (2026-08-22) — 아래 표가 곧 그 열거이고, HTTP 상태도 거기 함께 있다. 코드를 문자열 리터럴로 만들지 않는다.
 - **단건 응답은 `version`을 포함한다** — 동시성 제어 및 MCP 도구 계약(PRD-host FR-AI-10: 프로젝트 상세의 version 반환)의 전제.
-- **상태코드**: 200 조회·수정 / 201 생성 / 204 삭제·읽음 / 4xx 에러.
+- **상태코드**: 200 조회·수정·**본문 없는 성공(삭제·읽음)** / 201 생성 / 4xx 에러. **204는 쓰지 않는다**(2026-08-22 공통 봉투) — 본문 없는 성공도 `{success:true}`를 실어 형태를 하나로 유지한다.
 - **동시성**: 본문에 `version`, 불일치 시 `409 STALE_VERSION` → reload-and-retry.
 - **페이징**: `?page=0&size=20&sort=field,desc` · **가시성**: 조회 선필터, 범위 밖 `404`(은닉 — 권한/부재 비구분).
 

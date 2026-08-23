@@ -2,9 +2,9 @@ package kr.proten.pms.person.service.impl;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import kr.proten.pms.common.audit.service.AuditAction;
-import kr.proten.pms.common.audit.service.AuditTrail;
-import kr.proten.pms.common.audit.service.dto.AuditEntry;
+import kr.proten.pms.audit.AuditAction;
+import kr.proten.pms.audit.AuditEntry;
+import kr.proten.pms.audit.AuditTrail;
 import kr.proten.pms.person.service.entity.OrgUnit;
 import kr.proten.pms.person.service.entity.Person;
 import org.springframework.stereotype.Component;

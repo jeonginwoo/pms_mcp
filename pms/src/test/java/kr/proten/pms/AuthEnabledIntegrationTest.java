@@ -53,8 +53,8 @@ class AuthEnabledIntegrationTest {
     void login_withSeedAccount_issuesTokenPair() throws Exception {
         mockMvc.perform(loginRequest(ADMIN_EMAIL, SEED_PASSWORD))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accessToken").isNotEmpty())
-                .andExpect(jsonPath("$.refreshToken").isNotEmpty());
+                .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.data.refreshToken").isNotEmpty());
     }
 
     @Test
@@ -87,14 +87,14 @@ class AuthEnabledIntegrationTest {
         mockMvc.perform(get("/api/people")
                         .header("Authorization", "Bearer " + accessToken(ADMIN_EMAIL)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(43));
+                .andExpect(jsonPath("$.data.length()").value(43));
 
         mockMvc.perform(get("/api/people")
                         .header("Authorization", "Bearer " + accessToken(MEMBER_EMAIL)))
                 .andExpect(status().isOk())
                 // 팀원 scope는 TEAM이다(2026-08-22 결정) — CS사업팀 4명이 보인다
-                .andExpect(jsonPath("$.length()").value(4))
-                .andExpect(jsonPath("$[?(@.name == '남진식')]").exists());
+                .andExpect(jsonPath("$.data.length()").value(4))
+                .andExpect(jsonPath("$.data[?(@.name == '남진식')]").exists());
     }
 
     @Test
@@ -119,8 +119,8 @@ class AuthEnabledIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body("refreshToken", refreshToken(ADMIN_EMAIL))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accessToken").isNotEmpty())
-                .andExpect(jsonPath("$.refreshToken").isNotEmpty());
+                .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.data.refreshToken").isNotEmpty());
 
         mockMvc.perform(post("/api/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -129,11 +129,13 @@ class AuthEnabledIntegrationTest {
     }
 
     @Test
-    @DisplayName("JWKS — 토큰 없이 열려 있고 공개키만 담긴다")
+    @DisplayName("JWKS — 토큰 없이 열려 있고, 공통 봉투 없이 표준 형태로 나간다")
     void jwks_isPublicAndCarriesNoPrivateKey() throws Exception {
         String jwks = mockMvc.perform(get("/api/auth/jwks"))
                 .andExpect(status().isOk())
+                // 공통 봉투를 쓰지 않는 유일한 응답 — RFC 7517 형태여야 표준 디코더가 읽는다
                 .andExpect(jsonPath("$.keys[0].kty").value("RSA"))
+                .andExpect(jsonPath("$.success").doesNotExist())
                 .andReturn().getResponse().getContentAsString();
 
         // RSA 개인키 성분(d·p·q)이 새면 서명 위조가 가능하다

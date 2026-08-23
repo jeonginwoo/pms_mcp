@@ -7,11 +7,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
+import kr.proten.pms.person.OrgPermission;
 import kr.proten.pms.person.repository.GradeRepository;
 import kr.proten.pms.person.repository.OrgUnitRepository;
 import kr.proten.pms.person.repository.PermissionGroupRepository;
 import kr.proten.pms.person.repository.PersonRepository;
-import kr.proten.pms.person.service.dto.OrgPermission;
 import kr.proten.pms.person.service.entity.Grade;
 import kr.proten.pms.person.service.entity.PersonFixtures;
 import kr.proten.pms.person.service.entity.VisibilityScope;
@@ -90,19 +90,19 @@ class ProjectApiIntegrationTest extends PostgresTestBase {
                                 }
                                 """.formatted(PM_ID)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status").value("CONTRACT_PENDING"))
-                .andExpect(jsonPath("$.phase").value("SALES"))
-                .andExpect(jsonPath("$.assignments[0].personName").value("API피엠"))
+                .andExpect(jsonPath("$.data.status").value("CONTRACT_PENDING"))
+                .andExpect(jsonPath("$.data.phase").value("SALES"))
+                .andExpect(jsonPath("$.data.assignments[0].personName").value("API피엠"))
                 .andReturn().getResponse().getContentAsString();
         long projectId = projectIdOf(created);
 
         // 목록 — page 봉투로 나가고 팀장 가시성에 든다
         mockMvc.perform(get("/api/projects").header(CALLER_HEADER, TEAM_LEAD_ID))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[?(@.id == %d)].managerName".formatted(projectId))
+                .andExpect(jsonPath("$.data.content[?(@.id == %d)].managerName".formatted(projectId))
                         .value("API피엠"))
-                .andExpect(jsonPath("$.page").value(0))
-                .andExpect(jsonPath("$.totalElements").exists());
+                .andExpect(jsonPath("$.data.page").value(0))
+                .andExpect(jsonPath("$.data.totalElements").exists());
 
         // 계약대기 상태의 진척률 수정은 거절된다 (2026-08-22 결정 — 진행중에서만)
         mockMvc.perform(put("/api/projects/" + projectId + "/progress")
@@ -122,9 +122,9 @@ class ProjectApiIntegrationTest extends PostgresTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"progress\": 40, \"version\": 2, \"confirmed\": false}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.committed").value(false));
+                .andExpect(jsonPath("$.data.committed").value(false));
         mockMvc.perform(get("/api/projects/" + projectId).header(CALLER_HEADER, PM_ID))
-                .andExpect(jsonPath("$.progress").value(0));
+                .andExpect(jsonPath("$.data.progress").value(0));
 
         // 확인 후 — 커밋 + version 증가
         mockMvc.perform(put("/api/projects/" + projectId + "/progress")
@@ -132,8 +132,8 @@ class ProjectApiIntegrationTest extends PostgresTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"progress\": 40, \"version\": 2, \"confirmed\": true}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.committed").value(true))
-                .andExpect(jsonPath("$.version").value(3));
+                .andExpect(jsonPath("$.data.committed").value(true))
+                .andExpect(jsonPath("$.data.version").value(3));
 
         // 지나간 version — 409
         mockMvc.perform(put("/api/projects/" + projectId + "/progress")
@@ -173,8 +173,8 @@ class ProjectApiIntegrationTest extends PostgresTestBase {
     void listPeople_appliesVisibility() throws Exception {
         mockMvc.perform(get("/api/people").header(CALLER_HEADER, TEAM_LEAD_ID))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.name == 'API팀장')]").exists())
-                .andExpect(jsonPath("$[?(@.name == 'API타부문')]").doesNotExist());
+                .andExpect(jsonPath("$.data[?(@.name == 'API팀장')]").exists())
+                .andExpect(jsonPath("$.data[?(@.name == 'API타부문')]").doesNotExist());
     }
 
     @Test
@@ -213,7 +213,7 @@ class ProjectApiIntegrationTest extends PostgresTestBase {
                                 }
                                 """.formatted(status, version)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(status));
+                .andExpect(jsonPath("$.data.status").value(status));
     }
 
     /** 생성 응답에서 id만 뽑는다 — 본문 전체 역직렬화가 필요한 검증이 아니다. */

@@ -1,19 +1,18 @@
 package kr.proten.pms.person.service.impl;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Comparator;
 import java.util.stream.Collectors;
 import kr.proten.pms.common.exception.ConflictException;
-import kr.proten.pms.common.exception.ForbiddenException;
+import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.NotFoundException;
+import kr.proten.pms.common.exception.NotImplementedException;
 import kr.proten.pms.common.exception.UnprocessableException;
 import kr.proten.pms.common.exception.ValidationException;
 import kr.proten.pms.person.repository.OrgUnitRepository;
 import kr.proten.pms.person.repository.PersonRepository;
-import kr.proten.pms.person.service.OrgPermissionService;
 import kr.proten.pms.person.service.OrgUnitService;
-import kr.proten.pms.person.service.dto.OrgPermission;
 import kr.proten.pms.person.service.dto.OrgUnitView;
 import kr.proten.pms.person.service.entity.OrgUnit;
 import kr.proten.pms.person.service.entity.Person;
@@ -32,17 +31,17 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrgUnitServiceImpl implements OrgUnitService {
     private final OrgUnitRepository orgUnitRepository;
     private final PersonRepository personRepository;
-    private final OrgPermissionService orgPermissionService;
+    private final OrgManagePermission orgManagePermission;
     private final PersonAuditRecorder personAuditRecorder;
 
     public OrgUnitServiceImpl(
             OrgUnitRepository orgUnitRepository,
             PersonRepository personRepository,
-            OrgPermissionService orgPermissionService,
+            OrgManagePermission orgManagePermission,
             PersonAuditRecorder personAuditRecorder) {
         this.orgUnitRepository = orgUnitRepository;
         this.personRepository = personRepository;
-        this.orgPermissionService = orgPermissionService;
+        this.orgManagePermission = orgManagePermission;
         this.personAuditRecorder = personAuditRecorder;
     }
 
@@ -53,7 +52,7 @@ public class OrgUnitServiceImpl implements OrgUnitService {
      */
     @Transactional(readOnly = true)
     public List<OrgUnitView> list(long callerPersonId) {
-        requireManageOrg(callerPersonId);
+        orgManagePermission.require(callerPersonId);
 
         List<OrgUnit> units = orgUnitRepository.findAll();
         Map<Long, Long> memberCounts = personRepository.findByActiveTrue().stream()
@@ -74,7 +73,7 @@ public class OrgUnitServiceImpl implements OrgUnitService {
      * 만들면 부문 가시성 계산이 갈라지므로 거절한다(가시성은 root 직계 자식 기준 — §4-3).
      */
     public OrgUnitView create(long callerPersonId, Long parentId, String name) {
-        requireManageOrg(callerPersonId);
+        orgManagePermission.require(callerPersonId);
         requireText(name);
         requireValidParent(parentId);
 
@@ -85,8 +84,26 @@ public class OrgUnitServiceImpl implements OrgUnitService {
         return new OrgUnitView(saved.getId(), saved.getParentId(), saved.getName(), 0, 0, true);
     }
 
+    /**
+     * 노드 개명 — **골격만 있고 로직은 아직 없다** (2026-08-22).
+     *
+     * 이미 정해져 있는 것: 이름을 복사해 둔 컬럼이 없으므로 소속 인원·프로젝트의 표시는
+     * 저절로 따라온다(E3-2 — 비정규화 금지). 감사 action은 `UPDATE`이고, 회사(root)의
+     * 이름도 같은 경로로 바꾼다.
+     *
+     * 권한 판정은 골격 단계에서도 실제로 한다 — 없는 것은 로직이지 권한이 아니다.
+     *
+     * TODO(E3-2): 같은 부모 아래 이름 중복을 막을지 미정 — AC에 문구가 없고, 시드에는
+     *   중복이 없다. 막는다면 `409 DUPLICATE_*`이고 안 막는다면 그 판단을 여기 남긴다.
+     */
+    public OrgUnitView rename(long callerPersonId, long orgUnitId, String name) {
+        orgManagePermission.require(callerPersonId);
+
+        throw new NotImplementedException("조직 노드 개명 (E3-2)");
+    }
+
     public void delete(long callerPersonId, long orgUnitId) {
-        requireManageOrg(callerPersonId);
+        orgManagePermission.require(callerPersonId);
 
         OrgUnit target = orgUnitRepository.findById(orgUnitId).orElseThrow(NotFoundException::new);
         requireEmpty(orgUnitId);
@@ -106,12 +123,6 @@ public class OrgUnitServiceImpl implements OrgUnitService {
                 members == 0 && children == 0);
     }
 
-    private void requireManageOrg(long callerPersonId) {
-        if (!orgPermissionService.has(callerPersonId, OrgPermission.MANAGE_ORG)) {
-            throw new ForbiddenException("사용자·조직 관리 권한이 없습니다");
-        }
-    }
-
     private void requireText(String name) {
         if (name == null || name.isBlank()) {
             throw new ValidationException("조직명은 필수입니다", "name");
@@ -126,7 +137,7 @@ public class OrgUnitServiceImpl implements OrgUnitService {
         }
 
         if (!orgUnitRepository.existsById(parentId)) {
-            throw new UnprocessableException("REF_NOT_FOUND", "없는 상위 조직입니다: " + parentId);
+            throw new UnprocessableException(ErrorCode.REF_NOT_FOUND, "없는 상위 조직입니다: " + parentId);
         }
     }
 
@@ -134,7 +145,7 @@ public class OrgUnitServiceImpl implements OrgUnitService {
         boolean rootExists = orgUnitRepository.findAll().stream().anyMatch(OrgUnit::isRoot);
 
         if (rootExists) {
-            throw new ConflictException("DUPLICATE_ROOT",
+            throw new ConflictException(ErrorCode.DUPLICATE_ROOT,
                     "회사(root) 노드는 하나뿐입니다 — 상위 조직을 지정하세요");
         }
     }
@@ -144,7 +155,7 @@ public class OrgUnitServiceImpl implements OrgUnitService {
         long children = orgUnitRepository.countByParentId(orgUnitId);
 
         if (members > 0 || children > 0) {
-            throw new ConflictException("IN_USE",
+            throw new ConflictException(ErrorCode.IN_USE,
                     "소속 인원 %d명·하위 조직 %d개가 있어 삭제할 수 없습니다".formatted(
                             members, children));
         }

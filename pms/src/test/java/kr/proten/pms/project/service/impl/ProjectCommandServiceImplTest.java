@@ -1,7 +1,7 @@
 package kr.proten.pms.project.service.impl;
 
-import kr.proten.pms.project.service.dto.CreateProjectCommand;
 import kr.proten.pms.project.service.dto.AssignmentSpec;
+import kr.proten.pms.project.service.dto.CreateProjectCommand;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
@@ -14,17 +14,18 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import kr.proten.pms.common.exception.ConflictException;
+import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.ForbiddenException;
 import kr.proten.pms.common.exception.UnprocessableException;
-import kr.proten.pms.person.service.dto.OrgPermission;
-import kr.proten.pms.person.service.OrgPermissionService;
-import kr.proten.pms.person.service.PersonDirectoryService;
+import kr.proten.pms.person.OrgPermission;
+import kr.proten.pms.person.OrgPermissionService;
+import kr.proten.pms.person.PersonDirectoryService;
+import kr.proten.pms.project.repository.ProjectAssignmentRepository;
+import kr.proten.pms.project.repository.ProjectRepository;
 import kr.proten.pms.project.service.entity.Engagement;
 import kr.proten.pms.project.service.entity.Project;
 import kr.proten.pms.project.service.entity.ProjectAssignment;
-import kr.proten.pms.project.repository.ProjectAssignmentRepository;
 import kr.proten.pms.project.service.entity.ProjectFixtures;
-import kr.proten.pms.project.repository.ProjectRepository;
 import kr.proten.pms.project.service.entity.ProjectRole;
 import kr.proten.pms.project.service.entity.ProjectStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,6 +59,10 @@ class ProjectCommandServiceImplTest {
     private ProjectAuditRecorder projectAuditRecorder;
     @Mock
     private ProjectViewFactory projectViewFactory;
+    @Mock
+    private ProjectVisibilityService projectVisibilityService;
+    @Mock
+    private ProjectActionPermission projectActionPermission;
 
     private ProjectCommandServiceImpl service;
 
@@ -67,6 +72,8 @@ class ProjectCommandServiceImplTest {
         service = new ProjectCommandServiceImpl(
                 projectRepository,
                 assignmentRepository,
+                projectVisibilityService,
+                projectActionPermission,
                 personDirectoryService,
                 orgPermissionService,
                 new AssignmentFactory(),
@@ -142,7 +149,7 @@ class ProjectCommandServiceImplTest {
         assertThatExceptionOfType(ConflictException.class).isThrownBy(() ->
                 service.create(TEAM_LEAD_ID, command(
                         new AssignmentSpec(PM_ID, ProjectRole.PM, null, null, 0.5))))
-                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo("DUPLICATE_NAME"));
+                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo(ErrorCode.DUPLICATE_NAME));
         verify(projectRepository, never()).save(any());
     }
 
@@ -156,7 +163,7 @@ class ProjectCommandServiceImplTest {
         assertThatExceptionOfType(UnprocessableException.class).isThrownBy(() ->
                 service.create(TEAM_LEAD_ID, command(
                         new AssignmentSpec(MEMBER_ID, ProjectRole.PARTICIPANT, null, null, 0.5))))
-                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo("PM_REQUIRED"));
+                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo(ErrorCode.PM_REQUIRED));
     }
 
     @Test
@@ -170,7 +177,7 @@ class ProjectCommandServiceImplTest {
                 service.create(TEAM_LEAD_ID, command(
                         new AssignmentSpec(PM_ID, ProjectRole.PM, null, null, 0.5),
                         new AssignmentSpec(MEMBER_ID, ProjectRole.PM, null, null, 0.5))))
-                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo("MULTIPLE_PM"));
+                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo(ErrorCode.MULTIPLE_PM));
     }
 
     @Test
@@ -204,7 +211,7 @@ class ProjectCommandServiceImplTest {
         assertThatExceptionOfType(UnprocessableException.class).isThrownBy(() ->
                 service.create(TEAM_LEAD_ID, command(
                         new AssignmentSpec(PM_ID, ProjectRole.PM, null, null, 0.5))))
-                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo("REF_NOT_FOUND"));
+                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo(ErrorCode.REF_NOT_FOUND));
         verify(projectRepository, never()).save(any());
     }
 

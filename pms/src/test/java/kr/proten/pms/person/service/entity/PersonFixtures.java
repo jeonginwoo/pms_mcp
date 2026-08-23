@@ -3,7 +3,7 @@ package kr.proten.pms.person.service.entity;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
-import kr.proten.pms.person.service.dto.OrgPermission;
+import kr.proten.pms.person.OrgPermission;
 
 /**
  * person 모듈 테스트 픽스처 — 참조 데이터(조직·직급·권한 그룹·인원) 생성 단일 지점.

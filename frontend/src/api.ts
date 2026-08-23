@@ -19,7 +19,7 @@ import type {
   CreatePersonBody,
   CreateProjectBody,
   EditProjectBody,
-  ErrorEnvelope,
+  ApiEnvelope,
   MeView,
   OrgUnitView,
   PageResponse,
@@ -37,7 +37,14 @@ const ACCESS_KEY = 'pms.accessToken'
 const REFRESH_KEY = 'pms.refreshToken'
 const CALLER_KEY = 'pms.callerPersonId'
 
-/** §7 에러 봉투를 그대로 담는 예외 — 화면은 code로 분기하고 message를 보여 준다. */
+/**
+ * 봉투가 아예 성립하지 않을 때의 코드 — 서버 `ErrorCode`에는 없다.
+ * 프록시 오류 페이지나 배포 불일치처럼 **계약 밖 응답**을 화면 코드가 서버 오류와
+ * 구분할 수 있어야 해서 클라이언트가 붙인다.
+ */
+const MALFORMED_RESPONSE = 'MALFORMED_RESPONSE'
+
+/** 공통 봉투의 error를 그대로 담는 예외 — 화면은 code로 분기하고 message를 보여 준다. */
 export class ApiError extends Error {
   readonly status: number
   readonly code: string
@@ -196,7 +203,28 @@ async function send<T>(path: string, options: RequestInit, authenticated: boolea
     throw toApiError(res.status, body)
   }
 
-  return body as T
+  return unwrap<T>(body)
+}
+
+/**
+ * 공통 봉투를 검증하고 data만 꺼낸다 (2026-08-22 서버 계약).
+ *
+ * `success`를 실제로 확인하는 이유: 봉투를 도입한 목적이 "먼저 success를 보고 data나
+ * error를 읽는다"는 단일 규칙인데, 그냥 `body.data`를 캐스팅하면 봉투가 아닌 2xx 본문
+ * (프록시 오류 페이지, 배포 불일치로 감싸지 않은 응답)이 조용히 `undefined`가 되어
+ * 화면 깊숙한 곳에서 터진다. 경계에서 실패시키는 편이 추적 가능하다.
+ *
+ * 본문이 없는 성공(삭제·읽음 처리)은 data가 없어 undefined가 되는데, 그 호출부는
+ * 반환값을 쓰지 않는다 — 여기서 굳이 빈 값을 지어내지 않는다.
+ */
+function unwrap<T>(body: unknown): T {
+  const envelope = body as ApiEnvelope<T> | null
+
+  if (!envelope || envelope.success !== true) {
+    throw new ApiError(200, MALFORMED_RESPONSE, '서버 응답 형식이 올바르지 않습니다', null, null)
+  }
+
+  return envelope.data as T
 }
 
 function safeJson(text: string): unknown {
@@ -208,14 +236,15 @@ function safeJson(text: string): unknown {
 }
 
 function toApiError(status: number, body: unknown): ApiError {
-  const envelope = body as Partial<ErrorEnvelope> | null
+  const envelope = body as ApiEnvelope<never> | null
   const error = envelope?.error
 
   if (!error) {
-    return new ApiError(status, 'UNKNOWN', `요청 실패 (${status})`, null, null)
+    return new ApiError(status, MALFORMED_RESPONSE, `요청 실패 (${status})`, null, null)
   }
 
-  return new ApiError(status, error.code, error.message, error.field, error.traceId)
+  // field는 서버가 NON_NULL로 빼므로 없을 수 있다 — null로 정규화해 undefined가 새지 않게 한다
+  return new ApiError(status, error.code, error.message, error.field ?? null, error.traceId)
 }
 
 /** 인증이 필요한 요청 — 401이면 토큰을 한 번 회전한 뒤 재시도한다. */

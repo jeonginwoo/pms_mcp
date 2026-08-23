@@ -1,11 +1,11 @@
 package kr.proten.pms.project.service.impl;
 
 import java.util.Optional;
-import kr.proten.pms.person.service.dto.OrgPermission;
-import kr.proten.pms.person.service.OrgPermissionService;
+import kr.proten.pms.person.OrgPermission;
+import kr.proten.pms.person.OrgPermissionService;
+import kr.proten.pms.project.repository.ProjectAssignmentRepository;
 import kr.proten.pms.project.service.entity.AssignmentStatus;
 import kr.proten.pms.project.service.entity.ProjectAssignment;
-import kr.proten.pms.project.repository.ProjectAssignmentRepository;
 import kr.proten.pms.project.service.entity.ProjectRole;
 import org.springframework.stereotype.Component;
 

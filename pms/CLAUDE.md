@@ -11,35 +11,103 @@ seed loader) that the rebuild deliberately left out. `verify.sh`/CI only look at
 
 ## Structure (2026-08-21 decisions — shared decision log)
 
-- **One domain, one module.** Current modules: `person` · `project` · `common`.
-  `resource` · `maintenance` · `notification` and the `/mcp` adapter module are
-  added by their owner when that work starts — no empty modules ahead of time.
+- **One domain, one module.** Current modules: `person` · `auth` · `project` ·
+  `resource` · `notification` (domain) + `audit` · `common` (cross-cutting).
+  `audit` moved out of `common` on 2026-08-22: it is cross-cutting in *use*, but it
+  owns an entity, a repository and use cases of its own, so it does not belong in
+  the layer every module depends on. What that surfaced: `AuditSourceResolver` was
+  reading the servlet request directly, which `LayerRuleTest` forbids outside
+  `controller/` and `common/`. The fix was to move the *reading* down to
+  `common/config/RequestPathResolver` and leave audit only the mapping to WEB/MCP —
+  not to relax the rule. `maintenance` and the `/mcp` adapter
+  module are still added by their owner when that work starts.
+  `resource` and `notification` were scaffolded ahead of their logic on
+  2026-08-22 by explicit user decision — that suspends the former "no empty
+  modules ahead of time" rule **for those two only**; it still holds for
+  `maintenance` and for anything else.
+- **`auth` split out of `person` (2026-08-22)**: accounts, passwords, JWT and
+  the protected chain live in `auth/`. The dependency runs **auth → person**
+  (login asks `PersonDirectoryService` whether the person is active); the other
+  direction goes through an inverted port, because a direct call both ways is a
+  module cycle that `ModularityTest` rejects — **`kr.proten.pms.person.AccountPort`
+  is defined by person and implemented by auth**, so person never imports auth
+  and the initial password / hashing stay inside auth.
 - **Layout per domain module**, three layers in one direction:
 
   ```
   person/
-  ├── controller/            REST controllers + MCP adapters (empty until auth)
-  ├── service/               use-case interfaces = the module's contract
+  ├── controller/            REST controllers + MCP adapters
+  │   └── dto/                 request·response records (2026-08-22)
+  ├── service/               use-case interfaces = the module contract
   │   ├── impl/                implementations + internal collaborators
+  │   │   └── scope/             a strategy family with its own package
   │   ├── dto/                 inputs/outputs the contract exchanges
+  │   ├── spi/                 ports this module needs FROM others
   │   └── entity/              JPA entities, VOs, enums
   └── repository/            Spring Data repositories
   ```
 
-  `common/` holds cross-cutting concerns only — `config/`, `exception/`, and
-  `audit/` (which nests the same three layers: `audit/service{,/impl,/dto,/entity}`
-  + `audit/repository`, so the layer rules apply there unchanged).
+  `common/` holds shared wiring only — `config/` (caller identity, request path),
+  `exception/` (ErrorCode + the exception types), `web/` (ApiResponse, ApiError,
+  PageResponse, and the handler that turns one into the other).
+
+  **Split a folder when kinds mix, not when the count grows.** Request and response
+  records go to `controller/dto/`; a strategy family or a self-contained concept
+  gets its own package under `impl/` — `impl/scope/` (visibility strategies),
+  `impl/requester/` (caller → person+group), `impl/token/` (JWT issue/verify).
+  A startup job is not a use case, so the seed loader sits in `person/seed/`.
+  Folders with many files of *one* kind (`service/dto/`, `service/entity/`) are
+  lists and read fine — leave them alone.
+- **One contract per domain concern, not per use case** (2026-08-22). A contract
+  earns its own interface when it has **a distinct consumer** or **a distinct
+  judgement axis** — not merely because it is a distinct method. The rebuild had
+  sliced project into 9 interfaces, 6 of them single-method, 8 of them consumed
+  only by `ProjectController`, all of them depending on the same five
+  collaborators: the segregation removed no coupling. Now:
+
+  | module | contracts | axis |
+  |---|---|---|
+  | project | `ProjectQueryService` · `ProjectCommandService` · `ProjectLifecycleService` · `AssignmentService` | visibility read · CRUD · §5 state machine · assignment |
+  | person | `PersonService` · `OrgUnitService` · `GradeService` · `PermissionGroupService` · `AuditViewService` | one per managed resource |
+  | person (cross-module) | `PersonDirectoryService` · `OrgVisibilityService` · `OrgPermissionService` | **different consumers** — these earn the split |
+
+  Implementations stay decomposed where the work is: `ProjectActionPermission`,
+  `ProjectVisibilityService`, `ProjectAuditRecorder`, `ProjectViewFactory`,
+  `AssignmentFactory`, `PersonRefFactory`, the `OrgScopeResolver` family — one
+  judgement per class, so a use case reads as orchestration (conventions §7).
 - **`XxxService` interface in `service/`, `XxxServiceImpl` in `service/impl/`.**
   The **JPA entity is the domain model** — no separate pure-domain twin — so
   invariants live on the entity (no setters, intent-revealing methods, rules in
   factories) and the entity must not depend on `dto/`.
-- **What crosses a module boundary** is only what is marked `@NamedInterface`:
-  person's `service` + `service/dto`, common's `exception`, `config`, and
-  `audit/service` + `audit/service/dto`. `repository/`, `service/entity/`, and
-  `service/impl/` are closed, so **entities and repositories cannot leave their
-  module** and links are by id. That is why `AuditAction`/`AuditSource` sit next
-  to the `AuditTrail` interface rather than in `audit/service/entity/` — the
-  recording module must not reach into common's persistence model.
+- **A module's public API is its root package** (Modulith's default arrangement —
+  adopted 2026-08-22). Every sub-package (`controller/`, `service/`, `repository/`)
+  is internal, so the files sitting *directly* in `person/` and `audit/` **are** the
+  contract those modules offer — 7 and 6 files, and that list is the boundary.
+  `project` · `auth` · `resource` · `notification` have empty roots: nothing of
+  theirs crosses. Entities and repositories therefore cannot leave a module, and
+  links are by id.
+  - There are **no `package-info.java` files**. They only ever carried
+    `@NamedInterface`, which was needed because the contracts sat in a sub-package
+    instead of the root — the framework default removes the need entirely. Before
+    adding one back, move the type to the module root instead.
+  - Putting a type in a module root is a deliberate act: it is the only way to widen
+    the boundary, and `git diff` shows it as a new file at the top of the module.
+- **A scaffold still enforces its authorization** (2026-08-22, from the Codex review).
+  A caller without the flag must get **403, not 501** — a 501 tells them the route
+  exists and is coming, and the 403 would only appear later when the logic lands.
+  What is missing is the logic, not the permission. EPIC E write scaffolds run
+  `requireManageOrg` before throwing `NotImplementedException`, and
+  `ScaffoldAuthorizationTest` locks both branches (403 without the flag, 501 with it).
+- **`common` is not a module** — it is shared wiring (error model, response
+  envelope, caller identity) that every module uses and that has no domain to
+  encapsulate. Making it a module only records "everything depends on common" over
+  and over. `ModularityTest` passes it as the ignore predicate to
+  `ApplicationModules.of(…)`.
+- **Errors**: `ErrorCode` (common/exception) is the single definition of the §7
+  table — the code **and** its HTTP status. Throw an `ApiException` subtype with a
+  code; never a string literal. Every response body is `ApiResponse` —
+  `{success, data}` or `{success, error}` — including 200-with-no-data for
+  deletes; `GET /api/auth/jwks` is the one exception (RFC 7517 shape).
 - **Schema is owned by Flyway**: `src/main/resources/db/migration/V__*.sql`,
   `ddl-auto=none`, single schema. Never edit an applied migration — add a new
   version. Entities do not create the schema.
@@ -50,20 +118,44 @@ seed loader) that the rebuild deliberately left out. `verify.sh`/CI only look at
 
 ## What is not here yet
 
-- **Auth is built but switched off** — see the Auth section below. With
+**Scaffolded but empty (2026-08-22)** — the route, contract, entity, migration
+and the *reasoning* are in place; the use-case body throws
+`NotImplementedException` → **501 `NOT_IMPLEMENTED`**. Every one of them carries
+a `TODO(<AC>)` naming exactly what is missing. 501 rather than 500 so a caller
+can tell "not built yet" from "broken", and the code is deliberately absent from
+the §7 error table: when the logic lands, the throw site disappears.
+
+- **resource** — `GET /api/utilization` (EPIC C). `Capacity` is the per-month
+  override; the default stays `Person.capacity`. **Open seam**: the numerator
+  needs project to expose "assignment M/M per person per month". Today project
+  publishes only `ProjectQueryService` (read) and `AssignmentService` (write),
+  and reaching the assignment entity across the boundary is what `ModularityTest`
+  forbids — so this needs an application-service API addition, which is a
+  cross-boundary decision (shared decision log), not a unilateral edit.
+- **notification** — `GET /api/notifications`, `PATCH /{id}/read` (EPIC F).
+  Idempotency is already structural: `(recipient_id, dedupe_key)` is unique in
+  V7. The SSE route is deliberately not opened yet — it authenticates via
+  `?access_token=` (§7) and the access-log masking is part of the same unit.
+- **EPIC E writes** — `PUT /api/people/{id}` (E2-2), `PUT /api/people/{id}/org-unit`
+  (E1-1), `PUT /api/org-units/{id}` (E3-2), grade CRUD (E4), permission-group
+  CRUD (E5).
+- **Audit read views** — `GET /api/audit` (G1-3) and `GET /api/projects/{id}/audit`
+  (G2-2). **Their permission and visibility checks are real** — only the data
+  fetch is missing (see Audit below).
+
+**Not started**
+
+- **Auth is switched off** — see the Auth section below. With
   `pms.auth.enabled=false` (the default) the caller arrives as the
   `X-Caller-Person-Id` header and is trusted, so **this app must not be exposed**.
 - **`/mcp` adapter** (MCP dev). Its port contracts attach to the person/project
   service layer — that is what `pms-old`'s temporary seed adapter stood in for.
   Until it lands, every audit row is `source=WEB` (see Audit below).
-- **Audit read views** — `GET /api/audit` (G1-3) and
-  `GET /api/projects/{id}/audit` (G2-2), with their permission flag and 404
-  concealment. Rows are already accumulating, so this is additive.
 - **Domain events** — A7-1 `ProjectCompleted`, B2-1 `AssignmentClosed` and the
-  rest have no consumer yet (no notification module), so they are not published.
-- **Utilization recalculation** (B1-3 · C1-4) — no resource module yet.
+  rest are still not published: the notification module exists now, but nothing
+  consumes them until its logic lands.
 - project ACs **A6-3** (role assignment) · **A8** (per-project permission matrix),
-  people/org create·update (E2-1·E2-2·E3-1·E3-2), and the `?phase=` list filter.
+  and the `?phase=` list filter.
 
 ## Ownership inside this app
 
@@ -92,7 +184,7 @@ they are enforced (2026-08-21 decision: build it, use it later).
 ```
 false (default)   common/config OpenSecurityConfig      permit-all chain
                   HeaderCallerIdentityResolver          caller = X-Caller-Person-Id header
-true              person/controller ApiSecurityConfig   Bearer required, 401 envelope
+true              auth/controller ApiSecurityConfig     Bearer required, 401 envelope
                   TokenCallerIdentityResolver           caller = token subject (= personId)
 ```
 
@@ -120,7 +212,9 @@ it fails startup if any person points at a missing org unit, grade, or group.
 
 The gate is "any seeded section is empty", not just "people is empty" — when a new
 section was added (accounts), an already-seeded database would otherwise never
-receive it. Add a line to `missingSection()` when a section is added.
+receive it. Add a line to `missingSection()` when a section is added. The accounts
+count comes through `AccountPort` since the auth split — the loader stays in person
+but no longer touches auth's repository.
 
 The SQL file is the single source — it is not a Flyway migration on purpose, so
 that tests can opt out. Re-running is safe (`ON CONFLICT DO NOTHING`, and the
@@ -141,14 +235,25 @@ GET  /api/auth/jwks           public keys (the /mcp decoder consumes this)
 GET  /api/me                  caller identity + group flags — the front-end gates UI on this
 GET  /api/people              visible people (43 seeded, system account hidden)
 GET  /api/people/{id}          404 conceals both absence and out-of-visibility
-DELETE /api/people/{id}       204, soft deactivate — "사용자/조직/권한 관리" flag (E2-3)
+DELETE /api/people/{id}       200 {success:true}, soft deactivate — "사용자/조직/권한 관리" flag (E2-3)
 GET  /api/org-units           tree + counts + deletable, same flag
-DELETE /api/org-units/{id}    204, empty nodes only — 409 IN_USE otherwise (E3-3)
+DELETE /api/org-units/{id}    200 {success:true}, empty nodes only — 409 IN_USE otherwise (E3-3)
 
 POST /api/people              201 + person — creates the login account too (E2-1)
 POST /api/org-units           201 + node — arbitrary depth, one company root (E3-1)
 GET  /api/grades              form choices for the admin screen (same flag)
 GET  /api/permission-groups   form choices for the admin screen (same flag)
+
+--- scaffolded, 501 until the logic lands (2026-08-22) ---
+PUT  /api/people/{id}              edit name·org·grade·group (E2-2)
+PUT  /api/people/{id}/org-unit     move only (E1-1 — allowed with live assignments)
+PUT  /api/org-units/{id}           rename (E3-2)
+POST/PUT/DELETE /api/grades[/{id}]              grade CRUD (E4)
+POST/PUT/DELETE /api/permission-groups[/{id}]   group CRUD (E5)
+GET  /api/utilization?month=&personId=&orgUnitId=&overbooked=   (EPIC C)
+GET  /api/notifications  ·  PATCH /api/notifications/{id}/read  (F1-3)
+GET  /api/audit                    integrated log, manage flag — 403 is real (G1-3)
+GET  /api/projects/{id}/audit      per-project, visibility — 404 is already real (G2-2)
 
 POST /api/projects            201 + detail                       (A1)
 GET  /api/projects            §7 page envelope, ?page&size&sort   (A3-1)
@@ -157,22 +262,23 @@ PUT  /api/projects/{id}         edit info + one forward transition (A5)
 PUT  /api/projects/{id}/progress   two-step: confirmed=false → true (A2)
                                    진행중 only — else 409 NOT_IN_PROGRESS (A2-9)
 PUT  /api/projects/{id}/pm          PM handover, creates the assignment if needed (A6-1)
-DELETE /api/projects/{id}           204, soft delete — PM or the "프로젝트 생성" flag (A4)
+DELETE /api/projects/{id}           200 {success:true}, soft delete — PM or the "프로젝트 생성" flag (A4)
 POST /api/projects/{id}/complete   {version} — needs 진행중 + 100%   (A7-1)
 POST /api/projects/{id}/reopen     {version} — 완료 → 진행중, progress=90 (A7-3)
 
 POST   /api/projects/{id}/assignments   201 + assignment view      (B1-1)
 PUT    /api/assignments/{id}            period + monthly M/M       (B1-4)
-DELETE /api/assignments/{id}            204, status=CLOSED (row kept) (B2-1)
+DELETE /api/assignments/{id}            200 {success:true}, status=CLOSED (row kept) (B2-1)
 ```
 
 No assignment list route: the project detail already carries them (A3-3).
-Not routed yet, on purpose: A6-3 (`/roles`), A8 (`/permissions`), people/org
-create·update (E2-1·E2-2·E3-1·E3-2), the audit read views, and `?phase=`.
+Not routed yet, on purpose: A6-3 (`/roles`), A8 (`/permissions`), `?phase=`, and
+the SSE stream `GET /api/notifications/stream` (its `?access_token=` auth and the
+access-log masking are one unit — opening the route first leaks tokens into logs).
 
-## Audit (recording only — 2026-08-21 decision)
+## Audit (recording real · reading scaffolded)
 
-`common/audit` records every project-scoped change as one append-only row in
+`audit` records every project-scoped change as one append-only row in
 `audit_logs` (Flyway V3). One table is the whole store: the integrated log (G1-3)
 and the per-project history (G2-2) are two *read views* of the same rows, which is
 why `projectId` is a filter column filled even when `entityId` is an assignment.
@@ -187,6 +293,14 @@ why `projectId` is a filter column filled even when `entityId` is an assignment.
 - **`source`** comes from the request path (`/mcp` → MCP, else WEB), so the MCP
   adapter needs no audit wiring — verify that when it lands.
 - Rows join the caller's transaction: a rolled-back change leaves no history.
+- **Two views, two modules, one table** (2026-08-22): `AuditQueryService` in the audit module
+  is a plain read with **no permission logic** — it cannot have any, because the
+  two views judge differently (manage-org flag vs project visibility) and audit
+  may not depend on person or project (that is a cycle). person's
+  `AuditViewService` (G1-3) and project's `ProjectQueryService.listAudit` (G2-2) wrap it.
+  Their **checks are implemented; only the fetch throws 501** — a 403/404 hole is
+  not something to add later, and having the guard means the "no leak to a caller
+  without the flag" property is under test from now on.
 
 ## Project permissions
 

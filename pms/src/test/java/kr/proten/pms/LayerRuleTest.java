@@ -60,7 +60,7 @@ class LayerRuleTest {
     @DisplayName("서비스 계약(인터페이스)은 자기 구현을 모른다")
     void serviceContractDependsOnNoImplementation() {
         // "..service" = 이름이 service로 끝나는 모든 패키지 — 도메인 모듈뿐 아니라
-        // common 안에 중첩된 계약 패키지(common.audit.service)까지 함께 본다
+        // 횡단 모듈의 계약 패키지(audit.service)까지 함께 본다
         noClasses().that().resideInAPackage("..service")
                 .should().dependOnClassesThat().resideInAPackage("..service.impl..")
                 .allowEmptyShould(true)

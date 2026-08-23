@@ -75,7 +75,9 @@
 - **`@Transactional`**: on the service layer only (never controllers or repositories). Query services default to `@Transactional(readOnly = true)`.
 - **Query before you mutate** (2026-08-21): inside a transaction, run repository queries — duplicate checks, existence checks — *before* changing any entity. A query on a dirty session makes JPA flush first, so one use case increments `@Version` twice and writes the change before its own validation has run. Observed live: a single project edit moved `version` 1 → 3.
 - **Never expose entities**: REST controllers and MCP adapters never return entities. Convert to record DTOs in the service layer. **MCP tool output feeds straight into the LLM** — include only the fields needed, and never accidentally ship internal identifiers or sensitive fields.
-- **Exception → HTTP mapping**: throw `ApiException` subtypes and map them in one place via `@RestControllerAdvice` into the §7 error envelope (`ErrorResponse` — `{error:{code,message,field,traceId}}`; the security chain's 401 writes the same envelope). MCP adapters use the same shared mapping (no ad-hoc try-catch conversion inside individual tools).
+- **One response shape** (2026-08-22): every controller returns `ApiResponse<T>` — `{success, data}` on success, `{success, error}` on failure — including a 200 with no data for deletes. A list puts the §7 page envelope inside `data`. The only exception is `GET /api/auth/jwks`, whose shape RFC 7517 owns. Rationale: with an asymmetric contract the caller has to branch on the status code before it can even parse, and every client re-invents that branch.
+- **Error codes are an enum, never a literal**: `ErrorCode` (common/exception) is the single definition of the §7 table and carries the HTTP status with each code. A code that lives as a string at the throw site lets a typo compile and ship, and lets the same meaning split into two spellings.
+- **Exception → HTTP mapping**: throw `ApiException` subtypes carrying an `ErrorCode` and map them in one place via `@RestControllerAdvice`; the security chain's 401 writes the same envelope. MCP adapters use the same shared mapping (no ad-hoc try-catch conversion inside individual tools).
 
   | Situation | HTTP | MCP tool error message direction |
   |------|------|--------------------------|
@@ -95,34 +97,61 @@
 
 > Applies to `pms/`. The `host/` app is a thin agent-loop application — its
 > internal structure is decided at M0.
-> One module per domain. Current list (**rebuild of 2026-08-21, shared decision
-> log** — supersedes the M0 list `identity · project · resource · maintenance ·
-> notification · common`): **person · project · common**. `identity` was renamed
-> `person` once accounts and authentication left its scope. resource ·
-> maintenance · notification and the `/mcp` adapter module are added by their
-> owner when the work starts — no empty modules ahead of time.
+> One module per domain. Current list (**2026-08-22 scaffold extension, shared
+> decision log** — supersedes the 2026-08-21 rebuild list `person · project ·
+> common`): **person · auth · project · resource · notification** (domain)
+> **+ audit · common** (cross-cutting). `audit` left `common` on 2026-08-22 — it is
+> cross-cutting in *use* but owns an entity, a repository and its own use cases, so
+> it does not belong in the layer everything else depends on. `common` now holds
+> wiring only: no entity, no repository.
+> `identity` was renamed `person` once accounts and authentication left its
+> scope, and on 2026-08-22 those actually left, into **`auth`**. `maintenance`
+> and the `/mcp` adapter module are still added by their owner when the work
+> starts. `resource`/`notification` were scaffolded ahead of their logic by
+> explicit user decision — that is an exception on those two, not a repeal of
+> "no empty modules ahead of time".
+>
+> **Cycles are the constraint that shapes the module graph.** When two modules
+> each need something from the other, the one that *needs* defines an interface
+> **in its own module root package** and the other implements it —
+> `kr.proten.pms.person.AccountPort`, implemented by auth, is the worked example.
+> Never satisfy a mutual need by having both sides import each other; that is
+> exactly what `ModularityTest` rejects.
 
 ```
 kr.proten.pms
-├── common/                   # cross-cutting only — no domain logic
-│   ├── config/               #   @NamedInterface — shared Spring configuration
-│   ├── exception/            #   @NamedInterface — exception types + error-envelope handler
-│   └── audit/                #   a cross-cutting concern with its own three layers
-│       ├── service/          #     @NamedInterface — contract + its vocabulary enums
-│       │   ├── impl/ dto/ entity/
-│       └── repository/       #     (2026-08-21: nesting keeps the layer rules intact)
+├── common/                   # shared wiring — NOT a module (excluded from detection)
+│   ├── config/               #   caller identity · request path · security chains
+│   ├── exception/            #   ErrorCode + the exception types
+│   └── web/                  #   ApiResponse · ApiError · PageResponse + the one handler
+├── audit/                    # its own module since 2026-08-22 — it owns an entity
+│   ├── AuditTrail · AuditQueryService · AuditAction · AuditSource   # public contract
+│   ├── AuditEntry · AuditRecord                                     # public values
+│   ├── service/{impl,entity}/                                       # internal
+│   └── repository/                                                  # internal
 └── project/                  # module = one domain
+    ├── (root is empty)       #   nothing of project crosses the boundary
     ├── controller/           #   REST controllers + MCP adapters (siblings)
-    ├── service/              #   @NamedInterface — use-case interfaces (the module's contract)
+    │   └── dto/              #     request·response records
+    ├── service/              #   use-case interfaces — internal, only this module calls them
     │   ├── impl/             #     implementations + internal collaborators
-    │   ├── dto/              #     @NamedInterface — inputs/outputs the contract exchanges
+    │   │   └── scope/        #       a strategy family gets its own package
+    │   ├── dto/              #     inputs/outputs the contract exchanges
     │   └── entity/           #     JPA entities, VOs, enums
     └── repository/           #   Spring Data repositories
 ```
 
+The module root holds **only what crosses the boundary**, so that list *is* the
+contract and widening it is a visible act — a new file at the top of the module.
+Everything a module uses on its own stays in the layered sub-packages.
+
 - **Three layers, one direction**: `controller → service → repository`. A layer never depends on one above it; `service` (the contract) never depends on `service/impl`. Enforced by `LayerRuleTest` (ArchUnit).
 - **The JPA entity is the domain model** (2026-08-21 decision — supersedes the former hexagonal `api→application→domain←infra` layout with a framework-free domain). Entity invariants live on the entity: protected no-arg constructor, no setters, intent-revealing methods, state rules in factories. A separate pure-domain model mapped back and forth to a `*Jpa` twin is **not** used — the round-trip mapping cost each field twice and bought little.
-- **Interface in `service/`, implementation in `service/impl/`.** The interface is what other modules and the controllers see; naming is `XxxService` / `XxxServiceImpl`. Internal collaborators (factories, resolvers, strategy implementations) live in `impl/` and stay package-private unless another package in the same module needs them.
+- **Interface in `service/`, implementation in `service/impl/`.** Naming is `XxxService` / `XxxServiceImpl`. A contract only other modules use goes to the module root instead (see below). Internal collaborators (factories, resolvers, strategy implementations) live in `impl/` and stay package-private unless another package in the same module needs them.
+- **No `package-info.java` — a module's public API is its root package.** Modulith's documented default is "the module base package is the API package; sub-packages are internal". Put the types other modules use *directly in the module root* and nothing else is needed. `package-info.java` exists only to carry `@NamedInterface`, whose whole job is to reopen a sub-package that the default had closed — i.e. to pay for having put the contract in the wrong place. All eight were deleted on 2026-08-22 by moving the seven person types and six audit types to their module roots; boundary verification is unchanged and still fails on a cycle or an internal reference. Before adding a `package-info` back, move the type to the module root instead.
+- **Shared wiring is not a module.** `common` (error model, response envelope, caller identity) is passed to `ApplicationModules.of(Class, DescribedPredicate)` as the ignore predicate. A module everything depends on encapsulates nothing; making it one only re-records that fact.
+- **Group a folder by kind, not by count.** Request/response records go to `controller/dto/`; a strategy family or a self-contained concept gets its own package under `impl/` (`impl/scope/` · `impl/requester/` · `impl/token/`). Many files of *one* kind in a folder is a list and reads fine; a folder that **mixes** kinds — use cases next to auth infrastructure next to a seed loader — is what actually costs reading time. Split on the mixing, not on the number.
+- **A contract per domain concern, not per use case** (2026-08-22). "Small, segregated interfaces" (§7 ISP) means *a caller should not depend on methods it does not use* — so the test is **who consumes it**, not how many methods it has. Split when a contract has a distinct consumer or a distinct judgement axis; do not split a single domain's CRUD into one interface per verb. The smell that triggered this rule: nine project interfaces, six single-method, eight consumed only by `ProjectController`, every one of them injecting the same five collaborators — segregation that removed no coupling and multiplied the surface the `/mcp` adapter has to bind to. Keep decomposing the *implementation* (one judgement per class in `impl/`); that is where SRP pays.
 - **Persistence stays in `service/entity/` and `repository/`**: `jakarta.persistence` may only be imported there. Web concerns (`org.springframework.web`/`http`) belong to `controller/` and to common's error-envelope conversion. The entity must not depend on `dto/` — conversion runs one way, dto ← entity. All enforced by `LayerRuleTest`.
 - **Inter-module communication**: only through the packages the other module exposes with `@NamedInterface` — its `service` contract and `service/dto` values. `repository/`, `service/entity/`, and `service/impl/` are module-internal, so **entities and repositories cannot cross a module boundary** and links are by id (PRD-pms §0). Verified by `ModularityTest`.
 - These boundaries are enforced by the Modulith/ArchUnit tests — when a test breaks, fix the structure, not the test.

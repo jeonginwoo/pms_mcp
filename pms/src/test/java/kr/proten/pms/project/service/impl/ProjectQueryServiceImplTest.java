@@ -1,9 +1,9 @@
 package kr.proten.pms.project.service.impl;
 
-import kr.proten.pms.project.service.dto.ProjectVisibility;
-import kr.proten.pms.project.service.dto.ProjectSummary;
-import kr.proten.pms.project.service.dto.ProjectDetail;
 import kr.proten.pms.project.service.dto.AssignmentView;
+import kr.proten.pms.project.service.dto.ProjectDetail;
+import kr.proten.pms.project.service.dto.ProjectSummary;
+import kr.proten.pms.project.service.dto.ProjectVisibility;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
@@ -14,15 +14,16 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Set;
+import kr.proten.pms.audit.AuditQueryService;
 import kr.proten.pms.common.exception.NotFoundException;
-import kr.proten.pms.person.service.PersonDirectoryService;
-import kr.proten.pms.person.service.dto.PersonRef;
+import kr.proten.pms.person.PersonDirectoryService;
+import kr.proten.pms.person.PersonRef;
+import kr.proten.pms.project.repository.ProjectAssignmentRepository;
+import kr.proten.pms.project.repository.ProjectRepository;
 import kr.proten.pms.project.service.entity.AssignmentStatus;
 import kr.proten.pms.project.service.entity.Project;
 import kr.proten.pms.project.service.entity.ProjectAssignment;
-import kr.proten.pms.project.repository.ProjectAssignmentRepository;
 import kr.proten.pms.project.service.entity.ProjectFixtures;
-import kr.proten.pms.project.repository.ProjectRepository;
 import kr.proten.pms.project.service.entity.ProjectRole;
 import kr.proten.pms.project.service.entity.ProjectStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,6 +55,8 @@ class ProjectQueryServiceImplTest {
     @Mock
     private ProjectVisibilityService projectVisibilityService;
     @Mock
+    private AuditQueryService auditQueryService;
+    @Mock
     private PersonDirectoryService personDirectoryService;
 
     private ProjectQueryServiceImpl service;
@@ -63,7 +66,8 @@ class ProjectQueryServiceImplTest {
         service = new ProjectQueryServiceImpl(
                 projectRepository,
                 projectVisibilityService,
-                new ProjectViewFactory(assignmentRepository, personDirectoryService));
+                new ProjectViewFactory(assignmentRepository, personDirectoryService),
+                auditQueryService);
     }
 
     @Test

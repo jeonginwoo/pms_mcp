@@ -11,6 +11,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.time.LocalDate;
 import kr.proten.pms.common.exception.ConflictException;
+import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.StaleVersionException;
 import kr.proten.pms.common.exception.ValidationException;
 
@@ -176,7 +177,7 @@ public class Project {
         }
 
         if (!status.advancesTo(target)) {
-            throw new ConflictException("INVALID_TRANSITION",
+            throw new ConflictException(ErrorCode.INVALID_TRANSITION,
                     "%s에서 %s로는 바꿀 수 없습니다".formatted(status.label(), target.label()));
         }
 
@@ -190,12 +191,12 @@ public class Project {
      */
     public void complete() {
         if (status != ProjectStatus.IN_PROGRESS) {
-            throw new ConflictException("INVALID_TRANSITION",
+            throw new ConflictException(ErrorCode.INVALID_TRANSITION,
                     "진행중인 프로젝트만 완료 처리할 수 있습니다 (현재 " + status.label() + ")");
         }
 
         if (progress != 100) {
-            throw new ConflictException("PROGRESS_INCOMPLETE",
+            throw new ConflictException(ErrorCode.PROGRESS_INCOMPLETE,
                     "진척률 100%에서만 완료 처리할 수 있습니다 (현재 " + progress + "%)");
         }
 
@@ -210,7 +211,7 @@ public class Project {
      */
     public void reopen() {
         if (status != ProjectStatus.COMPLETED) {
-            throw new ConflictException("INVALID_TRANSITION",
+            throw new ConflictException(ErrorCode.INVALID_TRANSITION,
                     "완료된 프로젝트만 재개할 수 있습니다 (현재 " + status.label() + ")");
         }
 

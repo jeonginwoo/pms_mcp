@@ -1,5 +1,6 @@
 package kr.proten.pms.person.service.impl;
 
+import kr.proten.pms.person.service.impl.requester.RequesterResolver;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.never;
@@ -8,14 +9,18 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
-import kr.proten.pms.person.service.dto.OrgVisibility;
+import kr.proten.pms.person.OrgVisibility;
 import kr.proten.pms.person.repository.OrgUnitRepository;
-import kr.proten.pms.person.service.entity.PermissionGroup;
 import kr.proten.pms.person.repository.PermissionGroupRepository;
+import kr.proten.pms.person.repository.PersonRepository;
+import kr.proten.pms.person.service.entity.PermissionGroup;
 import kr.proten.pms.person.service.entity.Person;
 import kr.proten.pms.person.service.entity.PersonFixtures;
-import kr.proten.pms.person.repository.PersonRepository;
 import kr.proten.pms.person.service.entity.VisibilityScope;
+import kr.proten.pms.person.service.impl.scope.CompanyScopeResolver;
+import kr.proten.pms.person.service.impl.scope.DivisionScopeResolver;
+import kr.proten.pms.person.service.impl.scope.SelfScopeResolver;
+import kr.proten.pms.person.service.impl.scope.TeamScopeResolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

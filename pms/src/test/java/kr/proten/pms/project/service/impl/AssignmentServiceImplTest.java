@@ -13,10 +13,11 @@ import static org.mockito.Mockito.when;
 import java.time.LocalDate;
 import java.util.Optional;
 import kr.proten.pms.common.exception.ConflictException;
+import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.ForbiddenException;
 import kr.proten.pms.common.exception.NotFoundException;
 import kr.proten.pms.common.exception.UnprocessableException;
-import kr.proten.pms.person.service.PersonDirectoryService;
+import kr.proten.pms.person.PersonDirectoryService;
 import kr.proten.pms.project.repository.ProjectAssignmentRepository;
 import kr.proten.pms.project.service.dto.CreateAssignmentCommand;
 import kr.proten.pms.project.service.dto.UpdateAssignmentCommand;
@@ -126,7 +127,7 @@ class AssignmentServiceImplTest {
         assertThatExceptionOfType(ConflictException.class)
                 .isThrownBy(() -> service.assign(PM_ID, createCommand(ProjectRole.PARTICIPANT)))
                 .satisfies(thrown ->
-                        assertThat(thrown.code()).isEqualTo("DUPLICATE_ASSIGNMENT"));
+                        assertThat(thrown.code()).isEqualTo(ErrorCode.DUPLICATE_ASSIGNMENT));
         verify(assignmentRepository, never()).save(any());
     }
 
@@ -139,7 +140,7 @@ class AssignmentServiceImplTest {
         // When · Then
         assertThatExceptionOfType(UnprocessableException.class)
                 .isThrownBy(() -> service.assign(PM_ID, createCommand(ProjectRole.PM)))
-                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo("INVALID_ROLE"));
+                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo(ErrorCode.INVALID_ROLE));
     }
 
     @Test
@@ -152,7 +153,7 @@ class AssignmentServiceImplTest {
         // When · Then
         assertThatExceptionOfType(UnprocessableException.class)
                 .isThrownBy(() -> service.assign(PM_ID, createCommand(ProjectRole.PARTICIPANT)))
-                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo("REF_NOT_FOUND"));
+                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo(ErrorCode.REF_NOT_FOUND));
     }
 
     @Test
@@ -208,7 +209,7 @@ class AssignmentServiceImplTest {
         assertThatExceptionOfType(ConflictException.class)
                 .isThrownBy(() -> service.update(PM_ID, new UpdateAssignmentCommand(
                         ASSIGNMENT_ID, null, null, 0.9, 1L)))
-                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo("STALE_VERSION"));
+                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo(ErrorCode.STALE_VERSION));
         verify(assignmentRepository, never()).saveAndFlush(any());
     }
 
@@ -248,7 +249,7 @@ class AssignmentServiceImplTest {
         // When · Then
         assertThatExceptionOfType(UnprocessableException.class)
                 .isThrownBy(() -> service.close(PM_ID, ASSIGNMENT_ID))
-                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo("INVALID_ROLE"));
+                .satisfies(thrown -> assertThat(thrown.code()).isEqualTo(ErrorCode.INVALID_ROLE));
         verify(assignmentRepository, never()).saveAndFlush(any());
     }
 

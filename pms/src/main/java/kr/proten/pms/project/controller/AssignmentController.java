@@ -2,6 +2,9 @@ package kr.proten.pms.project.controller;
 
 import jakarta.validation.Valid;
 import kr.proten.pms.common.config.CallerPersonId;
+import kr.proten.pms.common.web.ApiResponse;
+import kr.proten.pms.project.controller.dto.CreateAssignmentRequest;
+import kr.proten.pms.project.controller.dto.UpdateAssignmentRequest;
 import kr.proten.pms.project.service.AssignmentService;
 import kr.proten.pms.project.service.dto.AssignmentView;
 import org.springframework.http.HttpStatus;
@@ -34,26 +37,31 @@ class AssignmentController {
     /** 인력 배정 (AC B1-1) — 성공 시 201 + 배정 항목. */
     @PostMapping("/projects/{projectId}/assignments")
     @ResponseStatus(HttpStatus.CREATED)
-    AssignmentView assign(
+    ApiResponse<AssignmentView> assign(
             @CallerPersonId long callerPersonId,
             @PathVariable long projectId,
             @Valid @RequestBody CreateAssignmentRequest request) {
-        return assignmentService.assign(callerPersonId, request.toCommand(projectId));
+        return ApiResponse.ok(
+                assignmentService.assign(callerPersonId, request.toCommand(projectId)));
     }
 
     /** 배정 수정 (AC B1-4) — 기간·투입 M/M. */
     @PutMapping("/assignments/{assignmentId}")
-    AssignmentView update(
+    ApiResponse<AssignmentView> update(
             @CallerPersonId long callerPersonId,
             @PathVariable long assignmentId,
             @Valid @RequestBody UpdateAssignmentRequest request) {
-        return assignmentService.update(callerPersonId, request.toCommand(assignmentId));
+        return ApiResponse.ok(
+                assignmentService.update(callerPersonId, request.toCommand(assignmentId)));
     }
 
     /** 배정 종료 (AC B2-1) — 행은 남고 상태가 종료로 바뀐다. */
     @DeleteMapping("/assignments/{assignmentId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    void close(@CallerPersonId long callerPersonId, @PathVariable long assignmentId) {
+    ApiResponse<Void> close(
+            @CallerPersonId long callerPersonId,
+            @PathVariable long assignmentId) {
         assignmentService.close(callerPersonId, assignmentId);
+
+        return ApiResponse.ok();
     }
 }

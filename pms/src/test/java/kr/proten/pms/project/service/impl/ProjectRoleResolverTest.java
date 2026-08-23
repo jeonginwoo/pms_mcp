@@ -6,10 +6,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
-import kr.proten.pms.person.service.dto.OrgPermission;
-import kr.proten.pms.person.service.OrgPermissionService;
-import kr.proten.pms.project.service.entity.AssignmentStatus;
+import kr.proten.pms.person.OrgPermission;
+import kr.proten.pms.person.OrgPermissionService;
 import kr.proten.pms.project.repository.ProjectAssignmentRepository;
+import kr.proten.pms.project.service.entity.AssignmentStatus;
 import kr.proten.pms.project.service.entity.ProjectFixtures;
 import kr.proten.pms.project.service.entity.ProjectRole;
 import org.junit.jupiter.api.BeforeEach;

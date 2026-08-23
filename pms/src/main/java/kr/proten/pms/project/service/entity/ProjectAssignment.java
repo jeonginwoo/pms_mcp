@@ -11,6 +11,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.time.LocalDate;
 import kr.proten.pms.common.exception.ConflictException;
+import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.StaleVersionException;
 import kr.proten.pms.common.exception.ValidationException;
 
@@ -113,7 +114,7 @@ public class ProjectAssignment {
      */
     public void close() {
         if (status == AssignmentStatus.CLOSED) {
-            throw new ConflictException("INVALID_TRANSITION", "이미 종료된 배정입니다");
+            throw new ConflictException(ErrorCode.INVALID_TRANSITION, "이미 종료된 배정입니다");
         }
 
         this.status = AssignmentStatus.CLOSED;
