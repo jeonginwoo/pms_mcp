@@ -9,6 +9,8 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * /mcp Streamable HTTP 테스트 클라이언트 — initialize 핸드셰이크 공통분.
@@ -30,6 +32,56 @@ final class McpHttp {
             {"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"find_person","arguments":{}}}""";
     static final String SEARCH_PROJECTS = """
             {"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"search_projects","arguments":{}}}""";
+
+    static String searchMaintenance(String keyword) {
+        return request(7, "search_maintenance", "\"keyword\":\"%s\"".formatted(keyword));
+    }
+
+    static String searchMaintenanceByStatus(String status) {
+        return request(8, "search_maintenance", "\"status\":\"%s\"".formatted(status));
+    }
+
+    static String listMaintenanceLogs(int id) {
+        return request(9, "list_maintenance_logs", "\"id\":%d".formatted(id));
+    }
+
+    static String listMaintenanceLogs(int id, String type) {
+        return request(10, "list_maintenance_logs",
+                "\"id\":%d,\"type\":\"%s\"".formatted(id, type));
+    }
+
+    /** tools/call 요청 한 줄 — 인자 JSON만 호출자가 만든다. */
+    private static String request(int id, String tool, String arguments) {
+        return ("{\"jsonrpc\":\"2.0\",\"id\":%d,\"method\":\"tools/call\","
+                + "\"params\":{\"name\":\"%s\",\"arguments\":{%s}}}")
+                .formatted(id, tool, arguments);
+    }
+
+    /**
+     * 도구 응답 안의 숫자 필드 — 도구가 준 id를 다음 도구에 넣는 흐름(eval C류의
+     * "id 확보 경로")을 테스트에서 그대로 밟기 위한 최소 추출기다. 응답 JSON이 텍스트
+     * 콘텐트 안에 이스케이프된 채 실려 오므로 파서를 세우지 않고 필드만 집어낸다.
+     */
+    static int intFieldOf(String body, String field) {
+        Matcher matcher = Pattern.compile(field + "[^0-9-]{0,8}(-?[0-9]+)").matcher(body);
+
+        assertThat(matcher.find()).as(field + " 필드가 응답에 없다: " + body).isTrue();
+
+        return Integer.parseInt(matcher.group(1));
+    }
+
+    /**
+     * 응답에 실린 첫 이슈의 id — 계약 → 이슈로 파고드는 흐름(eval C-04가 전제하는
+     * 이슈 id 직접 제공형)을 테스트에서 밟기 위한 것. `contractId`와 헷갈리지 않게
+     * `issues` 배열 안쪽만 본다.
+     */
+    static int firstIssueIdOf(String body) {
+        int issues = body.indexOf("issues");
+
+        assertThat(issues).as("issues 배열이 응답에 없다: " + body).isNotNegative();
+
+        return intFieldOf(body.substring(issues), "id");
+    }
 
     static String findPersonByTeam(String team) {
         return """

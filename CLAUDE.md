@@ -18,8 +18,10 @@ for the area this session works on — `docs/PROGRESS-host.md` or
 - `host/` — AI host Boot app (agent loop, LLM, MCP client). **Owner: MCP dev.**
   Rules: `host/CLAUDE.md`.
 - `pms-mcp-mock/` — M-1 mock MCP server (구현_노트 부록 B). **Owner: MCP dev.**
-  Its `mcp/` and `port/` layers are the real contract (promoted into `pms/` at
-  M0); `mock/` is disposable. Verified under the host scope.
+  Its `mcp/` tool layer was promoted into `pms/` (M0, re-promoted 2026-08-23);
+  `port/` and `mock/` did not survive that move — the real contract is now each
+  domain module's root (구현_노트 B-3). Kept as the catalog experiment bench.
+  Verified under the host scope.
 - `pms/` — rebuilt PMS Boot app (**rebuilt again 2026-08-21** — one module per
   domain, three layers `controller → service → repository`, JPA entity as the
   domain model). **Owner: PMS dev**, except the embedded `/mcp` adapter module,
@@ -117,9 +119,11 @@ docker compose -f pms/docker-compose.yml up -d
                          # and proten1!.
                          # MCP: POST /mcp (Streamable HTTP) — always requires a
                          # login access token regardless of pms.auth.enabled
-                         # (principle 4). 8 tools listed; only whoami and
-                         # find_person answer with real data, the other 6 return
-                         # the FR-AI-26 503 until their domain lands.
+                         # (principle 4). 8 tools listed; 4 answer with real
+                         # data (whoami, find_person, search_maintenance,
+                         # list_maintenance_logs), the other 4 (project 2,
+                         # utilization 2) return the FR-AI-26 503 — project's
+                         # contracts have landed, only the adapter wiring is left.
 ```
 
 ## Way of working
