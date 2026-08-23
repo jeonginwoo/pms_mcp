@@ -2,7 +2,7 @@ package kr.proten.pms.person;
 
 import java.util.Collection;
 import java.util.List;
-import kr.proten.pms.person.PersonRef;
+import java.util.Optional;
 
 /**
  * 인원 참조 조회 — 다른 모듈이 인원 id의 유효성을 확인하고 표시 이름을 얻는 경로.
@@ -17,4 +17,14 @@ public interface PersonDirectoryService {
 
     /** 주어진 id 중 활성 인원만 참조 값으로. 부재 id는 결과에서 빠진다. */
     List<PersonRef> findRefs(Collection<Long> personIds);
+
+    /**
+     * 이름으로 인원 id를 찾는다 — 시드 원본이 사람을 이름으로 적어 둔 경우의 창구다
+     * (유지보수 계약의 영업대표 3명, 2026-08-23 신설).
+     *
+     * <p>운영 입력 경로에는 쓰지 않는다: 동명이인이 생기면 이름은 식별자가 아니게
+     * 되고 그때 조용히 틀린 사람을 가리킨다. 그래서 **정확히 한 명일 때만** 답하고
+     * 없거나 둘 이상이면 빈 값이다 — 호출자가 그 사실을 보고 판단하게 한다.
+     */
+    Optional<Long> findIdByExactName(String name);
 }

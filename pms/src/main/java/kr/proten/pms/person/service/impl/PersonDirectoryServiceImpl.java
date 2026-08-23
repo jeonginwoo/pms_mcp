@@ -2,9 +2,11 @@ package kr.proten.pms.person.service.impl;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import kr.proten.pms.person.PersonDirectoryService;
 import kr.proten.pms.person.PersonRef;
 import kr.proten.pms.person.repository.PersonRepository;
+import kr.proten.pms.person.service.entity.Person;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,5 +39,17 @@ public class PersonDirectoryServiceImpl implements PersonDirectoryService {
 
         return personRefFactory.toRefs(
                 personRepository.findByIdInAndActiveTrue(personIds.stream().sorted().toList()));
+    }
+
+    @Override
+    public Optional<Long> findIdByExactName(String name) {
+        if (name == null || name.isBlank()) {
+            return Optional.empty();
+        }
+
+        List<Person> found = personRepository.findByNameAndActiveTrue(name.trim());
+
+        // 동명이인이면 이름은 식별자가 아니다 — 하나를 골라 주면 조용히 틀린다
+        return found.size() == 1 ? Optional.of(found.getFirst().getId()) : Optional.empty();
     }
 }
