@@ -100,9 +100,15 @@ docker compose -f pms/docker-compose.yml up -d
 
 (cd pms && ./gradlew bootRun)
                          # rebuilt PMS app on http://localhost:8080 (needs the
-                         # compose DB above). REST API on /api/people and
-                         # /api/projects; on an empty DB the org seed loads
-                         # itself from reference/seed/seed_org_proten.sql.
+                         # compose DB above). REST API: /api/auth, /api/me,
+                         # /api/people, /api/org-units, /api/grades,
+                         # /api/permission-groups, /api/projects (+ assignments),
+                         # /api/utilization, /api/notifications, /api/audit —
+                         # some are scaffolds answering 501 NOT_IMPLEMENTED
+                         # (PRD-pms §10 has the per-EPIC status). On an empty DB
+                         # the org seed loads itself from
+                         # reference/seed/seed_org_proten.sql; projects.json (382)
+                         # and maintenance.json are NOT loaded yet.
                          # Auth is built but off by default (pms.auth.enabled) —
                          # the caller is the X-Caller-Person-Id header and it is
                          # trusted, so do not expose this. Login works in both
