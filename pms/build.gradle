@@ -24,6 +24,7 @@ repositories {
 dependencies {
     implementation platform('org.springframework.boot:spring-boot-dependencies:4.1.0')
     implementation platform('org.springframework.modulith:spring-modulith-bom:2.1.0')
+    implementation platform('org.springframework.ai:spring-ai-bom:2.0.0')
     // 웹 계층은 common의 에러 봉투 변환(@RestControllerAdvice)이 쓴다 —
     // 모듈별 controller 패키지는 인증 도입 시 채운다(호출자 식별이 전제)
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -34,6 +35,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.springframework.modulith:spring-modulith-starter-core'
+    // 임베디드 /mcp 어댑터 (구조 원칙 2 — 별도 프로세스 금지). MCP 담당 소유분으로,
+    // pms-old의 M0 승격분을 2026-08-23에 재승격했다. Streamable HTTP 전송은 이
+    // 스타터가 /mcp 엔드포인트로 제공한다 — 직접 매핑하는 컨트롤러는 없다
+    implementation 'org.springframework.ai:spring-ai-starter-mcp-server-webmvc'
     // 이벤트 발행 레지스트리(spring-modulith-starter-jpa)는 도메인 이벤트 도입 시 추가
     // Boot 4는 기술별 자동 구성이 스타터로 분리됨 — flyway-core 단독은 자동 구성이 없다
     implementation 'org.springframework.boot:spring-boot-starter-flyway'

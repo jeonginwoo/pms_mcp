@@ -3,9 +3,9 @@
 > 공용 상태·결정 기록·미해결 이슈는 `PROGRESS.md`. 이 파일은 host 트랙의
 > 다음 작업과 세션 로그만 담는다.
 
-## 현재 상태 (2026-08-20)
+## 현재 상태 (2026-08-23)
 
-- **다음 작업:** **M1 착수 — 조회 6도구 실구현 연동.** 경로: 각 도메인 모듈 서비스가 port 5종을 구현하면 `/mcp`의 `internal/seed/` 임시 어댑터 제거 + 가시성 E2E 잔여분(프로젝트·404 은닉)을 mock 테스트에서 승격. **첫 후보 = identity `PeopleQueryService`의 person port 대체**(pms 2026-08-18 기록 — 시드가 실 DB에 있으므로 어댑터 교체만). 나머지 4포트(프로젝트·가동률·유지보수·진행률)는 pms 도메인 구현(PMS-M2~) 진도에 종속 — 순서 조율 필요. host 앱도 실서버 `/mcp` 대상 검토(base-url 8080 + 로그인 JWT — 목업은 카탈로그 실험장 존치). M1 세부 체크리스트는 ROADMAP에서 확장(다음 세션 계획 항목). **트리거 1건 유지**: 첫 배포 전 HS256 prod 프로파일 fail-fast(시크릿은 main yml에 잔존 — jwks-uri 삭제 실수 시 HS256 복귀 위험). eval 잔여는 G1 준비 시(자동 실행 스크립트·오염 레코드 주입·오류 주입 장치). 하네스 소소분: CI `setup-java@v4` deprecated → v5 (다음 정비 때)
+- **다음 작업:** **project 포트 실연결** — `search_projects`·`update_progress`. 선행은 pms 절 1항(project 조회·진척률 계약을 `project` 모듈 루트로 승격 — PMS 담당이 안을 올리고 이쪽이 확인, 공용 결정 기록 경유)이고, 그 합의가 오기 전에 이쪽에서 병행 가능한 것은 **eval 코퍼스 시드 재앵커**다(G1 선행 — people.json↔적재 SQL 인물 불일치, 결정 기록). 붙을 자리는 확정돼 있다: 조회는 `ProjectQueryService`, 쓰기는 `ProjectLifecycleService.updateProgress`(2단계 확인·낙관적 락·완료 규칙이 이미 그 안에 있다). 그 다음이 **host 앱 실서버 전환**(`pms.mcp.base-url` 8090→8080 + 로그인 access 토큰 관통 실측 — 지금은 person 2종만 응답하므로 관통 대상은 whoami·find_person 흐름). eval 잔여는 G1 준비 시(자동 실행 스크립트·오염 레코드 주입·오류 주입 장치). **소멸한 트리거 1건**: HS256 prod fail-fast — 재구축된 `pms`에 HS256 시크릿도 `jwks-uri` 프로퍼티도 없고 `/mcp`는 auth의 `accessTokenDecoder`를 그대로 쓴다(결정 기록). 하네스 소소분: CI `setup-java@v4` deprecated → v5 (다음 정비 때)
 - **차단 요소:** 없음
 
 ## 세션 로그
@@ -18,6 +18,14 @@
 - 미해결: <다음 세션으로 넘기는 것>
 - 다음 작업: <구체적으로>
 ```
+
+### 2026-08-23 — M1: `/mcp` 어댑터 재승격 + person 포트 실연결 (승격 방식 변경 — 결정 2건)
+
+- 완료: ①**상황 파악** — 08-20 이후 pms 3세션(재구축·모듈 분리·문서 정합)으로 바닥이 바뀌었음을 확인: `/mcp`가 새 `pms/`에서 빠져 `pms-old/`에만 있었고, ROADMAP M1 host 절은 자리표시자였고, 이 파일의 "첫 후보 = `PeopleQueryService`"는 사라진 클래스를 가리켰다. ②**승격 방식 결정**(사용자 승인 — 결정 기록): 3안 비교 후 **도메인 루트 조회 계약 + `mcp` 모듈이 도구·DTO·예외 매핑 소유**. 사용자 지적("①안도 새 도메인이면 똑같이 구현하면 되는 것 아닌가")이 타당해 확장성 논거는 접고, 실코드 대조로 판단을 바꿨다 — MCP DTO는 어느 안이든 필수(`MeView`의 권한 플래그 4개 vs `whoami` 유효 권한 미반환, `orgUnit` 1필드 vs `team`+`division` 2필드)이고, 결정적 차이는 **`maintenance` 모듈이 아직 없어 ①안은 그 도구를 둘 자리가 없다**는 것. ③**`/mcp` 재승격**: `mcp` 모듈(도구 8종·DTO 9종·`ToolError`·`ToolCalls`·`CallerContext`·`McpSecurityConfig`), spring-ai 2.0.0 BOM + `spring-ai-starter-mcp-server-webmvc`, `ModularityTest` 모듈 7종. 예외 매핑은 `ToolError.from(ApiException)` 한 곳 — `switch`에 default를 두지 않아 `ErrorCode`가 늘면 컴파일이 깨진다(conventions §4 "도구 안 try-catch 금지"). AOP를 쓰지 않은 이유는 도구 빈이 프록시되면 MCP 애노테이션 탐색이 도구를 놓칠 수 있고 그 실패가 "카탈로그에서 조용히 사라지는" 형태라서다. ④**디코더 전용 빈 폐기**(결정 기록): auth의 `accessTokenDecoder`를 그대로 받는다 — 빈을 하나 더 만들면 `ApiSecurityConfig`의 이름 주입과 충돌해 MCP 추가가 웹 인증을 깨뜨린다. 허용 목록도 없앴다(무클레임 HS256은 소멸, PAT는 미존재) → `/mcp`는 access 토큰만. ⑤**person 포트 실연결**: `person/PersonLookupService`+`PersonIdentity` 루트 승격, 구현은 `PersonService`를 그대로 불러 가시성 판정을 복제하지 않고(챗=화면) 부문만 조직 트리에서 채운다. ⑥**테스트 11건**: 인증 3케이스(무토큰·타 audience·정상 토큰 whoami=그 사용자)·체인 순서(웹 200/`/mcp` 401)·위조 서명·refresh 401·카탈로그 8종·가시성(팀원 CS사업팀 4명 vs 관리자 전사)·팀 필터·미구현 503. `bash scripts/verify.sh pms` **PASS**(281 테스트·실패 0)
+- 발견·정정: **시드 인물 데이터 2종 불일치**(결정 기록) — `people.json`과 적재본 `seed_org_proten.sql`의 이름 교집합 0명. eval-cases v1.6·유저_시나리오 v1.4의 화자·기대값이 실 서버에 없는 인물을 가리킨다(M0 실측은 people.json을 직접 읽는 임시 어댑터였기에 못 잡았다). **`spring.ai.mcp.server.protocol` 생략 금지** — 필드 기본값은 STREAMABLE이지만 자동 구성 조건이 `matchIfMissing=false`라 프로퍼티가 없으면 SSE가 켜지고 POST `/mcp`가 404다. 테스트 yml이 메인 yml을 통째로 가리므로 양쪽에 필요(pms-old에 같은 주석이 있었다). 기록 갱신: ROADMAP M1 host 절 10항목 기입·pms 절 G1 임계경로 문장 정정 · PROGRESS 결정 3건+현재 상태+미해결 1건 · 루트/pms CLAUDE.md의 "`/mcp` 미포함" 서술 정정
+- 미해결: eval 코퍼스 재앵커(G1 선행) · project·resource·maintenance 포트 실연결(pms 진도 종속) · host 앱 실서버 전환 · 감사 `source=MCP` 실측(쓰기 실연결 후)
+- 다음 작업: 위 "현재 상태"의 다음 작업
+
 
 ### 2026-08-20 — 게이트 M0 통과 (인증 3케이스 실서버 실측 + 사용자 승인) + JWKS 전환 스위치 활성화
 

@@ -15,6 +15,17 @@ spring:
       # 엔티티로 스키마를 만들지 않는다 (2026-08-21 결정 — Flyway 전환)
       ddl-auto: none
     open-in-view: false
+  # --- /mcp 어댑터 (MCP 담당 소유 블록) ------------------------------------
+  ai:
+    mcp:
+      server:
+        name: pms
+        version: 0.1.0
+        # 생략 금지 — 필드 기본값은 STREAMABLE이지만 자동 구성 조건이
+        # matchIfMissing=false라 프로퍼티가 없으면 SSE가 켜지고 /mcp가 404가 된다.
+        # 원칙 7(stateless 지향) — STATELESS 전환은 SDK 신 스펙 지원 후 검토
+        protocol: STREAMABLE
+        type: SYNC
 
 server:
   port: 8080

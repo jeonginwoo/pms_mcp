@@ -4,23 +4,25 @@ Scope: the rebuilt PMS Spring Boot app — domain modules, use-case services,
 persistence, and (once auth lands) the web API.
 Root `CLAUDE.md` invariants apply on top of this file.
 
-The previous implementation lives in `pms-old/` as **read-only reference** — it
-holds the gate-M0 output (`/mcp` adapter, login/JWT/JWKS auth chain, identity
-seed loader) that the rebuild deliberately left out. `verify.sh`/CI only look at
-`pms/gradlew`, so `pms-old/` is not verified.
+The previous implementation lives in `pms-old/` as **read-only reference**. What
+the rebuild left out has since been rebuilt here: the auth chain (2026-08-22) and
+the `/mcp` adapter (2026-08-23, on a different promotion design — shared decision
+log). `verify.sh`/CI only look at `pms/gradlew`, so `pms-old/` is not verified.
 
 ## Structure (2026-08-21 decisions — shared decision log)
 
 - **One domain, one module.** Current modules: `person` · `auth` · `project` ·
-  `resource` · `notification` (domain) + `audit` · `common` (cross-cutting).
+  `resource` · `notification` (domain) + `audit` (cross-cutting) + `mcp`
+  (inbound adapter) — and `common`, which is wiring, not a module.
   `audit` moved out of `common` on 2026-08-22: it is cross-cutting in *use*, but it
   owns an entity, a repository and use cases of its own, so it does not belong in
   the layer every module depends on. What that surfaced: `AuditSourceResolver` was
   reading the servlet request directly, which `LayerRuleTest` forbids outside
   `controller/` and `common/`. The fix was to move the *reading* down to
   `common/config/RequestPathResolver` and leave audit only the mapping to WEB/MCP —
-  not to relax the rule. `maintenance` and the `/mcp` adapter
-  module are still added by their owner when that work starts.
+  not to relax the rule. `mcp` joined on 2026-08-23 as the 7th module (MCP dev —
+  see the `/mcp` section below); `maintenance` is still added by its owner when
+  that work starts.
   `resource` and `notification` were scaffolded ahead of their logic on
   2026-08-22 by explicit user decision — that suspends the former "no empty
   modules ahead of time" rule **for those two only**; it still holds for
@@ -69,7 +71,7 @@ seed loader) that the rebuild deliberately left out. `verify.sh`/CI only look at
   |---|---|---|
   | project | `ProjectQueryService` · `ProjectCommandService` · `ProjectLifecycleService` · `AssignmentService` | visibility read · CRUD · §5 state machine · assignment |
   | person | `PersonService` · `OrgUnitService` · `GradeService` · `PermissionGroupService` · `AuditViewService` | one per managed resource |
-  | person (cross-module) | `PersonDirectoryService` · `OrgVisibilityService` · `OrgPermissionService` | **different consumers** — these earn the split |
+  | person (cross-module) | `PersonDirectoryService` · `OrgVisibilityService` · `OrgPermissionService` · `PersonLookupService` | **different consumers** — these earn the split |
 
   Implementations stay decomposed where the work is: `ProjectActionPermission`,
   `ProjectVisibilityService`, `ProjectAuditRecorder`, `ProjectViewFactory`,
@@ -83,8 +85,8 @@ seed loader) that the rebuild deliberately left out. `verify.sh`/CI only look at
   adopted 2026-08-22). Every sub-package (`controller/`, `service/`, `repository/`)
   is internal, so the files sitting *directly* in `person/` and `audit/` **are** the
   contract those modules offer — 7 and 6 files, and that list is the boundary.
-  `project` · `auth` · `resource` · `notification` have empty roots: nothing of
-  theirs crosses. Entities and repositories therefore cannot leave a module, and
+  `project` · `auth` · `resource` · `notification` · `mcp` have empty roots:
+  nothing of theirs crosses (`mcp` is the extreme case — it only *consumes*). Entities and repositories therefore cannot leave a module, and
   links are by id.
   - There are **no `package-info.java` files**. They only ever carried
     `@NamedInterface`, which was needed because the contracts sat in a sub-package
@@ -148,9 +150,11 @@ the §7 error table: when the logic lands, the throw site disappears.
 - **Auth is switched off** — see the Auth section below. With
   `pms.auth.enabled=false` (the default) the caller arrives as the
   `X-Caller-Person-Id` header and is trusted, so **this app must not be exposed**.
-- **`/mcp` adapter** (MCP dev). Its port contracts attach to the person/project
-  service layer — that is what `pms-old`'s temporary seed adapter stood in for.
-  Until it lands, every audit row is `source=WEB` (see Audit below).
+- **6 of the 8 MCP tools** — `search_projects` · `get_utilization` ·
+  `list_overbooked` · `search_maintenance` · `list_maintenance_logs` ·
+  `update_progress` return the FR-AI-26 `503` until their domain publishes a
+  contract at its module root (see the `/mcp` section below). Because the only
+  wired tools are reads, **every audit row is still `source=WEB`**.
 - **Domain events** — A7-1 `ProjectCompleted`, B2-1 `AssignmentClosed` and the
   rest are still not published: the notification module exists now, but nothing
   consumes them until its logic lands.
@@ -160,7 +164,9 @@ the §7 error table: when the logic lands, the throw site disappears.
 ## Ownership inside this app
 
 - **PMS dev**: domain modules, services, web/API, persistence, seed loading.
-- **MCP dev**: the `/mcp` adapter module when it is promoted.
+- **MCP dev**: the `mcp` adapter module (promoted 2026-08-23), plus the read
+  contract each domain publishes for it — those root files are agreed in the
+  shared decision log before they land.
 - The seam between the two is the service-layer API — changing it is a
   cross-boundary contract change: record it in the shared decision log in
   `docs/PROGRESS.md`, agreed by both devs.
@@ -201,6 +207,48 @@ deny-all. `AuthEnabledIntegrationTest` is the proof the on-path works.
 
 Seeded accounts: login id = the original staff email, initial password `proten1!`
 (one shared BCrypt hash; regenerate with `./gradlew printPasswordHash`).
+
+## `/mcp` adapter (MCP dev — re-promoted 2026-08-23)
+
+The embedded MCP server (principle 2 — never a separate process). Everything lives
+under `mcp/internal/`: the 8 `@McpTool` methods, the 9 response records
+(`internal/dto/`), `ToolError`, `CallerContext`, and the security chain. The module
+root is **empty on purpose** — nothing of `mcp` crosses a boundary, because the
+dependency runs one way: **`mcp` → the domain modules' roots**. Delete `mcp/` and
+the app still runs; what is left behind is the module list in `ModularityTest`, two
+lines in `build.gradle`, and any promoted contract that then has no consumer.
+
+- **A domain joins the catalog by publishing a read contract at its module root**,
+  not by hosting tool code. `person/PersonLookupService` (+`PersonIdentity`) is the
+  worked example; `project`, `resource` and `maintenance` follow the same shape when
+  their turn comes. That widening is a cross-boundary act — shared decision log.
+- **The tool response is not the screen response.** `MeView` carries four permission
+  flags and `whoami` must not return effective permissions (2026-08-03 decision), and
+  the tool DTOs split `orgUnit` into `team` + `division`. So the adapter maps; it
+  never forwards a screen DTO (구현_노트 §5).
+- **Visibility is never re-implemented here.** `PersonLookupServiceImpl` calls
+  `PersonService` so chat and screen answer identically. The adapter only maps.
+- **Exception → tool error lives in one place**: `ToolError.from(ApiException)`, whose
+  `switch` has **no `default`** — adding an `ErrorCode` breaks this compile on
+  purpose, so someone decides what the model should be told. Tools call domain
+  services through `ToolCalls.translating(...)`, so no tool has a `try`/`catch`
+  (conventions §4). Spring AOP was deliberately *not* used: proxying a tool bean can
+  make the MCP annotation scan miss it, and that failure looks like a tool silently
+  vanishing from the catalog.
+- **Token verification reuses auth's `accessTokenDecoder`** — the policy is identical
+  (audience=pms + token_type=access). Do **not** add a second `JwtDecoder` bean:
+  `ApiSecurityConfig` injects that one by parameter name, so a second bean makes
+  type injection ambiguous and the MCP change breaks web auth.
+- **`/mcp` always requires a token**, even with `pms.auth.enabled=false` — the chain
+  is `@Order(1)` on `securityMatcher("/mcp/**")`, so the permit-all web chain never
+  reaches it (principle 4).
+- **`spring.ai.mcp.server.protocol: STREAMABLE` must be written out**, in
+  `src/main/resources/application.yml` **and** in the test one (the test file shadows
+  main entirely). The field default is STREAMABLE but the autoconfiguration condition
+  is `matchIfMissing = false`, so leaving it out silently enables SSE and `POST /mcp`
+  becomes 404.
+- Unwired tools stay in the catalog and answer the FR-AI-26 `503`. Removing them would
+  make the model conclude the capability does not exist and route around it.
 
 ## Seed data
 
@@ -293,7 +341,9 @@ why `projectId` is a filter column filled even when `entityId` is an assignment.
   (§5 transitions only), otherwise `UPDATE`, soft close → `DELETE`. No change,
   no row. Call sites never pick the action themselves.
 - **`source`** comes from the request path (`/mcp` → MCP, else WEB), so the MCP
-  adapter needs no audit wiring — verify that when it lands.
+  adapter needs no audit wiring. The adapter landed on 2026-08-23 but only *read*
+  tools are wired, so no row is `source=MCP` yet — that gets measured when
+  `update_progress` is wired.
 - Rows join the caller's transaction: a rolled-back change leaves no history.
 - **Two views, two modules, one table** (2026-08-22): `AuditQueryService` in the audit module
   is a plain read with **no permission logic** — it cannot have any, because the
