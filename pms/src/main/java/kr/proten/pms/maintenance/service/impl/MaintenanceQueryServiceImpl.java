@@ -125,6 +125,19 @@ class MaintenanceQueryServiceImpl implements MaintenanceQueryService {
         return sitesOf(List.of(contractId));
     }
 
+
+    @Override
+    public boolean contractExists(long contractId) {
+        return contractRepository.existsById(contractId);
+    }
+
+    @Override
+    public String contractName(long contractId) {
+        return contractRepository.findById(contractId)
+                .map(MaintenanceContract::getName)
+                .orElseThrow(NotFoundException::new);
+    }
+
     private List<SiteView> sitesOf(List<Long> contractIds) {
         List<MaintenanceSite> sites = siteRepository.findByContractIdInOrderByNameAsc(contractIds);
 

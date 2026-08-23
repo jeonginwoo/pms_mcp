@@ -160,6 +160,8 @@ Everything a module uses on its own stays in the layered sub-packages.
 
 - Remove unused variables, imports, and methods
 - **Ask the DB, don't load-and-scan**: existence/count questions go through derived queries (`existsBy...`, `count()`), never `findAll()` + `isEmpty()`/`size()`. Deliberate load-all + in-memory filtering is allowed only with an ASSUMPTION comment stating the scale rationale and the revisit trigger.
+- **Give optional query filters a type.** `(:param is null or col = :param)` reaches PostgreSQL as an untyped null and fails with *"No function matches the given name and argument types"* — and `concat('%', :param, '%')` fails the same way. Build `like` patterns in Java and wrap the null test in `cast(:param as string|long|date)`. Both maintenance and project list queries hit this (2026-08-23); the failure is a runtime error on the *filterless* call, so a test that always passes a filter will not catch it.
+- **Never branch on a caught exception inside a transaction.** Catching `NotFoundException` from an inner `@Transactional` call to try a second lookup marks the surrounding transaction rollback-only, and the follow-up query then returns wrong results *without* throwing (measured 2026-08-23 — `logsOf` returned a hit for an id that exists nowhere). Ask with an existence query (`existsById`, `findX().isPresent()`) instead. Exceptions are for outcomes the caller cannot proceed from, not for control flow.
 - No duplicated code; minimize cognitive complexity
 - No empty catch blocks (at minimum log or leave an intent comment)
 - No raw types (specify generic types); compare strings with `equals()`

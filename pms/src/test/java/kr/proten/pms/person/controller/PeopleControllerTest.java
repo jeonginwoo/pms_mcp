@@ -37,8 +37,8 @@ class PeopleControllerTest {
     @DisplayName("목록 — 호출자 헤더의 personId로 서비스에 위임한다")
     void list_delegatesWithCallerFromHeader() throws Exception {
         when(personService.listVisible(102L)).thenReturn(List.of(
-                new PersonRef(102L, "팀장", "SI팀", "수석"),
-                new PersonRef(103L, "팀원", "SI팀", "주임")));
+                new PersonRef(102L, "팀장", "SI팀", "SI부문", "수석"),
+                new PersonRef(103L, "팀원", "SI팀", "SI부문", "주임")));
 
         mockMvc.perform(get("/api/people").header(CALLER_HEADER, "102"))
                 .andExpect(status().isOk())
@@ -51,7 +51,7 @@ class PeopleControllerTest {
     @DisplayName("단건 — 경로 변수와 호출자를 함께 넘긴다")
     void get_passesPathVariableAndCaller() throws Exception {
         when(personService.getPerson(102L, 103L))
-                .thenReturn(new PersonRef(103L, "팀원", "SI팀", "주임"));
+                .thenReturn(new PersonRef(103L, "팀원", "SI팀", "SI부문", "주임"));
 
         mockMvc.perform(get("/api/people/103").header(CALLER_HEADER, "102"))
                 .andExpect(status().isOk())

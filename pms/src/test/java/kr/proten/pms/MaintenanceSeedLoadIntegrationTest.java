@@ -14,12 +14,14 @@ import kr.proten.pms.maintenance.service.MaintenanceQueryService;
 import kr.proten.pms.maintenance.service.dto.ContractDetail;
 import kr.proten.pms.maintenance.service.dto.ContractQuery;
 import kr.proten.pms.maintenance.service.dto.ContractSummary;
+import kr.proten.pms.maintenance.ContractIssues;
 import kr.proten.pms.maintenance.service.dto.IssueQuery;
 import kr.proten.pms.maintenance.service.dto.IssueView;
 import kr.proten.pms.maintenance.service.dto.SiteView;
 import kr.proten.pms.maintenance.service.entity.ContractStatus;
 import kr.proten.pms.maintenance.service.entity.IssueType;
 import kr.proten.pms.maintenance.service.entity.MaintenanceContract;
+import kr.proten.pms.maintenance.service.entity.MaintenanceIssue;
 import kr.proten.pms.maintenance.service.entity.MaintenanceSite;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -51,6 +53,10 @@ class MaintenanceSeedLoadIntegrationTest {
 
     @Autowired
     private MaintenanceContractRepository contractRepository;
+    @Autowired
+    private kr.proten.pms.maintenance.repository.MaintenanceIssueRepository issueRepository;
+    @Autowired
+    private kr.proten.pms.maintenance.MaintenanceLookupService maintenance;
     @Autowired
     private MaintenanceSiteRepository siteRepository;
     @Autowired
@@ -221,6 +227,43 @@ class MaintenanceSeedLoadIntegrationTest {
                         .getContract(contractIdOfSite("TKG태광그룹"))
                         .salesRep())
                 .isNotNull();
+    }
+
+    @Test
+    @DisplayName("eval 앵커 — 계약 id가 시드 원본이다(한국거래소 = 101), 우연이 아니다")
+    void contractIdsAreSeedIds() {
+        // eval C-01~C-03이 계약 101을 앵커로 쓴다. identity 생성이면 시드 파일에 한 줄이
+        // 끼거나 순서가 바뀌는 순간 조용히 어긋난다 — 그래서 원본 id를 명시 지정한다
+        assertThat(contractIdOfSite("한국거래소")).isEqualTo(101L);
+        assertThat(contractRepository.count()).isEqualTo(105);
+        assertThat(contractRepository.findAll().stream().map(MaintenanceContract::getId))
+                .allSatisfy(id -> assertThat(id).isBetween(1L, 105L));
+    }
+
+    @Test
+    @DisplayName("이슈 id가 시드 원본 번호다(230~496) — 계약 id 공간과 겹치지 않는다")
+    void issueIdsAreSeedNumbers() {
+        List<Long> ids = issueRepository.findAll().stream()
+                .map(MaintenanceIssue::getId)
+                .sorted()
+                .toList();
+
+        assertThat(ids).hasSize(14);
+        // 겹치면 list_maintenance_logs가 이슈 id를 계약으로 해석해 ISSUE 갈래가 죽는다
+        assertThat(ids.getFirst()).isGreaterThan(105L);
+        assertThat(ids).containsExactly(
+                230L, 255L, 269L, 279L, 283L, 291L, 297L, 304L, 319L, 360L, 429L, 430L, 474L, 496L);
+    }
+
+    @Test
+    @DisplayName("list_maintenance_logs — 이슈 id면 그 이슈만, matched=ISSUE")
+    void logsByIssueId() {
+        // 230은 계약 id 범위(1~105) 밖이라 이슈로 해석된다
+        ContractIssues logs = maintenance.logsOf(230L, null, 50).orElseThrow();
+
+        assertThat(logs.matched()).isEqualTo("ISSUE");
+        assertThat(logs.issues()).hasSize(1);
+        assertThat(logs.issues().getFirst().id()).isEqualTo(230L);
     }
 
     private long contractIdOfSite(String siteName) {

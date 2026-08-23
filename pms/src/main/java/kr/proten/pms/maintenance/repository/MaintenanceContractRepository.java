@@ -55,4 +55,13 @@ public interface MaintenanceContractRepository extends JpaRepository<Maintenance
 
     /** 상세 조립 시 여러 계약을 한 번에 — 이슈 목록이 계약명을 붙일 때 쓴다. */
     List<MaintenanceContract> findByIdIn(Collection<Long> ids);
+
+    /**
+     * 다음 id — 계약·이슈는 시드가 <b>원본 번호</b>를 명시 지정하므로(계약 1~105,
+     * 이슈 230~496) identity 생성을 쓰지 않는다. 두 id 공간이 겹치지 않는 것이
+     * {@code list_maintenance_logs}의 "계약 id 또는 이슈 id" 해석을 가능하게 한다
+     * (2026-08-23 결정). 하드 삭제가 없으므로(D2-2 — 계약 종료는 상태로) max+1로 충분하다.
+     */
+    @Query("select coalesce(max(c.id), 0) + 1 from MaintenanceContract c")
+    long nextId();
 }

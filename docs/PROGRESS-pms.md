@@ -22,8 +22,8 @@
 - **부수 결함 1건 수정 — 타입 틀린 요청 값이 500으로 나가고 있었다**: `?month=2026-8-1`, `/api/projects/abc` 같은 요청이 `MethodArgumentTypeMismatchException`으로 전역 핸들러의 catch-all에 걸려 **500**이 됐다(2026-08-22 "매핑 없는 경로 500"과 같은 계열의 구멍이고, 골격 라우트의 바인딩 테스트를 쓰다 드러났다). 400 `VALIDATION_ERROR`(field=파라미터명)로 매핑 + 필수 파라미터 누락도 같이 처리 + 회귀 테스트
 - **검증**: `verify.sh pms` PASS — 테스트 **268개**. auth 분리·계약 통합 뒤에도 기존 검증(로그인·시드 관통·인증 ON 경로·프로젝트 관통)이 그대로 통과한다
 - **미해결 (공용 결정 필요) — resource가 배정 데이터를 읽을 경로가 없다**: 가동률 분자(Σ 월별 배정 M/M)를 얻으려면 project가 "인원×월 배정"을 내주는 서비스 계약이 필요한데 지금 공개된 것은 `ProjectQueryService`(목록·단건)·`AssignmentService`(쓰기)뿐이다. 배정 엔티티 직접 접근은 모듈 경계 위반이므로 **애플리케이션 서비스 API 추가**로 풀어야 하고, 그것은 공용 결정 기록 경유 사항이라 임의로 만들지 않았다(`UtilizationQueryServiceImpl` TODO)
-- **다음 작업:** ①계약 2종·②감사 조회 2뷰·③projects 시드·**EPIC D 조회분**은 2026-08-23 완료(501 골격 7 → 6개, 모듈 7종). **EPIC C 가동률**은 ①의 MCP 확인 후 — 그 전이면 **EPIC E 쓰기 5종**(판정은 이미 섰고 로직만). D 쓰기(D-b)·이관(D-c)은 ROADMAP 분리 등재. **G1 전 필수 선행**: 인물 이름 재매핑 194곳(PRD-pms §12)
-- **차단 요소:** 없음. 다만 `pms-old/`의 게이트 M0 산출물 승격 시점·방식은 MCP 담당 결정 사항
+- **다음 작업:** **EPIC C 가동률** — 계약 2종·조직 id·시드가 다 서 있어 바로 착수 가능하고, 끝나면 `/mcp` 카탈로그 **8종이 완성**된다(`UtilizationTools`가 마지막 503). 그 뒤 EPIC E 쓰기 5종 · D 쓰기(D-b)·이관(D-c) · project 잔여 AC(A6-3·A8) · EPIC F·H. **G1 전 필수 선행**: 인물 이름 재매핑 194곳(PRD-pms §12 — host 트랙 소유 문서)
+- **차단 요소:** 없음. `/mcp` 어댑터 승격은 2026-08-23 완료(MCP 담당 — PR #22, 승격 방식 안 ②). 도메인 쪽 몫도 이행 완료라 남은 도구 1개(`UtilizationTools`)는 EPIC C 구현에만 묶여 있다
 
 ## 이전 상태 (2026-08-21 — 재구축 · 시드 · 인증 · 감사 기록 · 프론트 실연동)
 
@@ -64,6 +64,15 @@
 - 미해결: <다음 세션으로 넘기는 것>
 - 다음 작업: <구체적으로>
 ```
+
+### 2026-08-23 — 도메인 루트 계약 3종 승격 (안 ② 도메인 몫) + 조직 id·시드 원본 id
+- 완료: MCP 담당이 확정한 승격 방식(안 ②)의 도메인 쪽 몫. **`maintenance.MaintenanceLookupService`** · **`project.ProjectLookupService`** · **`project.ProgressCommandService`** + **`WorkforceProfile` 조직 id 2종**(MCP 요청 건 해소) + **`PersonRef.division`**. 승격 전에는 `PersonTools`만 실연결이고 나머지 4도구가 `ToolError.unavailable`이었다 — 이제 `UtilizationTools`만 남고 그건 EPIC C에 묶인다. 검증 `verify.sh pms` PASS
+- **범위 오산 정정**: project 조회 승격을 "패키지 이동뿐"으로 봤으나 내부 계약에 status·keyword 필터가 아예 없어(`listVisible(caller, Pageable)`뿐) 저장소 질의를 신설했다
+- **사용자 결정 2건**: ①프로젝트의 team·division은 **PM 소속 파생**(실측이 결정 — 시드 값이 382/382 구 익명 명부 PM 소속과 일치해 파생값이었고, 실제 명부에서 300/382 불일치. eval B류·도구 description·프론트 어디도 이 필드를 보지 않는다) ②계약·이슈 id는 **시드 원본 번호**(계약 1~105·이슈 `no` 230~496)
+- **②가 닫은 결함 둘**: eval C-01~03의 앵커 **계약 101**이 identity 생성의 우연에 기대고 있었다 · 이슈에 identity 1~14를 주는 바람에 계약 id에 전부 가려 **`list_maintenance_logs`의 ISSUE 갈래에 도달할 수 없었다**(도구는 계약 우선 해석 — 목업과 동일)
+- **부수 수습**: 트랜잭션 안에서 `NotFoundException`을 잡아 갈래를 가르던 코드가 그 트랜잭션을 롤백 대상으로 표시해 뒤 질의를 조용히 망가뜨렸다(실측 — 999999 조회가 빈 값이 아니었다) → 존재 검사로 대체. 앞선 PostgreSQL 타입 없는 null 건과 같은 계열의 "조용히 틀리는" 함정
+- 미해결: 없음. 다음 도구 1개(`UtilizationTools`)는 EPIC C에 묶여 있다
+- 다음 작업: **EPIC C 가동률**(계약 2종·조직 id가 다 서 있어 바로 착수 가능 — 끝나면 카탈로그 8종 완성)
 
 ### 2026-08-23 — maintenance 모듈 신설 (EPIC D 조회분) + 시드↔모델 결정 7건
 - 완료: ROADMAP M1 pms 절 **EPIC D 조회분(D-a)**. 모듈 신설(6 → **7종**) · 엔티티 4종 + Flyway **V9** · 시드 적재(계약 105·사이트 157·연락처·이슈 14) · D4-1 목록(keyword = 계약명·계약사·**사이트명** 3종)·D4-2 상세·D4-3 전사 공개·D3-4 이슈 조회(미배정 필터) · `IssueComment` 표·조회. 검증 `verify.sh pms` PASS — 테스트 298 → **314개**

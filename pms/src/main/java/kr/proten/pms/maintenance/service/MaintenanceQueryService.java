@@ -27,6 +27,12 @@ public interface MaintenanceQueryService {
     /** 계약 상세 (D4-2) — 사이트·연락처·이슈 요약·원 프로젝트 링크를 함께 싣는다. */
     ContractDetail getContract(long contractId);
 
+    /** 계약이 존재하는가 — 어댑터가 "계약 id인가 이슈 id인가"를 예외 없이 가른다. */
+    boolean contractExists(long contractId);
+
+    /** 계약명만 — 이슈가 0건인 계약의 응답에도 이름은 실려야 한다. */
+    String contractName(long contractId);
+
     /** 계약의 사이트 목록 (§7 라우트) — 상세에도 들어 있지만 목록만 필요한 화면이 있다. */
     List<SiteView> listSites(long contractId);
 }
