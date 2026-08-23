@@ -7,12 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import kr.proten.pms.person.WorkforceDirectoryService;
-import kr.proten.pms.person.WorkforceProfile;
 import kr.proten.pms.person.repository.PersonRepository;
 import kr.proten.pms.person.service.entity.Person;
-import kr.proten.pms.project.AssignmentDirectoryService;
-import kr.proten.pms.project.MonthlyAssignment;
 import kr.proten.pms.project.ProjectStatus;
 import kr.proten.pms.project.repository.ProjectAssignmentRepository;
 import kr.proten.pms.project.repository.ProjectRepository;
@@ -20,6 +16,9 @@ import kr.proten.pms.project.service.entity.Engagement;
 import kr.proten.pms.project.service.entity.Project;
 import kr.proten.pms.project.service.entity.ProjectAssignment;
 import kr.proten.pms.project.service.entity.ProjectRole;
+import kr.proten.pms.resource.service.UtilizationQueryService;
+import kr.proten.pms.resource.service.dto.UtilizationQuery;
+import kr.proten.pms.resource.service.dto.UtilizationView;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +46,12 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @SpringBootTest(properties = "pms.seed.path=../reference/seed")
 @Testcontainers
 class ProjectSeedLoadIntegrationTest {
+    private static final YearMonth MONTH = YearMonth.of(2026, 8);
+    /** 박재완 — 시드에서 유일한 관리자(COMPANY scope) 실인원이다. */
+    private static final long COMPANY_SCOPE_CALLER_ID = 1L;
+    /** 윤종헌 — AX사업기획부라 billable=false다(시드 주석). */
+    private static final long NON_BILLABLE_PERSON_ID = 7L;
+
     @Container
     @ServiceConnection
     static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:17");
@@ -58,9 +63,7 @@ class ProjectSeedLoadIntegrationTest {
     @Autowired
     private PersonRepository personRepository;
     @Autowired
-    private AssignmentDirectoryService assignmentDirectory;
-    @Autowired
-    private WorkforceDirectoryService workforceDirectory;
+    private UtilizationQueryService utilizationQueryService;
 
     @Test
     @DisplayName("부록 B — 프로젝트 382건이 상태 분포 그대로 적재된다")
@@ -134,25 +137,30 @@ class ProjectSeedLoadIntegrationTest {
     @Test
     @DisplayName("2026-08 오버부킹 — 이현창·김경민 (C1-5로 윤종헌 제외)")
     void reproducesOverbookingFromSeed() {
-        Map<Long, WorkforceProfile> profiles = workforceDirectory.findProfiles(personIds()).stream()
-                .collect(Collectors.toMap(WorkforceProfile::personId, profile -> profile));
-
-        // 모집단 = 진행중 프로젝트의 배정만 (2026-08-10 — 전 상태를 세면 1171%로 왜곡된다)
-        Map<Long, Double> assigned =
-                assignmentDirectory.findInMonth(YearMonth.of(2026, 8), personIds()).stream()
-                        .filter(row -> row.projectStatus() == ProjectStatus.IN_PROGRESS)
-                        .collect(Collectors.groupingBy(
-                                MonthlyAssignment::personId,
-                                Collectors.summingDouble(MonthlyAssignment::monthlyMm)));
-
-        assertThat(overbooked(assigned, profiles, false))
-                .as("M/M 부여 규칙 자체 — billable을 거르기 전 기본 가동률 100% 초과")
-                .containsExactly("이현창 191%", "윤종헌 182%", "김경민 133%");
+        // 산식을 여기서 다시 쓰지 않는다(2026-08-23): EPIC C가 들어오기 전에는 이 테스트가
+        // 배정 합산·분모·>100 판정을 자체 구현하고 있었고, 그러면 정본이 두 벌이 된다.
+        List<UtilizationView> overbooked = utilizationQueryService.find(
+                COMPANY_SCOPE_CALLER_ID, new UtilizationQuery(MONTH, null, null, true));
 
         // C1-5: billable=false는 집계·overbooked 목록의 모집단에서 빠진다. 윤종헌(AX영업팀)이
         // 여기서 걸러져 2명이 된다 — 부록 B의 "3명"은 구 익명 명부(people.json) 기준 수치다.
-        assertThat(overbooked(assigned, profiles, true))
-                .containsExactly("이현창 191%", "김경민 133%");
+        assertThat(overbooked)
+                .extracting(view -> "%s %d%%".formatted(view.name(), Math.round(view.basic())))
+                .containsExactlyInAnyOrder("이현창 191%", "김경민 133%");
+    }
+
+    @Test
+    @DisplayName("C1-5 — 윤종헌은 실제로 182%지만 billable=false라 집계에서만 빠진다")
+    void nonBillablePersonStillHasOwnUtilization() {
+        // M/M 부여 규칙 자체가 만드는 수치는 개인 지정 조회로 확인한다 — 그쪽은 C1-5와
+        // 무관하다. 집계에서 사라지는 것과 "가동률이 없는 것"은 다른 말이다
+        List<UtilizationView> own = utilizationQueryService.find(
+                COMPANY_SCOPE_CALLER_ID, new UtilizationQuery(MONTH, NON_BILLABLE_PERSON_ID, null, false));
+
+        assertThat(own).singleElement().satisfies(view -> {
+            assertThat(view.name()).isEqualTo("윤종헌");
+            assertThat(Math.round(view.basic())).isEqualTo(182L);
+        });
     }
 
     @Test
@@ -177,23 +185,5 @@ class ProjectSeedLoadIntegrationTest {
         return projectRepository.findAll().stream()
                 .filter(project -> project.getEngagement() == engagement)
                 .count();
-    }
-
-    private List<String> overbooked(
-            Map<Long, Double> assigned,
-            Map<Long, WorkforceProfile> profiles,
-            boolean billableOnly) {
-        return assigned.entrySet().stream()
-                .filter(entry -> !billableOnly || profiles.get(entry.getKey()).billable())
-                .filter(entry -> pct(entry.getValue(), profiles.get(entry.getKey())) > 100)
-                .sorted((left, right) -> Double.compare(right.getValue(), left.getValue()))
-                .map(entry -> "%s %d%%".formatted(
-                        profiles.get(entry.getKey()).name(),
-                        pct(entry.getValue(), profiles.get(entry.getKey()))))
-                .toList();
-    }
-
-    private static int pct(double assignedMm, WorkforceProfile profile) {
-        return (int) Math.round(assignedMm / profile.defaultCapacity() * 100);
     }
 }

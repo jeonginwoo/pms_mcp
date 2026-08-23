@@ -165,7 +165,7 @@ B2-1 자연어 검증(2026-08-10)이 실증한 도구 카탈로그 공백 2건�
   | `OrgVisibilityService` · `OrgVisibility` | person | project · resource | 가시 인원 집합(scope 4단 판정 결과) |
   | `OrgPermissionService` · `OrgPermission` | person | project · auth | 프로젝트 밖 행위의 그룹 플래그 |
   | `AccountPort` | person(정의) | auth(구현) | 인력 등록 시 계정 생성 — 순환 회피의 방향 역전 |
-  | **`WorkforceDirectoryService` · `WorkforceProfile`** | person | resource · `mcp` | **가동률의 분모·모집단·계수**(capacity·billable·gradeCoeff) · team·division **이름과 조직 id 2종**(2026-08-23 추가 — 웹은 `?orgUnitId=`를 받지만 챗은 화자로부터 유도해야 하고 `org_units.name`에 유니크 제약이 없다) · 조직 subtree 인원 |
+  | **`WorkforceDirectoryService` · `WorkforceProfile`** | person | resource · `mcp` | **가동률의 분모·모집단·계수**(capacity·billable·gradeCoeff) · team·division **이름과 조직 id 2종**(2026-08-23 추가 — 웹은 `?orgUnitId=`를 받지만 챗은 화자로부터 유도해야 하고 `org_units.name`에 유니크 제약이 없다) · 조직 subtree 인원 · **집계 모집단 전체 명단**(2026-08-23 추가 `findAllAggregatablePersonIds` — 전사 scope 가시성은 `unrestricted`라 인원 집합이 비어 있어 집계 호출자가 명단을 얻을 경로가 없었다. 재직·비시스템만, 사용자 결정) |
   | **`AssignmentDirectoryService` · `MonthlyAssignment`** | project | resource | **가동률의 분자** — 그 달과 겹치는 배정 행(personId·projectId·projectName·**projectStatus**·monthlyMm) (2026-08-23 신설) |
   | `AuditQueryService` · `AuditRecord` 등 | audit | person · project | 감사 조회(권한 판정 없는 순수 조회) |
   | `NotificationService` · `NotifyCommand` 등 | notification | project · resource | 알림 적재 요청 |
@@ -477,7 +477,7 @@ POST /api/chat    POST /api/chat/feedback        # chat BFF — AI 호스트 프
 |------|------|---------|
 | **A 프로젝트** | 대부분 실구현 — A1 생성 · A2 진척률 2단계 · A3 조회·가시성 · A4 삭제 · A5 수정·상태전이 · A6-1·2·4·5 PM 교체 · A7 완료·재개 | **A6-3·A6-6·A6-7**(`PUT /projects/{id}/roles`) · **A8 전체**(`GET`/`PUT /permissions` — A8-5·A8-6이 진척률·배정 판정에 침투) · `?phase=` 목록 필터 |
 | **B 인력 배정** | 실구현 — B1-1·B1-2·B1-4 · B2-1 종료 | **B1-3**(커밋 후 가동률 재계산)은 C가 서기 전엔 성립하지 않는다 |
-| **C 가동률** | **골격** (`GET /api/utilization` → 501) | C1-1~C1-6 전부. **선행 = project가 "인원×월 배정 M/M"을 내주는 계약** — 애플리케이션 서비스 API 추가라 공용 결정 기록 경유(§12) |
+| **C 가동률** | **구현 완료** (2026-08-23 — `GET /api/utilization`) | C1-1~C1-6 전부. 산식·분모(그 달 `Capacity` 우선)·모집단(진행중 배정 · 집계만 billable)·과부하(기본>100)·소속 동봉. **남은 것은 `/mcp` 쪽뿐**: `resource` 모듈 루트가 비어 있어 `get_utilization`·`list_overbooked`가 붙을 계약이 없다 — 승격 소유자를 먼저 정한다(git-workflow §3 "One promotion, one owner") |
 | **D 유지보수** | **조회 실구현**(2026-08-23) — 모듈·엔티티 4종·Flyway V9·시드 적재(계약 105·사이트 157·연락처·이슈 14) · D4-1 목록(keyword 3종 매칭) · D4-2 상세 · D4-3 전사 공개 · **D3-4 이슈 조회**(미배정 필터 포함) · `IssueComment` 표·조회(적재 0건 — 시드에 본문 없음) | **쓰기 전부**: D1 이관(§5에 완료→유지보수중 전이가 없어 `Project`에 전용 메서드 신설 필요 + 모듈 방향 결정) · D2 계약·사이트 등록/수정 · D3-1~D3-3 이슈 등록·처리·코멘트 |
 | **E 조직·사용자** | 절반 실구현 — E2-1 등록 · E2-3 비활성 · E2-5 시스템 계정 보호 · E3-1 생성 · E3-3 `IN_USE` 삭제 거절 · E3-4 subtree 가시성 · E2-4 플래그 403 | **골격 5종**: E1-1 소속 이동 · E2-2 수정 · E3-2 개명 · E4 직급 3종 · E5 권한 그룹 3종 |
 | **F 알림** | **골격** (`GET /api/notifications` · `PATCH /{id}/read` → 501) | F1 전부 · **SSE 라우트 미착수**(토큰 마스킹과 한 묶음) · **스케줄러 F2·F3 미착수** |
@@ -561,6 +561,8 @@ POST /api/chat    POST /api/chat/feedback        # chat BFF — AI 호스트 프
 
 **에이전트는 임의 구현하지 말고 질문할 것**
 
+- **가동률 집계와 과거 월의 퇴사자 (2026-08-23 등재 — 미해결)**: 집계 모집단을 **재직자만**으로 정했는데(사용자 결정 — "지금 우리 조직 가동률"에 퇴사자를 세면 집계가 틀어진다), 그러면 **지난달을 오늘 조회하면 그 사이 퇴사한 사람의 배정이 빠진다**. person 계약이 이미 두 규칙을 갖고 있는 것이 이 문제의 표면이다: `findPersonIdsInSubtree`는 재직자만이고 `findProfiles`는 "지난달 가동률은 그때 재직 중이던 사람으로 계산된다"며 비활성을 포함한다. 대안은 모집단을 "재직 ∪ 그 달 배정 있음"으로 넓히는 것인데 규칙이 하나 늘고 "재직 0% 행"과 구분이 필요하다. eval 36케이스는 현재 월만 물으므로 **G1을 막지 않는다**
+- **`?orgUnitId=`가 없는/가시성 밖 조직일 때 (2026-08-23 등재 — 미해결)**: 현재 **빈 목록**이다(404가 아니다). 조직 자체의 가시성을 물으려면 person이 계약을 하나 더 열어야 하는데 §7에 그 오류 규칙이 없어, 명세 없는 이유로 모듈 경계를 넓히지 않았다(`UtilizationPopulation`에 `// ASSUMPTION:` 주석). 다른 조회는 가시성 밖을 404로 은닉하므로 규칙이 갈려 있다
 - **인물 이름 재매핑 (2026-08-23 등재 — 미해결)**: 인원 정본이 `seed_org_proten.sql`(실제 명부)로 바뀌었는데 **기획 문서의 인물 이름은 구 익명 명부(`people.json`) 기준**이다. 두 명부는 이름이 하나도 겹치지 않아, 문서의 이름으로 DB를 조회하면 아무것도 나오지 않는다. 영향 범위: 본 문서 부록 B 검증 케이스(정정 완료) · **`docs/evals/eval-cases.md` 36케이스의 화자·기대값** · **`docs/유저_시나리오.md` 페르소나 8명** · 상위 `PRD.md` §4-1 근거의 인물 언급 · PROGRESS 과거 기록(그 시점의 기록이므로 그대로 둔다). 합계 **194곳**. eval 채점은 이름 대조를 포함하므로 **G1 게이트 전에 반드시 해소**해야 하고, eval·시나리오는 host 트랙 소유라 **공용 결정 기록 경유**다
 - ~~**권한 모델 재기술 (pms 담당 결정)**~~ — 2026-08-03 결정 완료(합집합 판정 + PM/PL/참여자 3단, 상위 `PRD.md` §4 재작성 · PROGRESS 결정 기록). ~~MCP 담당 확인 대기~~ — 2026-08-03 확인 완료(PROGRESS 결정 기록)
 - ~~**가동률 집계 대상(구 "HQ 제외 여부")**~~ — 2026-08-06 해소: `Person.billable` 플래그(상위 PRD §3·C1-5·부록 B). ~~MCP 담당 확인 대기~~ — 2026-08-06 확인 완료(결정 기록)

@@ -86,6 +86,14 @@ class WorkforceDirectoryServiceImpl implements WorkforceDirectoryService {
                 .collect(Collectors.toUnmodifiableSet());
     }
 
+    @Override
+    public Set<Long> findAllAggregatablePersonIds() {
+        // 필터를 저장소 메서드 이름이 정한다 — 재직·비시스템을 호출자가 뒤집을 수 없다.
+        return personRepository.findByActiveTrueAndSystemFalseOrderByIdAsc().stream()
+                .map(Person::getId)
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
     /** 없는 직급은 계수 1.0으로 본다 — 보정 지표 하나 때문에 조회가 실패하지 않게 한다. */
     private Map<Long, Double> coeffsOf(List<Person> people) {
         Set<Long> gradeIds = people.stream()
