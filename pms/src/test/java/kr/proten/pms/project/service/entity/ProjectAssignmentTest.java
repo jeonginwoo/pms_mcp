@@ -16,12 +16,36 @@ import org.junit.jupiter.api.Test;
  * 종료하는 요청은 충돌이라는 것이 이 엔티티의 규칙이다.
  */
 class ProjectAssignmentTest {
+    private static final LocalDate CLOSED_ON = LocalDate.of(2026, 8, 23);
     private static final long PROJECT_ID = 7L;
 
     @Test
     @DisplayName("생성 — 새 배정은 진행 상태다")
     void of_startsActive() {
         assertThat(active().getStatus()).isEqualTo(AssignmentStatus.ACTIVE);
+    }
+
+    @Test
+    @DisplayName("B2-1 — 종료하면 종료일이 종료월 말일로 당겨진다")
+    void close_pullsEndDateToClosingMonthEnd() {
+        // ProjectFixtures 기본 기간은 2026-08-01 ~ 2026-12-31
+        ProjectAssignment assignment = active();
+
+        assignment.close(LocalDate.of(2026, 8, 23));
+
+        // 8월까지는 세고 9월부터는 빠진다 — 겹침 판정 하나로 "종료월 이후 제외"가 성립
+        assertThat(assignment.getEndDate()).isEqualTo(LocalDate.of(2026, 8, 31));
+    }
+
+    @Test
+    @DisplayName("B2-1 — 이미 종료월보다 이른 종료일은 늘리지 않는다")
+    void close_doesNotExtendAnEarlierEndDate() {
+        ProjectAssignment assignment = active();
+        assignment.reschedule(LocalDate.of(2026, 8, 1), LocalDate.of(2026, 9, 30), 0.5);
+
+        assignment.close(LocalDate.of(2026, 12, 5));
+
+        assertThat(assignment.getEndDate()).isEqualTo(LocalDate.of(2026, 9, 30));
     }
 
     @Test
@@ -42,7 +66,7 @@ class ProjectAssignmentTest {
     void close_marksClosedAndKeepsRow() {
         ProjectAssignment assignment = active();
 
-        assignment.close();
+        assignment.close(CLOSED_ON);
 
         assertThat(assignment.getStatus()).isEqualTo(AssignmentStatus.CLOSED);
         assertThat(assignment.getMonthlyMm()).isEqualTo(0.5);
@@ -52,10 +76,10 @@ class ProjectAssignmentTest {
     @DisplayName("B2-1 — 이미 종료된 배정의 재종료는 409 INVALID_TRANSITION")
     void close_alreadyClosed_isConflict() {
         ProjectAssignment assignment = active();
-        assignment.close();
+        assignment.close(CLOSED_ON);
 
         assertThatExceptionOfType(ConflictException.class)
-                .isThrownBy(assignment::close)
+                .isThrownBy(() -> assignment.close(CLOSED_ON))
                 .satisfies(thrown -> assertThat(thrown.code()).isEqualTo(ErrorCode.INVALID_TRANSITION));
     }
 

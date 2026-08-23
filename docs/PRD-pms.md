@@ -3,7 +3,7 @@
 | 항목 | 내용 |
 |------|------|
 | 문서 | PMS 본체 구현명세 (코딩 에이전트용) · **소유: pms 트랙** |
-| 버전 / 상태 | v2.8 · **확정** (게이트 P 통과 2026-08-09. v2.6 = 가동률 의미 재정의 + 시드 정책 완결(2026-08-10 — MCP 담당 확인 완료). v2.7 = M-1 카탈로그 공백 2건 해소의 PMS 측 반영(2026-08-11 결정 기록, 2026-08-12 MCP 담당 확인 완료 — 양측 합의 성립·host 반영 완료). 이슈→계약 링크 기준 = 사이트명 포함 확정(2026-08-14 — 부록 B·결정 기록). **v2.8 = 재구축·골격 확장 이후의 문서↔코드 정합 (2026-08-23 — 결정 기록)**) |
+| 버전 / 상태 | v2.9 · **확정** (게이트 P 통과 2026-08-09. v2.6 = 가동률 의미 재정의 + 시드 정책 완결(2026-08-10 — MCP 담당 확인 완료). v2.7 = M-1 카탈로그 공백 2건 해소의 PMS 측 반영(2026-08-11 결정 기록, 2026-08-12 MCP 담당 확인 완료 — 양측 합의 성립·host 반영 완료). 이슈→계약 링크 기준 = 사이트명 포함 확정(2026-08-14 — 부록 B·결정 기록). v2.8 = 재구축·골격 확장 이후의 문서↔코드 정합(2026-08-23 — 결정 기록). **v2.9 = 모듈 간 계약 2종 신설(가동률 분자·분모) + B2-1 종료일 규칙 — 2026-08-23 결정 기록, MCP 담당 확인 요청**) |
 | 작성일 | 2026-08-02 — 구 "PMS — AI 구현용 PRD" v1.0(2026-06-21, 전사본 `reference/PMS_구현용_PRD_v1.0.md`) 현행화 이관 |
 | 범위 | 프로텐 전사 1차 |
 | 규모 | 약 40명(시드 기준 44명) · 2인 개발(MCP 담당 + PMS 담당) |
@@ -95,6 +95,14 @@ B2-1 자연어 검증(2026-08-10)이 실증한 도구 카탈로그 공백 2건�
 - **§10 구현 순서 → 구현 상태 (라벨 폐기 — 이번 개정의 유일한 결정)**: 구 **PMS-M0~M6 순차 라벨을 폐기**하고 **EPIC 기준 상태표**(실구현 / 골격 / 미착수)로 대체. 근거는 실제 진행이 순서를 벗어난 것 — M6(프론트)이 M3~M5보다 먼저 끝났고, M1의 "person + 인증"은 `auth` 분리로 두 단위가 됐고, M3·M5는 골격만 서 있다. 순서를 지키지 못한 계획은 진행 상황을 숨긴다. 횡단 기반(시드 적재 범위·인증 스위치·`/mcp` 부재)도 같은 표에 실측으로 올렸다
 - **§12**: 해소 항목이 가리키던 "구현 시점 = PMS-M1"을 **실제 소관 EPIC**으로 교체(C1-6 → EPIC C · D4-1·유지보수 시드 → EPIC D)
 
+### v2.9 반영 (2026-08-23 — 모듈 간 계약 2종 신설 + B2-1 종료일 규칙, PROGRESS 결정 기록 · **MCP 담당 확인 요청**)
+
+가동률(EPIC C)을 막고 있던 접점을 열었다. 실측해 보니 막힌 곳이 배정 조회 하나가 아니라 **분자·분모·모집단·계수·조직 표시까지 전부**였다 — `PersonRef(id, name, orgUnit, grade)`로는 가동률을 계산할 수 없다.
+
+- **§3 모듈 간 공개 계약 표 신설** — 모듈 루트에 있는 것이 곧 밖으로 나가는 전부이므로(§0) 그 목록을 문서에도 원장으로 둔다. 신설 2종: **`AssignmentDirectoryService`·`MonthlyAssignment`**(project → resource, 가동률 분자를 **행 단위**로) · **`WorkforceDirectoryService`·`WorkforceProfile`**(person → resource, capacity·billable·gradeCoeff·team·division·subtree 인원)
+- **§6 B2-1 개정** — 종료 시 **`endDate`를 종료월 말일로 당긴다**. 이전에는 상태만 CLOSED로 바꾸고 종료 시점을 남기지 않아 AC가 약속한 "종료월 이후 제외"를 데이터로 표현할 수 없었다(상태만 보고 거르면 종료한 순간 지난달 집계에서까지 사라지고, 상태를 무시하면 영영 빠지지 않는다)
+- **§10 `/mcp` 행 정정** — `/mcp` 승격이 도메인 루트 승격에 걸린다고 적었던 것을 바로잡았다. M0 산출물은 도메인이 `mcp` 루트의 port를 **구현**하는 형태(의존 `project → mcp`)이고, 구조 원칙 3의 "호출"과는 방향이 반대다. **어느 쪽인지는 MCP 담당 결정 사항**으로 양쪽 문서에 미정임을 명시했다
+
 ---
 
 ## 0. AI 에이전트에게 주는 지시
@@ -149,7 +157,22 @@ B2-1 자연어 검증(2026-08-10)이 실증한 도구 카탈로그 공백 2건�
 
 - Frontend=화면·검증·표시(권한은 UI노출만) / Backend=단일앱 모듈러 모놀리식 / DB=단일PG·단일스키마(Flyway 소유 — §0) / 인증=자체 로그인+JWT(stateless) / 알림=SSE 즉시 푸시(⑥) / 스케줄러=일1회(마감알림)만 / 파일저장소 없음.
 - **모듈 목록(2026-08-22 골격 확장에서 갱신 — 공용 결정 기록. 구 2026-08-21 재구축 3종을 대체)**: 현재 **person · auth · project · resource · notification · audit 6종**. `audit`는 2026-08-22에 `common`에서 승격했다(쓰임은 횡단이지만 자기 엔티티·저장소·유스케이스를 가진 도메인이다). **`common`은 모듈이 아니다** — 에러 모델·응답 봉투·호출자 식별 같은 공용 배선이라 `ModularityTest`가 Modulith 탐지에서 제외한다. **모듈의 공개 API = 모듈 루트 패키지**(Modulith 기본 규약)이므로 밖으로 나가는 타입만 루트에 두고 `package-info.java`는 쓰지 않는다. `identity`는 계정·인증이 범위에서 빠지며 담는 것이 사람·조직·직급·권한 그룹뿐이 되어 **`person`으로 개명**했고, 2026-08-22에 그 계정·인증이 실제로 **`auth`** 모듈로 나갔다(의존은 auth → person 한 방향, 반대 방향은 person이 모듈 루트에 정의한 `AccountPort`를 auth가 구현 — 직접 상호 호출은 모듈 순환이라 `ModularityTest`가 막는다). `resource`·`notification`은 **로직보다 골격을 먼저 세웠다**(사용자 지시 — 미구현 유스케이스는 `501 NOT_IMPLEMENTED`). `maintenance`와 `/mcp` 어댑터 모듈(MCP 담당 소유 — 구현은 `pms-old/`에 보존)은 **해당 작업 착수 시 담당이 추가**한다. 지원 모듈 후보(chat BFF·mcpconfig)는 미생성 유보 — 챗 연동 시점 M1에 재론. 베이스 패키지 = `kr.proten.pms`. "모듈 고정"은 해제 상태 유지(증설은 열림).
-- `/mcp` 어댑터가 호출하는 애플리케이션 서비스는 EPIC A(조회·진척률)·C(가동률)·D(이력)·H(`/api/me` = `whoami`)와 동일 — 도구 카탈로그 대응은 PRD-host §4-2. 서비스 API 변경은 공용 결정 기록 경유(2인 협업 경계).
+- **모듈 간 공개 계약 (모듈 루트에 있는 것 = 밖으로 나가는 전부 — §0)**: 소비자가 실제로 쓰는 좁은 면만 열고, 내부 계약(`ProjectQueryService` 등)은 하위 패키지에 둔 채로 둔다.
+
+  | 계약 | 소유 | 소비자 | 무엇을 |
+  |------|------|--------|--------|
+  | `PersonDirectoryService` · `PersonRef` | person | project | 배정에 붙일 인원 참조(이름·조직명·직급명) |
+  | `OrgVisibilityService` · `OrgVisibility` | person | project · resource | 가시 인원 집합(scope 4단 판정 결과) |
+  | `OrgPermissionService` · `OrgPermission` | person | project · auth | 프로젝트 밖 행위의 그룹 플래그 |
+  | `AccountPort` | person(정의) | auth(구현) | 인력 등록 시 계정 생성 — 순환 회피의 방향 역전 |
+  | **`WorkforceDirectoryService` · `WorkforceProfile`** | person | resource | **가동률의 분모·모집단·계수**(capacity·billable·gradeCoeff)와 team·division, 조직 subtree 인원 (2026-08-23 신설) |
+  | **`AssignmentDirectoryService` · `MonthlyAssignment`** | project | resource | **가동률의 분자** — 그 달과 겹치는 배정 행(projectId·projectName·monthlyMm) (2026-08-23 신설) |
+  | `AuditQueryService` · `AuditRecord` 등 | audit | person · project | 감사 조회(권한 판정 없는 순수 조회) |
+  | `NotificationService` · `NotifyCommand` 등 | notification | project · resource | 알림 적재 요청 |
+
+  신설 2종의 설계 근거: **행 단위로 내준다**(합계가 아니라) — 과부하 응답이 원인을 프로젝트별로 보여 주므로(`Cause(projectName, mm)`) 합계만 주면 같은 행을 두 번 읽는다. **인원 명단을 받는다**(orgUnitId가 아니라) — 가시성·billable 판정은 person·resource의 몫이고 project는 조직을 알지 못한다. **`PersonRef`를 확장하지 않고 나눴다** — 그것은 project가 쓰는 표시용 참조라, capacity·billable을 얹으면 resource의 관심사가 project의 컴파일 면에 올라온다(conventions §5).
+
+- `/mcp` 어댑터가 호출하는 애플리케이션 서비스는 EPIC A(조회·진척률)·C(가동률)·D(이력)·H(`/api/me` = `whoami`)와 동일 — 도구 카탈로그 대응은 PRD-host §4-2. 서비스 API 변경은 공용 결정 기록 경유(2인 협업 경계). **"호출"의 방향은 미정** — M0 산출물은 도메인이 `mcp` 루트의 port를 구현하는 형태(의존 `project → mcp`)이고 이 줄은 그 반대로 읽힌다. 어느 쪽인지는 MCP 담당이 정한다(§10 횡단 기반 표).
 
 ## 4. 도메인 모델
 
@@ -262,7 +285,8 @@ B2-1 자연어 검증(2026-08-10)이 실증한 도구 카탈로그 공백 2건�
 - B1-5 배정 M/M의 의미 = **실투입 계획**(상위 PRD §3 · 2026-08-10) — 입력 UI 레이블·헬프에 "계약 배분 아님"을 명시(부록 A 배정 패널)
 
 **US-B2 배정 종료 시 이후 월 가동률에서 빠진다** [PM]
-- B2-1 When `DELETE /assignments/{id}` Then status=종료, `AssignmentClosed`, 종료월 이후 제외
+- B2-1 When `DELETE /assignments/{id}` Then status=종료, `AssignmentClosed`, **`endDate`가 종료월 말일로 당겨진다**(그보다 이른 종료일은 늘리지 않는다), 종료월 이후 가동률 모집단에서 제외. 행은 남는다 — 지난달 가동률은 그때의 배정으로 계산된다
+  - **종료일을 당기는 이유 (2026-08-23 결정)**: 이전에는 상태만 CLOSED로 바꾸고 종료 시점을 어디에도 남기지 않아 "종료월 이후"를 데이터로 표현할 수 없었다. 상태만 보고 거르면 종료한 순간 지난달 집계에서까지 사라지고, 상태를 무시하면 영영 빠지지 않는다. 종료일을 당기면 **기간 겹침 판정 하나로** 두 요구가 함께 성립하고 C1-1의 분자 질의도 상태를 볼 필요가 없다. 시작 전 배정을 종료하면 빈 구간(종료일 < 시작일)이 되어 어느 달에도 세지 않는다 — 시작하지 않은 채 끝난 배정에는 그것이 맞는 결과다(`// ASSUMPTION:` 주석)
 
 ### EPIC C · 가동률
 
@@ -464,7 +488,7 @@ POST /api/chat    POST /api/chat/feedback        # chat BFF — AI 호스트 프
 | 응답 봉투 §7 · `ErrorCode` 열거 | 실구현 |
 | 시드 적재 | **조직·직급·권한 그룹·인원·User만**(`seed_org_proten.sql`). **`projects.json` 382건·`maintenance.json` 미적재** — A·C·D의 실데이터 전제이자 `/mcp` project port의 전제 |
 | 프론트엔드 (`frontend/`) | 실연동 TS 재작성 완료(2026-08-22) — 구현된 라우트만 사용 |
-| `/mcp` 어댑터 | **이 앱에 없음** — MCP 담당 소유이고 구현은 `pms-old/`에 보존(§3). 승격 시 port가 붙을 자리는 각 도메인의 `service` 계약이며, **모듈 루트로 계약을 올리는 것이 선행**이다(§0 — project·resource 루트가 비어 있어 지금은 밖에서 부를 수 없다) |
+| `/mcp` 어댑터 | **이 앱에 없음** — MCP 담당 소유이고 구현은 `pms-old/`에 보존(§3). **의존 방향이 미정이다**(2026-08-23 실측 — MCP 담당 결정 사항): M0 산출물은 port 인터페이스·DTO를 `mcp` 모듈 루트에 두고 **도메인이 그것을 구현**하는 형태여서(`internal/seed/TemporaryPortsConfig`, PROGRESS "각 도메인 모듈 서비스가 port 5종 구현") 의존이 `project → mcp` 한 방향이고 도메인 루트에 아무것도 올릴 필요가 없다. 반면 구조 원칙 3과 아래 줄은 "어댑터가 애플리케이션 서비스를 **호출**한다"(`mcp → project`)로 읽히고, 그 경우엔 도메인 루트가 필요한 면을 열어야 한다. 어느 쪽이든 **resource↔project 계약(위 §3 표)과는 무관**하다 |
 
 ## 11. 완료 정의 (Definition of Done)
 

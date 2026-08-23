@@ -1,5 +1,6 @@
 package kr.proten.pms.project.service.impl;
 
+import java.time.LocalDate;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -158,7 +159,7 @@ class ProjectAuditRecorderTest {
         ProjectAssignment assignment =
                 ProjectFixtures.assignment(31L, PROJECT_ID, 105L, ProjectRole.PARTICIPANT);
         Map<String, Object> before = recorder.snapshot(assignment);
-        assignment.close();
+        assignment.close(LocalDate.of(2026, 8, 23));
 
         // When
         recorder.assignmentClosed(ACTOR_ID, assignment, before);

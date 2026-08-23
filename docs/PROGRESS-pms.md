@@ -22,7 +22,7 @@
 - **부수 결함 1건 수정 — 타입 틀린 요청 값이 500으로 나가고 있었다**: `?month=2026-8-1`, `/api/projects/abc` 같은 요청이 `MethodArgumentTypeMismatchException`으로 전역 핸들러의 catch-all에 걸려 **500**이 됐다(2026-08-22 "매핑 없는 경로 500"과 같은 계열의 구멍이고, 골격 라우트의 바인딩 테스트를 쓰다 드러났다). 400 `VALIDATION_ERROR`(field=파라미터명)로 매핑 + 필수 파라미터 누락도 같이 처리 + 회귀 테스트
 - **검증**: `verify.sh pms` PASS — 테스트 **268개**. auth 분리·계약 통합 뒤에도 기존 검증(로그인·시드 관통·인증 ON 경로·프로젝트 관통)이 그대로 통과한다
 - **미해결 (공용 결정 필요) — resource가 배정 데이터를 읽을 경로가 없다**: 가동률 분자(Σ 월별 배정 M/M)를 얻으려면 project가 "인원×월 배정"을 내주는 서비스 계약이 필요한데 지금 공개된 것은 `ProjectQueryService`(목록·단건)·`AssignmentService`(쓰기)뿐이다. 배정 엔티티 직접 접근은 모듈 경계 위반이므로 **애플리케이션 서비스 API 추가**로 풀어야 하고, 그것은 공용 결정 기록 경유 사항이라 임의로 만들지 않았다(`UtilizationQueryServiceImpl` TODO)
-- **다음 작업:** **ROADMAP M1 pms 절 순서대로**(2026-08-23 확장) — ①**project 계약 모듈 루트 승격 + 배정 조회 계약 안 작성 → 결정 기록 등재**(공용 결정이라 합의에 시간이 걸리니 먼저 던진다. `/mcp` 승격의 선행이기도 하므로 한 번에 설계) ②**감사 조회 2뷰**(G1-3·G2-2 — 판정은 이미 실구현, 파생 질의만) ③**projects 시드 382건**(합의 대기 중 진행 가능) ④EPIC C 가동률 → ⑤EPIC D 유지보수. EPIC E 쓰기 5종·A6-3·A8·F·H는 그 뒤 — G1 게이트와 무관하다
+- **다음 작업:** **ROADMAP M1 pms 절 ②·③** — ①(project 계약 루트 승격 + 배정 조회 계약)은 2026-08-23 완료·MCP 확인 요청 중. ②**감사 조회 2뷰**(G1-3·G2-2 — 권한·가시성 판정은 이미 실구현, 최신순 파생 질의만) ③**projects 시드 382건**(`/mcp` project port의 실데이터 전제). 둘 다 MCP 확인과 무관하게 진행 가능하고, 확인이 오면 ④EPIC C 가동률 산식으로 넘어간다
 - **차단 요소:** 없음. 다만 `pms-old/`의 게이트 M0 산출물 승격 시점·방식은 MCP 담당 결정 사항
 
 ## 이전 상태 (2026-08-21 — 재구축 · 시드 · 인증 · 감사 기록 · 프론트 실연동)
@@ -64,6 +64,14 @@
 - 미해결: <다음 세션으로 넘기는 것>
 - 다음 작업: <구체적으로>
 ```
+
+### 2026-08-23 — 모듈 간 계약 2종 신설 (가동률 분자·분모) + B2-1 종료일 규칙
+- 완료: ROADMAP M1 pms 절 ①. **`project.AssignmentDirectoryService`·`MonthlyAssignment`**(그 달과 겹치는 배정을 행 단위로 — personId·projectId·projectName·monthlyMm)와 **`person.WorkforceDirectoryService`·`WorkforceProfile`**(capacity·billable·gradeCoeff·team·division·subtree 인원)을 각 모듈 루트에 신설. **부수 결함 수정**: `close()`가 상태만 바꾸고 종료 시점을 남기지 않아 AC B2-1의 "종료월 이후 제외"를 표현할 수 없었다 → 종료 시 `endDate`를 종료월 말일로 당기고(사용자 결정) `Clock` 주입으로 시간을 고정 검증. 검증 `verify.sh pms` PASS — 테스트 270 → **281개**(신규 11)
+- 실측이 바꾼 판단: 미해결 접점이 "배정 조회 하나"라고 적어 뒀는데 산식을 코드에 대보니 **분모·모집단·계수·team/division·subtree까지 전부** 경로가 없었다 — `PersonRef`로는 가동률을 계산할 수 없다. 그래서 계약이 하나가 아니라 둘이 됐고, `PersonRef`를 확장하는 대신 나눴다(소비자가 다르면 나눈다 — conventions §5)
+- 두 계약 모두 **판정을 하지 않는다**: 가시성·모집단은 resource가 정해 인원 명단으로 넘긴다. 두 곳에서 거르면 정본이 갈리고 project가 조직을 알아야 해진다
+- **정정**: PR #18 §4에 "`/mcp` 승격도 이 승격에 걸린다"고 적었으나 **틀렸다**. M0 산출물(`internal/seed/TemporaryPortsConfig`)은 port·DTO를 `mcp` 루트에 두고 도메인이 구현하는 형태라 의존이 `project → mcp`다. 구조 원칙 3의 "호출"과 방향이 반대여서 두 기록이 갈리는데, **어느 쪽인지는 MCP 담당 결정 사항**이라 문서 양쪽에 미정으로 등재했다
+- 미해결: 두 계약이 **아직 소비되지 않았다** — 경계는 열렸지만 실제 횡단은 EPIC C가 첫 사례가 된다(project가 이미 `person` 루트를 쓰고 통과하므로 모양 자체는 검증된 패턴). MCP 담당 확인 2건: 시그니처가 `UtilizationEntry`·`OverbookedEntry.Cause`를 채우기에 충분한가 · port 의존 방향
+- 다음 작업: ROADMAP M1 pms 절 ② 감사 조회 2뷰(G1-3·G2-2 — 판정은 이미 실구현, 파생 질의만) 또는 ③ projects 시드 382건. MCP 확인을 기다리는 동안 둘 다 진행 가능
 
 ### 2026-08-23 — 문서↔코드 정합 일괄 + PMS-M 라벨 폐기 (코드 변경 없음)
 - 완료: 문서 19종을 코드와 실측 대조 → **드리프트 21건** 확인 후 A(pms 단독)·B(공용 사실 오류)까지 정정. 성격별 정리는 공용 결정 기록 2026-08-23 1행. pms 트랙 반영분: **PRD-pms v2.8** — §0 스택(H2 → Testcontainers 전용 · 프론트 JSX 전제 소멸) · §0 모듈 간 통신(`@NamedInterface` → 모듈 루트 = 공개 API, §3과의 정면 모순 해소) · §1·§11의 `보정100` → **`보정144`**(2026-08-10 재정의가 이 두 곳만 못 미쳤고 상위 PRD와 어긋나 있었다) · §11 DoD(폐기된 "domain에 Spring/JPA import 0" → `LayerRuleTest` + "501 던지는 자리 0건" 신설) · **§10을 EPIC 기준 상태표로 재편**(PMS-M0~M6 라벨 폐기) · §12의 "구현 시점 = PMS-M1"을 실제 소관 EPIC으로. 그 밖에 `pms/CLAUDE.md`(`ProgressUpdateService` → `ProjectLifecycleService.updateProgress`) · `conventions/react-ts.md` 전면(api.js→api.ts·store.jsx→store.tsx·JS 전제 소멸·Vitest 부재를 트리거와 함께 명시)

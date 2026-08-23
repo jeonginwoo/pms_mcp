@@ -1,5 +1,7 @@
 package kr.proten.pms.project.service.impl;
 
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.Map;
 import kr.proten.pms.common.exception.ConflictException;
 import kr.proten.pms.common.exception.ErrorCode;
@@ -40,6 +42,7 @@ public class AssignmentServiceImpl implements AssignmentService {
     private final AssignmentFactory assignmentFactory;
     private final ProjectAuditRecorder projectAuditRecorder;
     private final ProjectViewFactory projectViewFactory;
+    private final Clock clock;
 
     public AssignmentServiceImpl(
             ProjectAssignmentRepository assignmentRepository,
@@ -48,7 +51,8 @@ public class AssignmentServiceImpl implements AssignmentService {
             PersonDirectoryService personDirectoryService,
             AssignmentFactory assignmentFactory,
             ProjectAuditRecorder projectAuditRecorder,
-            ProjectViewFactory projectViewFactory) {
+            ProjectViewFactory projectViewFactory,
+            Clock clock) {
         this.assignmentRepository = assignmentRepository;
         this.projectVisibilityService = projectVisibilityService;
         this.projectActionPermission = projectActionPermission;
@@ -56,6 +60,7 @@ public class AssignmentServiceImpl implements AssignmentService {
         this.assignmentFactory = assignmentFactory;
         this.projectAuditRecorder = projectAuditRecorder;
         this.projectViewFactory = projectViewFactory;
+        this.clock = clock;
     }
 
     public AssignmentView assign(long callerPersonId, CreateAssignmentCommand command) {
@@ -94,7 +99,7 @@ public class AssignmentServiceImpl implements AssignmentService {
         requireNotManager(assignment);
 
         Map<String, Object> before = projectAuditRecorder.snapshot(assignment);
-        assignment.close();
+        assignment.close(LocalDate.now(clock));
         ProjectAssignment saved = assignmentRepository.saveAndFlush(assignment);
         projectAuditRecorder.assignmentClosed(callerPersonId, saved, before);
     }

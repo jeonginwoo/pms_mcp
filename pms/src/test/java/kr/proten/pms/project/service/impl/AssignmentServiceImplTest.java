@@ -1,5 +1,8 @@
 package kr.proten.pms.project.service.impl;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
@@ -63,6 +66,9 @@ class AssignmentServiceImplTest {
     @Mock
     private ProjectViewFactory projectViewFactory;
 
+    private static final Clock FIXED_CLOCK =
+            Clock.fixed(Instant.parse("2026-08-23T00:00:00Z"), ZoneOffset.UTC);
+
     private AssignmentServiceImpl service;
 
     @BeforeEach
@@ -74,7 +80,8 @@ class AssignmentServiceImplTest {
                 personDirectoryService,
                 new AssignmentFactory(),
                 projectAuditRecorder,
-                projectViewFactory);
+                projectViewFactory,
+                FIXED_CLOCK);
     }
 
     @Test
