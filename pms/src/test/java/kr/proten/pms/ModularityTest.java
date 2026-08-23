@@ -36,13 +36,15 @@ class ModularityTest {
     }
 
     @Test
-    @DisplayName("현재 모듈은 person · auth · project · resource · notification · audit · maintenance 7종")
+    @DisplayName("현재 모듈은 person · auth · project · resource · notification · audit"
+            + " · maintenance · mcp 8종")
     void detectsAllModules() {
         var detected = modules.stream()
                 .map(module -> module.getIdentifier().toString())
                 .toList();
 
         assertThat(detected).containsExactlyInAnyOrder(
-                "person", "auth", "project", "resource", "notification", "audit", "maintenance");
+                "person", "auth", "project", "resource", "notification", "audit",
+                "maintenance", "mcp");
     }
 }

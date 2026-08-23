@@ -37,7 +37,7 @@
 ## M1 — 조회 전용 → M2 — 안전한 쓰기 → M3 — 프롬프트·외부
 
 - 큰 줄기: 조회 6도구 + whoami → eval 게이트(**G1**) → `update_progress` 2단계 쓰기 → 운영 검증(**G2**) → 프롬프트·확장(**G3**: 모델·단가·학습 조항 최종 확인) (조회 6도구 = 2026-08-11 결정 ④ 8종화 반영)
-- **G1의 임계경로는 pms 쪽이다**(2026-08-23 실측): `/mcp` port 5종 중 person·진척률은 이미 서 있고, project는 **시드 미적재**라 데이터가 없고, 가동률·유지보수는 **골격/미착수**다. 아래 pms 절이 곧 G1의 선행 조건이다.
+- **G1의 임계경로는 pms 쪽이다**(2026-08-23 실측): 도구 8종 중 person 2종(`whoami`·`find_person`)은 실연결됐고, 진척률 쓰기는 도메인 구현(`ProjectLifecycleService.updateProgress`)은 있으나 계약이 모듈 루트에 없어 어댑터가 부를 수 없고, project는 그 위에 **시드 미적재**이며, 가동률·유지보수는 **골격/미착수**다. 아래 pms 절이 곧 G1의 선행 조건이다.
 
 ### M1 — pms 트랙 (owner: PMS 담당)
 
@@ -57,12 +57,18 @@
 
 ### M1 — host 트랙 (owner: MCP 담당)
 
-> **이 절은 MCP 담당이 채운다.** PMS 담당이 대신 쓰지 않는다 — 아래는 `docs/PROGRESS-host.md`가
-> 이미 적어 둔 방향을 자리표시로 옮긴 것뿐이다.
->
-> - `/mcp` 어댑터 승격(`pms-old/` → `pms/`) · port 5종을 도메인 서비스 구현으로 교체 · `internal/seed/` 임시 어댑터 제거
-> - eval 자동 실행 스크립트 + 오염 레코드·오류 주입 장치(하네스 증설 예약 항목)
-> - **주의**: PROGRESS-host의 "첫 후보 = identity `PeopleQueryService`"는 2026-08-21 재구축으로 **사라진 클래스**를 가리킨다(현행은 `PersonService`/`PersonDirectoryService`). 착수 전 갱신 필요 — pms 트랙이 대신 고치지 않는다
+도구 실연결의 순서는 pms 진도에 종속된다(위 pms 절). 아래는 **어댑터 쪽에서 해야 하는 일**만 둔다.
+
+- [x] **`/mcp` 어댑터 재승격 (`pms-old/` → `pms/`)** — **2026-08-23 완료**. 승격 방식을 재구축 구조에 맞춰 바꿨다(공용 결정 기록): 도구 8종·응답 DTO·예외 매핑은 `mcp` 모듈이 소유하고, 각 도메인은 **자기 모듈 루트에 조회 계약을 올려** 어댑터가 그것만 부른다 — 의존이 `mcp → 도메인` 한 방향이라 `mcp/`를 지워도 pms는 그대로 돈다. 디코더는 새로 만들지 않고 auth의 `accessTokenDecoder`를 받는다(audience=pms·token_type=access가 이미 부착 — 빈을 하나 더 만들면 타입 주입이 모호해져 웹 인증이 깨진다). `pms.auth.enabled`와 무관하게 `/mcp`는 항상 토큰을 요구한다(원칙 4). 테스트 11건(인증 3케이스·체인 순서·위조 서명·refresh·카탈로그 8종·가시성·503)
+- [x] **person 포트 실연결** — **2026-08-23 완료**. `person/PersonLookupService`(+`PersonIdentity`) 루트 승격 → `whoami`·`find_person`이 실 DB 응답. 가시성 판정은 `PersonService`를 그대로 불러 **챗과 화면이 같은 답**을 내게 했고, `whoami`의 부문은 person 안에서 조직 트리를 올라가 채운다(`MeView`에 없는 값). 권한 플래그는 담지 않는다(FR-AI-16)
+- [ ] **project 포트 실연결** (`search_projects`·`update_progress`) — **선행: project 조회·진척률 계약의 루트 승격이 아직 없다.** PR #19(2026-08-23 머지)가 올린 `AssignmentDirectoryService`는 **가동률용**이고, 이 두 도구가 쓸 `ProjectQueryService`(가시성 조회·404 은닉)와 `ProjectLifecycleService.updateProgress`(2단계 확인·낙관적 락·완료 규칙)는 여전히 `project/service/`(internal)에 있다 — 별도 승격 필요(공용 결정 기록 경유). 그 위에 projects 시드 적재가 데이터 전제다(pms 절 ③ — **PR #20이 main에 미도달**, 미해결 이슈 참조)
+- [ ] **resource 포트 실연결** (`get_utilization`·`list_overbooked`) — **계약은 도착했다**(PR #19: `AssignmentDirectoryService`·`WorkforceDirectoryService`, 응답 9필드 전부 채워짐을 확인). 남은 것은 EPIC C 실구현 + **조직 id 후속 1건**: 두 계약이 조직을 이름으로만 주므로 `scope=MY_TEAM`·`DIVISION`을 화자로부터 유도할 수 없다(미해결 이슈)
+- [ ] **maintenance 포트 실연결** (`search_maintenance`·`list_maintenance_logs`) — EPIC D(모듈 신설 + maintenance 시드)가 선행
+- [ ] **eval 코퍼스 시드 재앵커** — `reference/seed/people.json`과 실제 적재본 `seed_org_proten.sql`이 **서로 다른 익명화 데이터**다(2026-08-23 실측: 각 44명, **이름 교집합 0명**, id별 일치 0건). eval-cases v1.6·유저_시나리오 v1.4의 화자·기대값이 전부 people.json 기준이라 **실 서버에 없는 인물**을 가리킨다. G1 실행 전 재앵커 필수
+- [ ] **host 앱 실서버 전환** — `pms.mcp.base-url` 8090(목업) → 8080 + 로그인 access 토큰으로 관통 실측. 목업은 카탈로그 실험장으로 존치
+- [ ] **감사 `source=MCP` 실측** — 경로 접두사로 판정하므로 어댑터에 배선이 없다(`AuditSourceResolver`). 쓰기 도구 실연결 후 실제로 MCP로 잡히는지 확인(pms/CLAUDE.md가 남긴 확인 항목)
+- [ ] **eval 자동 실행 스크립트 + 오류 주입 장치** — 오염 레코드·오류 주입(하네스 증설 예약 항목, G1 준비 시)
+- [ ] **게이트 G1**: 36케이스 — 치명(F1~F4) 0건 · 합격률 ≥ 90%(33/36) · 사람 승인(결정 기록)
 
 
 ## 하네스 증설 예약 (해당 고통이 발생하면 그때 추가)
