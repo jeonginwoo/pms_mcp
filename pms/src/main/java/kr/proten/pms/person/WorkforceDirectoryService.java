@@ -30,4 +30,25 @@ public interface WorkforceDirectoryService {
      * 얻은 범위와 교집합한다. 두 곳에서 거르면 어느 쪽이 정본인지 모르게 된다.
      */
     Set<Long> findPersonIdsInSubtree(long orgUnitId);
+
+    /**
+     * 집계 모집단이 될 수 있는 인원 전체 — 재직자, 시스템 계정 제외
+     * (2026-08-23 추가, 공용 결정 기록).
+     *
+     * <p>필요한 이유: 전사 scope 화자의 가시성은 {@link OrgVisibility#unrestricted()}이고
+     * 그때 {@code visiblePersonIds}가 <b>빈 집합</b>이다("제약이 없다"는 뜻이지 "아무도
+     * 없다"가 아니다). 그러면 집계 호출자에게 명단을 얻을 경로가 없다 — person 밖으로
+     * 전원을 내주는 창구가 여기 말고 없었다.
+     *
+     * <p><b>재직자만</b>이다(사용자 결정 2026-08-23): {@link #findPersonIdsInSubtree}와
+     * 같은 규칙이다. "지금 우리 조직 가동률"에 퇴사자를 세면 집계가 틀어진다. 대가는
+     * 지난달을 오늘 조회하면 그 사이 퇴사한 사람의 배정이 빠지는 것이고, 그것은
+     * 미해결로 등재했다(PRD-pms §12) — {@link #findProfiles}가 비활성을 포함하는 것과
+     * 규칙이 다른 것도 그 항목에 함께 적혀 있다.
+     *
+     * <p>시스템 계정을 빼는 것은 시드가 정한 것이다 — {@code system_account=true}는
+     * "인력·가동률·배정 목록에서 제외"다. billable=false라 집계에서는 어차피 빠지지만,
+     * 그것과 별개로 명단 자체에 들어가지 않는 편이 규칙 하나로 끝난다.
+     */
+    Set<Long> findAllAggregatablePersonIds();
 }

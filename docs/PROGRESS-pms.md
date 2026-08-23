@@ -65,6 +65,15 @@
 - 다음 작업: <구체적으로>
 ```
 
+### 2026-08-23 — EPIC C 가동률 실구현 (C1-1~C1-6) — pms 절 G1 선행 완료
+- 완료: ROADMAP M1 pms 절 마지막 항목. `UtilizationQueryServiceImpl` 본문 + 모집단 판정을 **`UtilizationPopulation`으로 분리**(`ProjectVisibilityService` 선례 — 규칙이 개인 지정/집계 · 전사/제한 두 축으로 갈려 산식과 한 클래스에 두면 매번 되짚는다). 골격이 계약·DTO·엔티티·저장소·라우트까지 다 세워 둬서 **빈 것은 impl 본문 하나**였다. 검증 `verify.sh pms` PASS — 테스트 347 → **368**, 501 골격 14 → **13**
+- **착수 전 오산 2건 정정**: ①C1-4를 "이벤트 재계산"으로 봤는데 골격 javadoc이 이미 답을 적어 뒀다 — 조회 시점 계산이라 **구현할 것이 없고 증명만** 남아 있었다(통합 테스트 1건) ②실측한 계약 공백 — 전사 scope 가시성은 `unrestricted`라 `visiblePersonIds`가 **빈 집합**이어서(제약 없음 ≠ 아무도 없음) 집계 호출자가 명단을 얻을 경로가 없었다 → `WorkforceDirectoryService.findAllAggregatablePersonIds()` 신설(공개 API — 결정 기록)
+- **사용자 결정**: 집계 모집단은 **재직자만**. person이 이미 두 규칙을 갖고 있어 임의로 못 정했다(`findPersonIdsInSubtree` 재직자만 vs `findProfiles` 비활성 포함). 대가는 지난달 조회 시 그 사이 퇴사자 배정 누락 — PRD-pms §12 등재, eval은 현재 월만 물으므로 G1 무관
+- **부동소수점 노이즈**: 0.5+0.7에 계수 1.5를 곱하면 `179.99999999999997`이다(실측). 값이 지저분한 것보다 **과부하 판정이 `기본 > 100`이라 노이즈가 판정을 뒤집을 수 있다**는 게 결정적이라 6자리 반올림 + 단위 테스트로 고정
+- **정본 두 벌 제거**: `ProjectSeedLoadIntegrationTest`가 산식·모집단·>100 판정을 테스트 안에 따로 구현하고 있었다(게다가 `Capacity` 월 예외를 무시했다) → 실서비스 호출로 교체. 윤종헌 182%는 개인 지정 조회로 옮겨 "집계에서 빠지는 것 ≠ 가동률이 없는 것"을 분리
+- 미해결 2건 등재(PRD-pms §12): 과거 월의 퇴사자 · `?orgUnitId=`가 없는/가시성 밖 조직일 때 빈 목록(다른 조회는 404 은닉이라 규칙이 갈려 있다 — 명세 없는 이유로 모듈 경계를 넓히지 않았다)
+- 다음 작업: **`resource` 루트 승격 소유자 결정** — 루트가 비어 있어 `get_utilization`·`list_overbooked`가 붙을 계약이 없다. 같은 날 등재한 git-workflow §3("One promotion, one owner")를 이번엔 실제로 밟는다(MCP 담당 합의 후 착수)
+
 ### 2026-08-23 — 상태 원장 정정 3건 + 중복 승격 재발 규칙 (코드 변경 없음)
 - 계기: MCP 담당 브랜치를 머지하려다 **같은 계약이 양쪽에서 각각 만들어진 것**을 발견했다. MCP 담당이 #26에서 자기 판을 버리고 내 계약(`ContractBrief`·`ContractIssues`·`IssueBrief`·`CommentBrief`)에 어댑터를 다시 붙이는 쪽으로 이미 정리해 main에 넣었다 — 코드 쪽 결론은 그것으로 끝났고, 여기서는 **원장 정정과 재발 방지만** 한다
 - 공용 `PROGRESS.md` **자기모순 2건 정정**(실측): 코드 줄이 "**7종 실연결**(`UtilizationTools`만 503)"이라고 적혀 있었는데 같은 파일 단계 줄은 "4종"이었다 — 실측 4종이 맞다(`whoami`·`find_person`·`search_maintenance`·`list_maintenance_logs`, 503은 `search_projects`·`update_progress`·`get_utilization`·`list_overbooked`) · "**501 골격 6개**: resource 1 · notification 4 · EPIC E 쓰기 5종"은 합이 맞지 않았다(1+4+5=10) — 실측 **미구현 유스케이스 14개**(notification 4 · EPIC E 쓰기 9 · resource 1)

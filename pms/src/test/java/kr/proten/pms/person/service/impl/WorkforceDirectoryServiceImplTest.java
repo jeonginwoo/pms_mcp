@@ -132,6 +132,21 @@ class WorkforceDirectoryServiceImplTest {
         assertThat(service.findPersonIdsInSubtree(DIVISION_ID)).containsExactly(PERSON_ID);
     }
 
+    @Test
+    @DisplayName("집계 모집단 명단은 재직자·비시스템만 — 전사 scope가 쓸 유일한 경로다")
+    void findAllAggregatablePersonIds_keepsActiveNonSystemOnly() {
+        // Given: 전사 scope 화자의 가시성은 unrestricted라 인원 집합이 비어 있고,
+        //        그때 집계 호출자가 명단을 얻을 곳이 여기뿐이다
+        when(personRepository.findByActiveTrueAndSystemFalseOrderByIdAsc())
+                .thenReturn(List.of(person(TEAM_ID, 1.0, true)));
+
+        // When
+        Set<Long> roster = service.findAllAggregatablePersonIds();
+
+        // Then: 필터는 저장소 메서드 이름이 정한다 — 호출자가 뒤집을 수 없다
+        assertThat(roster).containsExactly(PERSON_ID);
+    }
+
     private Person person(long orgUnitId, double capacity, boolean billable) {
         return Person.of(
                 PERSON_ID, "전세아", orgUnitId, GRADE_ID, 4L, capacity, billable, false, true);
