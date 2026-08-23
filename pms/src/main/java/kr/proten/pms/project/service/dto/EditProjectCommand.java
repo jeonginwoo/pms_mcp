@@ -2,7 +2,7 @@ package kr.proten.pms.project.service.dto;
 
 import java.time.LocalDate;
 import kr.proten.pms.project.service.entity.Engagement;
-import kr.proten.pms.project.service.entity.ProjectStatus;
+import kr.proten.pms.project.ProjectStatus;
 
 /**
  * 프로젝트 정보·상태 수정 입력 (AC A5-1) — 전체 치환(PUT) 의미론이다.

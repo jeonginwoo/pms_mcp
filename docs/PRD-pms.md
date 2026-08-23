@@ -166,11 +166,11 @@ B2-1 자연어 검증(2026-08-10)이 실증한 도구 카탈로그 공백 2건�
   | `OrgPermissionService` · `OrgPermission` | person | project · auth | 프로젝트 밖 행위의 그룹 플래그 |
   | `AccountPort` | person(정의) | auth(구현) | 인력 등록 시 계정 생성 — 순환 회피의 방향 역전 |
   | **`WorkforceDirectoryService` · `WorkforceProfile`** | person | resource | **가동률의 분모·모집단·계수**(capacity·billable·gradeCoeff)와 team·division, 조직 subtree 인원 (2026-08-23 신설) |
-  | **`AssignmentDirectoryService` · `MonthlyAssignment`** | project | resource | **가동률의 분자** — 그 달과 겹치는 배정 행(projectId·projectName·monthlyMm) (2026-08-23 신설) |
+  | **`AssignmentDirectoryService` · `MonthlyAssignment`** | project | resource | **가동률의 분자** — 그 달과 겹치는 배정 행(personId·projectId·projectName·**projectStatus**·monthlyMm) (2026-08-23 신설) |
   | `AuditQueryService` · `AuditRecord` 등 | audit | person · project | 감사 조회(권한 판정 없는 순수 조회) |
   | `NotificationService` · `NotifyCommand` 등 | notification | project · resource | 알림 적재 요청 |
 
-  신설 2종의 설계 근거: **행 단위로 내준다**(합계가 아니라) — 과부하 응답이 원인을 프로젝트별로 보여 주므로(`Cause(projectName, mm)`) 합계만 주면 같은 행을 두 번 읽는다. **인원 명단을 받는다**(orgUnitId가 아니라) — 가시성·billable 판정은 person·resource의 몫이고 project는 조직을 알지 못한다. **`PersonRef`를 확장하지 않고 나눴다** — 그것은 project가 쓰는 표시용 참조라, capacity·billable을 얹으면 resource의 관심사가 project의 컴파일 면에 올라온다(conventions §5).
+  신설 2종의 설계 근거: **`ProjectStatus`를 모듈 루트로 올려 배정 행에 함께 싣는다** — 가동률 모집단은 "진행중 프로젝트의 배정만"인데(2026-08-10 결정. 완료·수주확정까지 세면 시드 실측에서 정태휘가 **1171%** 로 왜곡된다) 그 규칙은 EPIC C의 것이므로 project는 상태라는 **사실만** 내주고 판정은 resource가 한다. project가 걸러 버리면 모집단 정의가 두 모듈에 나뉜다. **행 단위로 내준다**(합계가 아니라) — 과부하 응답이 원인을 프로젝트별로 보여 주므로(`Cause(projectName, mm)`) 합계만 주면 같은 행을 두 번 읽는다. **인원 명단을 받는다**(orgUnitId가 아니라) — 가시성·billable 판정은 person·resource의 몫이고 project는 조직을 알지 못한다. **`PersonRef`를 확장하지 않고 나눴다** — 그것은 project가 쓰는 표시용 참조라, capacity·billable을 얹으면 resource의 관심사가 project의 컴파일 면에 올라온다(conventions §5).
 
 - `/mcp` 어댑터가 호출하는 애플리케이션 서비스는 EPIC A(조회·진척률)·C(가동률)·D(이력)·H(`/api/me` = `whoami`)와 동일 — 도구 카탈로그 대응은 PRD-host §4-2. 서비스 API 변경은 공용 결정 기록 경유(2인 협업 경계). **"호출"의 방향은 미정** — M0 산출물은 도메인이 `mcp` 루트의 port를 구현하는 형태(의존 `project → mcp`)이고 이 줄은 그 반대로 읽힌다. 어느 쪽인지는 MCP 담당이 정한다(§10 횡단 기반 표).
 

@@ -1,4 +1,4 @@
-package kr.proten.pms.project.service.entity;
+package kr.proten.pms.project;
 
 import java.util.Optional;
 

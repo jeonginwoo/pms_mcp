@@ -25,6 +25,9 @@ public interface AssignmentDirectoryService {
      * 말일로 당겨지므로(AC B2-1) 겹침 판정 하나로 "종료월 이후 제외"가 성립한다.
      * 지난달 가동률을 오늘 조회해도 그때의 수치가 그대로 나온다.
      *
+     * <p>프로젝트 상태로 거르지 않는다 — 모집단 판정(진행중만)은 호출자의 몫이라
+     * 각 행에 {@link MonthlyAssignment#projectStatus}를 실어 보낸다.
+     *
      * @param personIds 빈 집합이면 빈 목록 — 질의하지 않는다
      */
     List<MonthlyAssignment> findInMonth(YearMonth month, Collection<Long> personIds);

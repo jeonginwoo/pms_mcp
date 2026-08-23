@@ -62,7 +62,7 @@ public interface ProjectAssignmentRepository extends JpaRepository<ProjectAssign
      */
     @Query("""
             select new kr.proten.pms.project.MonthlyAssignment(
-                    a.personId, a.projectId, p.name, a.monthlyMm)
+                    a.personId, a.projectId, p.name, p.status, a.monthlyMm)
             from ProjectAssignment a, Project p
             where p.id = a.projectId
               and a.personId in :personIds

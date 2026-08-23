@@ -12,6 +12,7 @@ import java.time.YearMonth;
 import java.util.List;
 import java.util.Set;
 import kr.proten.pms.project.MonthlyAssignment;
+import kr.proten.pms.project.ProjectStatus;
 import kr.proten.pms.project.repository.ProjectAssignmentRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -63,13 +64,32 @@ class AssignmentDirectoryServiceImplTest {
     @Test
     @DisplayName("합산하지 않고 행 그대로 넘긴다 — 과부하 원인이 프로젝트별로 필요하다")
     void findInMonth_returnsRowsNotSums() {
-        MonthlyAssignment first = new MonthlyAssignment(18L, 1L, "명화공업 MES", 0.5);
-        MonthlyAssignment second = new MonthlyAssignment(18L, 2L, "SK온 EUE공장", 0.7);
+        MonthlyAssignment first =
+                new MonthlyAssignment(18L, 1L, "명화공업 MES", ProjectStatus.IN_PROGRESS, 0.5);
+        MonthlyAssignment second =
+                new MonthlyAssignment(18L, 2L, "SK온 EUE공장", ProjectStatus.IN_PROGRESS, 0.7);
         when(assignmentRepository.findOverlapping(anyCollection(), any(), any()))
                 .thenReturn(List.of(first, second));
 
         List<MonthlyAssignment> found = service.findInMonth(YearMonth.of(2026, 8), Set.of(18L));
 
         assertThat(found).containsExactly(first, second);
+    }
+
+    @Test
+    @DisplayName("모집단 판정은 하지 않는다 — 완료 프로젝트 행도 상태를 달고 그대로 나간다")
+    void findInMonth_doesNotFilterByProjectStatus() {
+        // 진행중만 세는 규칙(2026-08-10)은 EPIC C의 것이다. 여기서 걸러 버리면
+        // 모집단 정의가 두 모듈에 나뉘고, 시드 실측의 1171% 왜곡을 어느 쪽이 막는지
+        // 알 수 없게 된다.
+        MonthlyAssignment done =
+                new MonthlyAssignment(13L, 9L, "TCK 검색엔진 추가", ProjectStatus.COMPLETED, 0.25);
+        when(assignmentRepository.findOverlapping(anyCollection(), any(), any()))
+                .thenReturn(List.of(done));
+
+        List<MonthlyAssignment> found = service.findInMonth(YearMonth.of(2026, 8), Set.of(13L));
+
+        assertThat(found).containsExactly(done);
+        assertThat(found.getFirst().projectStatus()).isEqualTo(ProjectStatus.COMPLETED);
     }
 }

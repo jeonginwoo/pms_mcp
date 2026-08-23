@@ -1,6 +1,6 @@
 package kr.proten.pms.project.service.dto;
 
-import kr.proten.pms.project.service.entity.ProjectStatus;
+import kr.proten.pms.project.ProjectStatus;
 
 /**
  * 프로젝트 목록 항목 (AC A3-1).

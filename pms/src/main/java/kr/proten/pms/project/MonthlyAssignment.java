@@ -10,6 +10,16 @@ package kr.proten.pms.project;
  *
  * <p>{@code projectName}을 동봉하는 것도 같은 이유다 — 호출자가 id로 프로젝트를
  * 되묻게 하면 N+1이 모듈 경계를 넘어 생긴다.
+ *
+ * <p><b>{@code projectStatus}를 함께 싣는다</b>: 가동률 모집단은 "진행중 프로젝트의
+ * 배정만"이고(2026-08-10 결정 — 완료·수주확정까지 세면 시드 실측에서 정태휘가
+ * 1171%로 왜곡된다), 그 규칙은 EPIC C의 것이라 <b>판정은 resource가 한다</b>.
+ * project는 사실만 내준다 — 여기서 걸러 버리면 모집단 정의가 두 모듈에 나뉜다.
  */
-public record MonthlyAssignment(long personId, long projectId, String projectName, double monthlyMm) {
+public record MonthlyAssignment(
+        long personId,
+        long projectId,
+        String projectName,
+        ProjectStatus projectStatus,
+        double monthlyMm) {
 }
