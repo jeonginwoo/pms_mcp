@@ -65,6 +65,15 @@
 - 다음 작업: <구체적으로>
 ```
 
+### 2026-08-23 — 상태 원장 정정 3건 + 중복 승격 재발 규칙 (코드 변경 없음)
+- 계기: MCP 담당 브랜치를 머지하려다 **같은 계약이 양쪽에서 각각 만들어진 것**을 발견했다. MCP 담당이 #26에서 자기 판을 버리고 내 계약(`ContractBrief`·`ContractIssues`·`IssueBrief`·`CommentBrief`)에 어댑터를 다시 붙이는 쪽으로 이미 정리해 main에 넣었다 — 코드 쪽 결론은 그것으로 끝났고, 여기서는 **원장 정정과 재발 방지만** 한다
+- 공용 `PROGRESS.md` **자기모순 2건 정정**(실측): 코드 줄이 "**7종 실연결**(`UtilizationTools`만 503)"이라고 적혀 있었는데 같은 파일 단계 줄은 "4종"이었다 — 실측 4종이 맞다(`whoami`·`find_person`·`search_maintenance`·`list_maintenance_logs`, 503은 `search_projects`·`update_progress`·`get_utilization`·`list_overbooked`) · "**501 골격 6개**: resource 1 · notification 4 · EPIC E 쓰기 5종"은 합이 맞지 않았다(1+4+5=10) — 실측 **미구현 유스케이스 14개**(notification 4 · EPIC E 쓰기 9 · resource 1)
+- 단계 줄의 **G1 선행 조건 ①** 현행화: `projects 시드`·`EPIC D 조회분`·`project 계약 루트 승격`이 모두 끝나 **남은 것은 EPIC C뿐**이다
+- **재발 규칙을 conventions에 등재**(git-workflow §3 "One promotion, one owner"): 원인은 설계 이견이 아니라 **소유 공백**이다 — ROADMAP이 한 가지 일을 pms 절·host 절 두 곳에 적고 누가 계약 파일을 만드는지 정해 두지 않았다. 모듈 루트에 파일을 만들기 전에 소유자를 결정 기록으로 먼저 정한다
+- 버려진 판에서 배운 것 2가지를 결정 기록에 남겼다: ①절단 50은 **어댑터 상수**가 제자리다(#26이 `TOOL_LIMIT`로 그렇게 갔다 — 도메인이 도구 description의 약속을 알 필요가 없다) ②`contractId` nullable은 두 판이 독립적으로 같은 결론에 도달했다
+- 미해결: 없음
+- 다음 작업: **EPIC C 가동률 실구현**(C1-1~C1-6) — pms 절에 남은 유일한 G1 선행 항목
+
 ### 2026-08-23 — 도메인 루트 계약 3종 승격 (안 ② 도메인 몫) + 조직 id·시드 원본 id
 - 완료: MCP 담당이 확정한 승격 방식(안 ②)의 도메인 쪽 몫. **`maintenance.MaintenanceLookupService`** · **`project.ProjectLookupService`** · **`project.ProgressCommandService`** + **`WorkforceProfile` 조직 id 2종**(MCP 요청 건 해소) + **`PersonRef.division`**. 승격 전에는 `PersonTools`만 실연결이고 나머지 4도구가 `ToolError.unavailable`이었다 — 이제 `UtilizationTools`만 남고 그건 EPIC C에 묶인다. 검증 `verify.sh pms` PASS
 - **범위 오산 정정**: project 조회 승격을 "패키지 이동뿐"으로 봤으나 내부 계약에 status·keyword 필터가 아예 없어(`listVisible(caller, Pageable)`뿐) 저장소 질의를 신설했다
