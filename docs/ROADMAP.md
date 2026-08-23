@@ -5,7 +5,7 @@
 ## P단계 — 기획 (완료 — 게이트 P 통과 2026-08-09)
 
 > 아래 항목은 **P단계 당시의 산출 기록**이므로 버전 표기도 그때 값이다. 산출물의
-> **현행 버전**(2026-08-23 실측): 상위 PRD v1.0 · PRD-host **v2.5** · PRD-pms **v2.13** ·
+> **현행 버전**(2026-08-23 실측): 상위 PRD v1.0 · PRD-host **v2.6** · PRD-pms **v2.13** ·
 > 기술_선택_근거 v2.0 · 구현 노트 **v1.1** · 유저 시나리오 v1.4 · eval-cases v1.6.
 
 - [x] **PRD-host v2.0** (2026-08-02 작성 → `docs/PRD-host.md` + 공유 정의는 상위 `docs/PRD.md`로 승격, 게이트 P 통과 2026-08-09) — 구 PRD(v1.2) 기반 재작성: 허점 6종 수정(측정 불가 기준·요구 충돌·version 반환 구멍·용어 정의 누락·열린 질문 처리·시효 정보), 2026-07-31 결정 반영(`scope=ME`·version 반환·오류/점검 FR·기준 모델·get_project 조건 명시). 시스템 프롬프트 전문·마일스톤 표·비용 모델은 PRD에서 분리(소유권: 프롬프트→구현 노트, 마일스톤→이 문서, 비용→기술 근거)
@@ -37,7 +37,7 @@
 ## M1 — 조회 전용 → M2 — 안전한 쓰기 → M3 — 프롬프트·외부
 
 - 큰 줄기: 조회 6도구 + whoami → eval 게이트(**G1**) → `update_progress` 2단계 쓰기 → 운영 검증(**G2**) → 프롬프트·확장(**G3**: 모델·단가·학습 조항 최종 확인) (조회 6도구 = 2026-08-11 결정 ④ 8종화 반영)
-- **G1의 잔여 임계경로는 EPIC C 하나다**(2026-08-23 갱신 — 같은 날 pms 3건이 머지되며 좁혀졌다): 도구 8종 중 **4종 실연결**(person 2 + maintenance 2). 남은 4종의 선행이 갈린다 — `search_projects`·`update_progress`는 계약도 시드도 도착해 **어댑터 배선만** 남았고(PR #25 — host 절 항목), 가동률 2종은 **EPIC C 실구현**이 없어 계약만으로는 답을 만들 수 없다.
+- **G1의 잔여 임계경로는 EPIC C 하나다**(2026-08-23 재갱신 — project 배선까지 끝나 이제 문자 그대로다): 도구 8종 중 **6종 실연결**(person 2 + maintenance 2 + project 2). 남은 2종은 가동률뿐이고 **EPIC C 실구현**이 없어 계약만으로는 답을 만들 수 없다 — 어댑터가 할 일은 없다. G1 선행으로 남은 host 몫은 **eval 코퍼스 시드 재앵커** 하나다.
 
 ### M1 — pms 트랙 (owner: PMS 담당)
 
@@ -62,12 +62,12 @@
 
 - [x] **`/mcp` 어댑터 재승격 (`pms-old/` → `pms/`)** — **2026-08-23 완료**. 승격 방식을 재구축 구조에 맞춰 바꿨다(공용 결정 기록): 도구 8종·응답 DTO·예외 매핑은 `mcp` 모듈이 소유하고, 각 도메인은 **자기 모듈 루트에 조회 계약을 올려** 어댑터가 그것만 부른다 — 의존이 `mcp → 도메인` 한 방향이라 `mcp/`를 지워도 pms는 그대로 돈다. 디코더는 새로 만들지 않고 auth의 `accessTokenDecoder`를 받는다(audience=pms·token_type=access가 이미 부착 — 빈을 하나 더 만들면 타입 주입이 모호해져 웹 인증이 깨진다). `pms.auth.enabled`와 무관하게 `/mcp`는 항상 토큰을 요구한다(원칙 4). 테스트 11건(인증 3케이스·체인 순서·위조 서명·refresh·카탈로그 8종·가시성·503)
 - [x] **person 포트 실연결** — **2026-08-23 완료**. `person/PersonLookupService`(+`PersonIdentity`) 루트 승격 → `whoami`·`find_person`이 실 DB 응답. 가시성 판정은 `PersonService`를 그대로 불러 **챗과 화면이 같은 답**을 내게 했고, `whoami`의 부문은 person 안에서 조직 트리를 올라가 채운다(`MeView`에 없는 값). 권한 플래그는 담지 않는다(FR-AI-16)
-- [ ] **project 포트 실연결** (`search_projects`·`update_progress`) — **선행: project 조회·진척률 계약의 루트 승격이 아직 없다.** PR #19(2026-08-23 머지)가 올린 `AssignmentDirectoryService`는 **가동률용**이고, 이 두 도구가 쓸 `ProjectQueryService`(가시성 조회·404 은닉)와 `ProjectLifecycleService.updateProgress`(2단계 확인·낙관적 락·완료 규칙)는 여전히 `project/service/`(internal)에 있다 — 별도 승격 필요(공용 결정 기록 경유). 그 위에 projects 시드 적재가 데이터 전제다(pms 절 ③ — **PR #20이 main에 미도달**, 미해결 이슈 참조)
+- [x] **project 포트 실연결** (`search_projects`·`update_progress`) — **2026-08-23 완료**. 도메인 계약은 PR #25가 올렸고(`ProjectLookupService`·`ProgressCommandService`) 이 항목은 **어댑터 배선**이다. **쓰기 도구가 처음 실연결됐다**: 2단계 확인·권한·낙관적 락·완료 규칙은 내부 유스케이스가 그대로 갖고 어댑터는 `confirmed` 왕복과 표현 변환만 한다(구조 원칙 5) — 프로토콜을 두 곳에 두면 한쪽이 확인을 건너뛰는 길이 생긴다. `summary` 한 줄만 어댑터가 만든다(도메인에 없는 필드 · 커밋 뒤에는 현재값=요청값이 되므로 두 단계의 문장이 갈린다). **404 은닉은 maintenance와 반대로 도메인이 든다** — 프로젝트는 가시성 밖이 부재와 같이 숨어야 하고(A3-2) 유지보수는 숨길 것이 없다(D4-3). 카탈로그 문구 3건 정정(절단 50건 명시·keyword 부분 일치·status 5종 — 결정 기록, PRD-host v2.6). 테스트 13건: 가시성 화자별 갈림 · 절단 50 · 상태 필터 19건 · 422 · 부분 일치(토큰 AND 아님) · 상세 version · 404 은닉 · 2단계 확인 양단 · 409 낙관적 락 · 403 비담당자
 - [ ] **resource 포트 실연결** (`get_utilization`·`list_overbooked`) — **계약은 도착했다**(PR #19: `AssignmentDirectoryService`·`WorkforceDirectoryService`, 응답 9필드 전부 채워짐을 확인). 남은 것은 EPIC C 실구현 + **조직 id 후속 1건**: 두 계약이 조직을 이름으로만 주므로 `scope=MY_TEAM`·`DIVISION`을 화자로부터 유도할 수 없다(미해결 이슈)
 - [x] **maintenance 포트 실연결** (`search_maintenance`·`list_maintenance_logs`) — **2026-08-23 완료**. 도메인 계약은 PR #25가 올렸고(`maintenance.MaintenanceLookupService`) 이 항목은 **어댑터 배선**이다: 503 제거 · 절단 50건과 404 문구를 어댑터가 든다(도구 description·`ToolError`가 이 모듈 소관) · `contractId`를 nullable로 정정(계약 미연결 이슈를 0으로 내보내던 자리). **화자를 넘기지 않는 유일한 도구 묶음**이다(전사 공개 AC D4-3). eval C류 앵커를 **도구 관통으로** 고정: 사이트명으로만 45사이트 계약 도달 · `search_maintenance`가 준 계약 id로 이슈 7건 · **그 이슈 id로 ISSUE 갈래 도달**(eval C-04 전제 — #25의 시드 원본 id 재부여가 열었다)
 - [ ] **eval 코퍼스 시드 재앵커** — `reference/seed/people.json`과 실제 적재본 `seed_org_proten.sql`이 **서로 다른 익명화 데이터**다(2026-08-23 실측: 각 44명, **이름 교집합 0명**, id별 일치 0건). eval-cases v1.6·유저_시나리오 v1.4의 화자·기대값이 전부 people.json 기준이라 **실 서버에 없는 인물**을 가리킨다. G1 실행 전 재앵커 필수
 - [ ] **host 앱 실서버 전환** — `pms.mcp.base-url` 8090(목업) → 8080 + 로그인 access 토큰으로 관통 실측. 목업은 카탈로그 실험장으로 존치
-- [ ] **감사 `source=MCP` 실측** — 경로 접두사로 판정하므로 어댑터에 배선이 없다(`AuditSourceResolver`). 쓰기 도구 실연결 후 실제로 MCP로 잡히는지 확인(pms/CLAUDE.md가 남긴 확인 항목)
+- [x] **감사 `source=MCP` 실측** — **2026-08-23 완료**. 어댑터에 배선할 것이 없다는 판단이 맞았고(`AuditSourceResolver`가 `/mcp` 경로 접두사로 판정), 쓰기 도구가 실연결된 그 세션에 관통으로 확인했다: `confirmed=true` 직후 그 프로젝트의 최신 감사 행이 `source=MCP`다(기동 시 시드 적재분은 `WEB`이라 구분된다). 쓰기 도구 없이는 실측할 방법이 없던 항목이라 배선과 같은 세션에서 닫혔다
 - [ ] **eval 자동 실행 스크립트 + 오류 주입 장치** — 오염 레코드·오류 주입(하네스 증설 예약 항목, G1 준비 시)
 - [ ] **게이트 G1**: 36케이스 — 치명(F1~F4) 0건 · 합격률 ≥ 90%(33/36) · 사람 승인(결정 기록)
 

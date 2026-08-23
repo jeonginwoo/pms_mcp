@@ -14,6 +14,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import kr.proten.pms.audit.AuditQueryService;
+import kr.proten.pms.audit.AuditRecord;
+import kr.proten.pms.audit.AuditSource;
 import kr.proten.pms.auth.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -59,6 +63,8 @@ class McpAdapterIntegrationTest {
     private static final String SEED_PASSWORD = "proten1!";
     // 도구 결과가 오류로 표시됐는지 — SDK가 실패를 이 플래그로 싣는다
     private static final String ERROR_FLAG = "\"isError\":true";
+    // 목록 건수를 파서 없이 세는 기준 필드 — 프로젝트 항목마다 정확히 한 번 실린다
+    private static final String CLIENT_FIELD = "\\\"client\\\"";
 
     @Container
     @ServiceConnection
@@ -72,6 +78,9 @@ class McpAdapterIntegrationTest {
 
     @Autowired
     JwtEncoder jwtEncoder;
+
+    @Autowired
+    AuditQueryService auditQueryService;
 
     McpHttp mcp;
 
@@ -266,10 +275,169 @@ class McpAdapterIntegrationTest {
         assertThat(body).contains("[404 NOT_FOUND]").contains("조회 가능한 범위");
     }
 
+    // --- project 실연결 (search_projects · update_progress) --------------------
+
+    @Test
+    @DisplayName("프로젝트 가시성 — 같은 키워드가 화자에 따라 다른 목록을 준다 (챗 = 화면)")
+    void searchProjects_appliesCallerVisibility() {
+        String admin = mcp.call(accessToken(ADMIN_EMAIL), McpHttp.searchProjects("한국타이어"));
+        String member = mcp.call(accessToken(MEMBER_EMAIL), McpHttp.searchProjects("한국타이어"));
+
+        // 전사 2건이지만, 완료분 PM은 AX솔루션개발2팀이라 CS사업팀 팀원에게는 없는 것과 같다
+        assertThat(countOf(admin, CLIENT_FIELD)).isEqualTo(2);
+        assertThat(countOf(member, CLIENT_FIELD)).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("절단 50건 — description이 약속한 수치를 넘기지 않는다 (전사 382건)")
+    void searchProjects_truncatesAtFifty() {
+        String body = mcp.call(accessToken(ADMIN_EMAIL), McpHttp.SEARCH_PROJECTS);
+
+        // 절단을 문구로 약속하지 않으면 모델이 잘린 개수를 전체로 답한다 —
+        // 이 수치와 description은 한 세트다(2026-08-23 결정)
+        assertThat(countOf(body, CLIENT_FIELD)).isEqualTo(50);
+    }
+
+    @Test
+    @DisplayName("상태 필터 — 한국어 라벨이 화면과 같은 표기로 통한다 (eval B-04: 수주확정 19건)")
+    void searchProjects_filtersByStatusLabel() {
+        String body = mcp.call(accessToken(ADMIN_EMAIL), McpHttp.searchProjectsByStatus("수주확정"));
+
+        assertThat(body).doesNotContain(ERROR_FLAG);
+        assertThat(countOf(body, CLIENT_FIELD)).isEqualTo(19);
+    }
+
+    @Test
+    @DisplayName("모르는 상태 라벨은 422로 유효 값을 알려 준다 — 필터를 조용히 지우지 않는다")
+    void searchProjects_rejectsUnknownStatusLabel() {
+        // "유지"는 유지보수 계약의 상태다 — 도구를 헷갈린 모델이 실제로 보낼 수 있는 값
+        String body = mcp.call(accessToken(ADMIN_EMAIL), McpHttp.searchProjectsByStatus("유지"));
+
+        assertThat(body).contains("[422 VALIDATION]").contains("계약대기");
+    }
+
+    @Test
+    @DisplayName("keyword는 부분 일치다 — 토큰 AND가 아니다 (목업과의 괴리, 2026-08-23 결정)")
+    void searchProjects_matchesSubstringNotTokenAnd() {
+        String token = accessToken(ADMIN_EMAIL);
+
+        // 붙어 있으면 찾고, 같은 토큰을 뒤집어 흩어 놓으면 못 찾는다. 목업은 토큰 AND였고
+        // eval B-01·B-05는 우연히 둘 다 통과한다("AI 검색"은 solution 값 자체다) —
+        // 그래서 문구를 실제 거동에 맞췄고, 그 사실을 이 테스트가 붙잡는다
+        assertThat(countOf(mcp.call(token, McpHttp.searchProjects("한국거래소 경영정보시스템")), CLIENT_FIELD))
+                .isEqualTo(1);
+        assertThat(countOf(mcp.call(token, McpHttp.searchProjects("경영정보시스템 한국거래소")), CLIENT_FIELD))
+                .isZero();
+        // eval B-01 앵커 — 키워드가 이름이 아니라 솔루션 필드로 도달한다
+        assertThat(countOf(mcp.call(token, McpHttp.searchProjects("AI 검색")), CLIENT_FIELD))
+                .isEqualTo(17);
+    }
+
+    @Test
+    @DisplayName("상세 갈래 — version이 함께 온다 (FR-AI-10: 쓰기가 조회만으로 완결)")
+    void searchProjects_detailCarriesVersion() {
+        String token = accessToken(ADMIN_EMAIL);
+        int projectId = McpHttp.firstProjectIdOf(
+                mcp.call(token, McpHttp.searchProjects("한국거래소 경영정보시스템")));
+
+        String body = mcp.call(token, McpHttp.projectDetail(projectId));
+
+        assertThat(body).doesNotContain(ERROR_FLAG);
+        assertThat(McpHttp.firstProjectIdOf(body)).isEqualTo(projectId);
+        assertThat(McpHttp.intFieldOf(body, "version")).isNotNegative();
+        // 목록에 없는 상세 전용 필드 — PM 이름·계약 M/M
+        assertThat(body).contains("김문수").contains("contractMm");
+    }
+
+    @Test
+    @DisplayName("가시성 밖 프로젝트는 403이 아니라 404 정본 문구로 숨는다 (AC A3-2)")
+    void searchProjects_concealsInvisibleProject() {
+        // 관리자에게는 보이는 프로젝트를 CS사업팀 팀원에게 물어본다 — 부재와 같은 문구여야 한다
+        int projectId = McpHttp.firstProjectIdOf(
+                mcp.call(accessToken(ADMIN_EMAIL), McpHttp.searchProjects("한미글로벌 프로젝트 데이터")));
+
+        String body = mcp.call(accessToken(MEMBER_EMAIL), McpHttp.projectDetail(projectId));
+
+        assertThat(body).contains("[404 NOT_FOUND]").contains("조회 가능한 범위");
+    }
+
+    @Test
+    @DisplayName("2단계 확인 1단계 — confirmed=false는 요약만 주고 DB를 바꾸지 않는다 (구조 원칙 5)")
+    void updateProgress_summaryDoesNotCommit() {
+        String token = accessToken(MEMBER_EMAIL);
+        // 남진식은 이 프로젝트의 참여자다 — 배정 인원이면 역할 무관하게 가능하다
+        int projectId = McpHttp.firstProjectIdOf(
+                mcp.call(token, McpHttp.searchProjects("한국거래소 경영정보시스템")));
+        String detail = mcp.call(token, McpHttp.projectDetail(projectId));
+        int before = McpHttp.intFieldOf(detail, "progress");
+
+        String summary = mcp.call(token, McpHttp.updateProgress(
+                projectId, 40, McpHttp.intFieldOf(detail, "version"), false));
+
+        assertThat(summary).doesNotContain(ERROR_FLAG);
+        // 확인 카드의 재료 — 현재값 → 새값 (eval D-01 채점 기준)
+        assertThat(McpHttp.intFieldOf(summary, "previousProgress")).isEqualTo(before);
+        assertThat(McpHttp.intFieldOf(summary, "requestedProgress")).isEqualTo(40);
+        // DB는 그대로다
+        assertThat(McpHttp.intFieldOf(mcp.call(token, McpHttp.projectDetail(projectId)), "progress"))
+                .isEqualTo(before);
+    }
+
+    @Test
+    @DisplayName("2단계 확인 2단계 — confirmed=true가 저장하고 감사에 source=MCP로 남는다")
+    void updateProgress_commitsAndRecordsMcpSource() {
+        String token = accessToken(MEMBER_EMAIL);
+        int projectId = McpHttp.firstProjectIdOf(
+                mcp.call(token, McpHttp.searchProjects("한국거래소 경영정보시스템")));
+        String detail = mcp.call(token, McpHttp.projectDetail(projectId));
+
+        String result = mcp.call(token, McpHttp.updateProgress(
+                projectId, 95, McpHttp.intFieldOf(detail, "version"), true));
+
+        assertThat(result).doesNotContain(ERROR_FLAG);
+        assertThat(McpHttp.intFieldOf(mcp.call(token, McpHttp.projectDetail(projectId)), "progress"))
+                .isEqualTo(95);
+        // 감사 출처는 어댑터가 배선하지 않는다 — AuditSourceResolver가 /mcp 경로로 판정하므로
+        // 쓰기 도구가 처음 실연결된 지금이 그 판정을 실측할 수 있는 첫 시점이다
+        assertThat(auditQueryService.findByProject(projectId, PageRequest.of(0, 1)).getContent())
+                .singleElement()
+                .extracting(AuditRecord::source)
+                .isEqualTo(AuditSource.MCP);
+    }
+
+    @Test
+    @DisplayName("낙관적 락 — 틀린 version은 409로 거절되고 자동 재시도를 금지한다")
+    void updateProgress_rejectsStaleVersion() {
+        String token = accessToken(MEMBER_EMAIL);
+        int projectId = McpHttp.firstProjectIdOf(
+                mcp.call(token, McpHttp.searchProjects("한국거래소 경영정보시스템")));
+        int version = McpHttp.intFieldOf(
+                mcp.call(token, McpHttp.projectDetail(projectId)), "version");
+
+        String body = mcp.call(token, McpHttp.updateProgress(projectId, 95, version + 7, true));
+
+        assertThat(body).contains("[409 STALE_VERSION]").contains("자동 재시도");
+    }
+
+    @Test
+    @DisplayName("보이지만 담당자 아님 — 403이며 404 은닉과 구분된다 (eval E-01형)")
+    void updateProgress_rejectsNonAssignee() {
+        // 같은 CS사업팀 팀장의 프로젝트라 보이지만, 남진식은 배정되지 않았다
+        String token = accessToken(MEMBER_EMAIL);
+        int projectId = McpHttp.firstProjectIdOf(
+                mcp.call(token, McpHttp.searchProjects("한국타이어 TRAMA")));
+
+        // 1단계에서 이미 거절된다 — 권한 판정이 confirmed 분기보다 앞이다
+        String body = mcp.call(token, McpHttp.updateProgress(projectId, 80, 0, false));
+
+        assertThat(body).contains("[403 FORBIDDEN]");
+    }
+
     @Test
     @DisplayName("미구현 포트는 FR-AI-26 표준 오류를 반환한다 — 도구는 노출된 채로")
     void unimplementedPort_returnsStandardUnavailableError() {
-        String body = mcp.call(accessToken(ADMIN_EMAIL), McpHttp.SEARCH_PROJECTS);
+        // 남은 503은 가동률 2종뿐이다 — EPIC C 실구현에 묶여 있다
+        String body = mcp.call(accessToken(ADMIN_EMAIL), McpHttp.GET_UTILIZATION);
 
         assertThat(body).contains("[503 UNAVAILABLE]").contains("준비 중");
     }

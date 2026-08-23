@@ -33,6 +33,29 @@ final class McpHttp {
     static final String SEARCH_PROJECTS = """
             {"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"search_projects","arguments":{}}}""";
 
+    /** 남은 유일한 503 — 가동률 2종은 EPIC C 실구현에 묶여 있다. */
+    static final String GET_UTILIZATION = request(
+            11, "get_utilization", "\"month\":\"2026-08\",\"scope\":\"ME\"");
+
+    static String searchProjects(String keyword) {
+        return request(12, "search_projects", "\"keyword\":\"%s\"".formatted(keyword));
+    }
+
+    static String searchProjectsByStatus(String status) {
+        return request(13, "search_projects", "\"status\":\"%s\"".formatted(status));
+    }
+
+    /** projectId 갈래 — 같은 도구의 상세 조회다(분리 불요 확정, 2026-08-12 결정). */
+    static String projectDetail(int projectId) {
+        return request(14, "search_projects", "\"projectId\":%d".formatted(projectId));
+    }
+
+    static String updateProgress(int projectId, int percent, int version, boolean confirmed) {
+        return request(15, "update_progress",
+                "\"projectId\":%d,\"percent\":%d,\"version\":%d,\"confirmed\":%b"
+                        .formatted(projectId, percent, version, confirmed));
+    }
+
     static String searchMaintenance(String keyword) {
         return request(7, "search_maintenance", "\"keyword\":\"%s\"".formatted(keyword));
     }
@@ -81,6 +104,20 @@ final class McpHttp {
         assertThat(issues).as("issues 배열이 응답에 없다: " + body).isNotNegative();
 
         return intFieldOf(body.substring(issues), "id");
+    }
+
+    /**
+     * 응답에 실린 첫 프로젝트의 id — 봉투의 JSON-RPC `id`와 헷갈리지 않게 <b>`name`이
+     * 바로 뒤에 오는 자리</b>만 본다(레코드 필드 순서가 id, name, client...이다).
+     * 도구가 준 id를 다음 호출에 넣는 흐름(목록 → 상세 → version → 쓰기)을 테스트가
+     * 모델과 같은 경로로 밟기 위한 것이다.
+     */
+    static int firstProjectIdOf(String body) {
+        Matcher matcher = Pattern.compile("id[^0-9]{0,4}([0-9]+)[^a-zA-Z]{0,6}name").matcher(body);
+
+        assertThat(matcher.find()).as("프로젝트 id가 응답에 없다: " + body).isTrue();
+
+        return Integer.parseInt(matcher.group(1));
     }
 
     static String findPersonByTeam(String team) {
