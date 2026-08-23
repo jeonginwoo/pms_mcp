@@ -174,7 +174,9 @@ the §7 error table: when the logic lands, the throw site disappears.
 - Auth: user-token passthrough + audience restriction (principle 4).
 - Write path: `update_progress` only, with the 2-step confirmation
   (confirmed=false → summary → confirmed=true). No destructive tools
-  (principle 5). `ProgressUpdateService` already implements that protocol.
+  (principle 5). `ProjectLifecycleService.updateProgress` already implements that
+  protocol (renamed from `ProgressUpdateService` when the project contracts were
+  consolidated on 2026-08-22 — the `/mcp` write tool binds to this name).
 
 ## Auth (built, switched off — `pms.auth.enabled`)
 
