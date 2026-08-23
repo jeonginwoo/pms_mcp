@@ -5,7 +5,7 @@
 
 ## 현재 상태 (2026-08-23)
 
-- **다음 작업:** **project 포트 실연결** — `search_projects`·`update_progress`. 선행은 pms 절 1항(project 조회·진척률 계약을 `project` 모듈 루트로 승격 — PMS 담당이 안을 올리고 이쪽이 확인, 공용 결정 기록 경유)이고, 그 합의가 오기 전에 이쪽에서 병행 가능한 것은 **eval 코퍼스 시드 재앵커**다(G1 선행 — people.json↔적재 SQL 인물 불일치, 결정 기록). 붙을 자리는 확정돼 있다: 조회는 `ProjectQueryService`, 쓰기는 `ProjectLifecycleService.updateProgress`(2단계 확인·낙관적 락·완료 규칙이 이미 그 안에 있다). 그 다음이 **host 앱 실서버 전환**(`pms.mcp.base-url` 8090→8080 + 로그인 access 토큰 관통 실측 — 지금은 person 2종만 응답하므로 관통 대상은 whoami·find_person 흐름). eval 잔여는 G1 준비 시(자동 실행 스크립트·오염 레코드 주입·오류 주입 장치). **소멸한 트리거 1건**: HS256 prod fail-fast — 재구축된 `pms`에 HS256 시크릿도 `jwks-uri` 프로퍼티도 없고 `/mcp`는 auth의 `accessTokenDecoder`를 그대로 쓴다(결정 기록). 하네스 소소분: CI `setup-java@v4` deprecated → v5 (다음 정비 때)
+- **다음 작업:** **eval 코퍼스 시드 재앵커**(G1 선행 — 이름 194곳은 id 기준 기계적 치환이지만 보정 가동률·billable·가시성 기대값은 재계산이다). 이것이 지금 이쪽에서 막힘 없이 진행 가능한 유일한 항목이다: **project 포트 실연결은 계약 승격 대기**(PR #19는 가동률용만 올렸고 `ProjectQueryService`·`ProjectLifecycleService`는 아직 internal) · **resource 포트는 EPIC C 실구현 대기**(계약은 도착, 조직 id 후속 1건 등재) · **host 앱 실서버 전환**은 도구가 person 2종뿐이라 관통 범위가 whoami·find_person에 한정된다(먼저 해도 되지만 얻는 것이 적다). 주의: **PR #20·#21이 main에 미도달**이라 projects 시드가 없다(미해결 이슈 — 복구 경로 기재). eval 잔여는 G1 준비 시(자동 실행 스크립트·오염 레코드 주입·오류 주입 장치). 하네스 소소분: CI `setup-java@v4` → v5 + `ci.yml`의 PR base 제한 완화
 - **차단 요소:** 없음
 
 ## 세션 로그

@@ -71,7 +71,8 @@ log). `verify.sh`/CI only look at `pms/gradlew`, so `pms-old/` is not verified.
   |---|---|---|
   | project | `ProjectQueryService` · `ProjectCommandService` · `ProjectLifecycleService` · `AssignmentService` | visibility read · CRUD · §5 state machine · assignment |
   | person | `PersonService` · `OrgUnitService` · `GradeService` · `PermissionGroupService` · `AuditViewService` | one per managed resource |
-  | person (cross-module) | `PersonDirectoryService` · `OrgVisibilityService` · `OrgPermissionService` · `PersonLookupService` | **different consumers** — these earn the split |
+  | person (cross-module) | `PersonDirectoryService` · `OrgVisibilityService` · `OrgPermissionService` · `PersonLookupService` · `WorkforceDirectoryService` | **different consumers** — these earn the split |
+  | project (cross-module) | `AssignmentDirectoryService` | one more consumer set (resource · `/mcp`) — 2026-08-23 |
 
   Implementations stay decomposed where the work is: `ProjectActionPermission`,
   `ProjectVisibilityService`, `ProjectAuditRecorder`, `ProjectViewFactory`,
@@ -83,11 +84,11 @@ log). `verify.sh`/CI only look at `pms/gradlew`, so `pms-old/` is not verified.
   factories) and the entity must not depend on `dto/`.
 - **A module's public API is its root package** (Modulith's default arrangement —
   adopted 2026-08-22). Every sub-package (`controller/`, `service/`, `repository/`)
-  is internal, so the files sitting *directly* in `person/` and `audit/` **are** the
-  contract those modules offer — 7 and 6 files, and that list is the boundary.
-  `project` · `auth` · `resource` · `notification` · `mcp` have empty roots:
-  nothing of theirs crosses (`mcp` is the extreme case — it only *consumes*). Entities and repositories therefore cannot leave a module, and
-  links are by id.
+  is internal, so the files sitting *directly* in `person/`, `audit/` and `project/`
+  **are** the contract those modules offer — 11, 6 and 3 files, and that list is the
+  boundary. `auth` · `resource` · `mcp` have empty roots: nothing of theirs crosses
+  (`mcp` is the extreme case — it only *consumes*). Entities and repositories
+  therefore cannot leave a module, and links are by id.
   - There are **no `package-info.java` files**. They only ever carried
     `@NamedInterface`, which was needed because the contracts sat in a sub-package
     instead of the root — the framework default removes the need entirely. Before
@@ -128,12 +129,15 @@ can tell "not built yet" from "broken", and the code is deliberately absent from
 the §7 error table: when the logic lands, the throw site disappears.
 
 - **resource** — `GET /api/utilization` (EPIC C). `Capacity` is the per-month
-  override; the default stays `Person.capacity`. **Open seam**: the numerator
-  needs project to expose "assignment M/M per person per month". Today project
-  publishes only `ProjectQueryService` (read) and `AssignmentService` (write),
-  and reaching the assignment entity across the boundary is what `ModularityTest`
-  forbids — so this needs an application-service API addition, which is a
-  cross-boundary decision (shared decision log), not a unilateral edit.
+  override; the default stays `Person.capacity`. **The seam is now open**
+  (2026-08-23, shared decision log): `project.AssignmentDirectoryService` gives the
+  numerator as rows (with `projectStatus`, so resource owns the "진행중 only"
+  population rule) and `person.WorkforceDirectoryService` gives capacity, billable,
+  grade coefficient and team/division. **One gap remains for the chat path**: the
+  contracts return org names, not ids, so `get_utilization(scope=MY_TEAM|DIVISION)`
+  — where the server must derive the target set from the caller rather than take an
+  `?orgUnitId=` — has no way to resolve it. See the unresolved issue in
+  `docs/PROGRESS.md`.
 - **notification** — `GET /api/notifications`, `PATCH /{id}/read` (EPIC F).
   Idempotency is already structural: `(recipient_id, dedupe_key)` is unique in
   V7. The SSE route is deliberately not opened yet — it authenticates via
