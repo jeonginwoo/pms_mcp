@@ -23,11 +23,12 @@ for the area this session works on — `docs/PROGRESS-host.md` or
 - `pms/` — rebuilt PMS Boot app (**rebuilt again 2026-08-21** — one module per
   domain, three layers `controller → service → repository`, JPA entity as the
   domain model). **Owner: PMS dev**, except the embedded `/mcp` adapter module,
-  which the MCP dev owns (principle 2 makes it live here) and which is **not yet
-  in the new app**. Rules: `pms/CLAUDE.md`.
-- `pms-old/` — the previous `pms/`, kept as **read-only reference**: it holds the
-  gate-M0 output (`/mcp` adapter, login/JWT/JWKS auth chain, identity seed
-  loader) that the rebuild left out. `verify.sh`/CI ignore it.
+  which the MCP dev owns (principle 2 makes it live here) and which was
+  **re-promoted into the new app on 2026-08-23**. Rules: `pms/CLAUDE.md`.
+- `pms-old/` — the previous `pms/`, kept as **read-only reference**. What it was
+  kept for has since been rebuilt in `pms/`: the auth chain (2026-08-22) and the
+  `/mcp` adapter (2026-08-23, on a different promotion design — shared decision
+  log). It is now only a history trail. `verify.sh`/CI ignore it.
 - `frontend/` — the web client, **wired to the real `pms/` API** (React + TS,
   rebuilt 2026-08-22: old prototype's design, new API/state layer; only
   implemented endpoints are used). Owner: PMS dev. See `frontend/README.md`.
@@ -114,7 +115,11 @@ docker compose -f pms/docker-compose.yml up -d
                          # trusted, so do not expose this. Login works in both
                          # modes: POST /api/auth/login with a seeded staff email
                          # and proten1!.
-                         # The /mcp adapter still lives only in pms-old/.
+                         # MCP: POST /mcp (Streamable HTTP) — always requires a
+                         # login access token regardless of pms.auth.enabled
+                         # (principle 4). 8 tools listed; only whoami and
+                         # find_person answer with real data, the other 6 return
+                         # the FR-AI-26 503 until their domain lands.
 ```
 
 ## Way of working
