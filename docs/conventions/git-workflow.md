@@ -48,6 +48,15 @@
   modules is the rule.
 - **Shared files** (root/scoped CLAUDE.md, conventions, module public APIs,
   shared `docs/PROGRESS.md`): tell the other person before changing them.
+- **One promotion, one owner** (2026-08-23, learned the hard way). Promoting a
+  contract to a module root is *one* task even though the ROADMAP records it twice —
+  once in the pms track ("promote the domain contract") and once in the host track
+  ("wire the port"). Reading it as two, both devs wrote
+  `maintenance.MaintenanceLookupService` on the same day in different shapes; the
+  merge was an add/add conflict and one full contract + impl + tests was thrown
+  away. So: **before creating a file in a module root, name who creates it** — the
+  shared decision-log entry comes first and it settles the owner, not just the
+  design. A ROADMAP item that spans both tracks says which track owns the file.
 - **Progress records**: session logs live in per-track files
   (`docs/PROGRESS-host.md` / `docs/PROGRESS-pms.md`), so they don't conflict.
   In the shared `docs/PROGRESS.md`, decision-log entries are appended and both
