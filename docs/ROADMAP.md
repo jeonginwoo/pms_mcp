@@ -44,7 +44,7 @@
 세부 상태는 `docs/PRD-pms.md` §10(EPIC 기준 상태표)이 원장이고, 여기에는 **G1까지의 순서**만 둔다.
 
 - [x] **project·person 루트에 가동률용 계약 신설** — **2026-08-23 완료**. `project.AssignmentDirectoryService`·`MonthlyAssignment`(그 달과 겹치는 배정을 행 단위로) + `person.WorkforceDirectoryService`·`WorkforceProfile`(capacity·billable·gradeCoeff·team·division·subtree 인원). 착수 전 가정("분자만 없다")이 실측에서 깨졌다 — 분모·모집단·계수·조직 표시까지 전부 경로가 없어 계약이 둘이 됐다. 부수로 AC B2-1 종료일 당김(`close()`가 종료 시점을 남기지 않아 "종료월 이후 제외"가 표현 불가였다). **MCP 담당 확인 요청 중**: 시그니처가 `UtilizationEntry`·`OverbookedEntry.Cause`를 채우기에 충분한가 · port 의존 방향(`project → mcp` 구현 vs `mcp → project` 호출 — 두 기록이 갈린다)
-- [ ] **감사 조회 2뷰 골격 채우기** (G1-3 `/api/audit` · G2-2 `/projects/{id}/audit`) — 권한·가시성 판정은 이미 실구현이라 최신순 파생 질의만 남았다. 가장 싼 항목
+- [x] **감사 조회 2뷰** (G1-3 `/api/audit` · G2-2 `/projects/{id}/audit`) — **2026-08-23 완료**. 판정은 골격 단계에서 이미 실구현이었어서 파생 질의·스냅샷 역직렬화만 남아 있었다. 정렬은 호출자가 뒤집을 수 없게 저장소 메서드 이름이 정한다. 부수: 통합 목록의 최신순 인덱스가 없어 Flyway **V8** 신설(V3의 둘은 선행 컬럼이 달라 쓰이지 못했다)
 - [x] **projects 시드 적재** — **2026-08-23 완료**. `ProjectSeedLoader`가 382건을 §5 상태 전이를 실제로 밟아 적재(배정 포함), 부록 B의 M/M 부여 규칙으로 2026-08 오버부킹을 재현. **부수 발견**: 인원 정본이 `seed_org_proten.sql`(실제 명부)인데 문서는 구 익명 명부(`people.json`) 이름을 194곳에서 참조하고 있었다 — eval 채점이 이름 대조를 포함하므로 **G1 전 재매핑 필요**(PRD-pms §12 등재)
 - [ ] **EPIC C 가동률 실구현** (C1-1~C1-6) — 첫 항목 합의 후 착수. `get_utilization` port의 원천
 - [ ] **EPIC D 유지보수** (모듈 신설 + 계약/사이트/이슈 3층 + D1~D4) — `search_maintenance`·`list_maintenance_logs` port의 원천이자 가장 큰 덩어리. maintenance 시드 적재 포함
