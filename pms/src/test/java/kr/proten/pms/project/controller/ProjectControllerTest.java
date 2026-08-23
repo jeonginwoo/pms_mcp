@@ -32,7 +32,7 @@ import kr.proten.pms.project.service.dto.UpdateProgressCommand;
 import kr.proten.pms.project.service.entity.Engagement;
 import kr.proten.pms.project.service.entity.ProjectPhase;
 import kr.proten.pms.project.service.entity.ProjectRole;
-import kr.proten.pms.project.service.entity.ProjectStatus;
+import kr.proten.pms.project.ProjectStatus;
 import org.assertj.core.api.Assertions;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;

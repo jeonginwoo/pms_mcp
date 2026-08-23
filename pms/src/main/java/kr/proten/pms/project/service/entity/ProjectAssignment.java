@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import kr.proten.pms.common.exception.ConflictException;
 import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.StaleVersionException;
@@ -111,13 +112,30 @@ public class ProjectAssignment {
      * 행은 남긴다: 지난 달의 가동률은 그때의 배정으로 계산되어야 한다.
      * 이미 종료된 배정을 다시 종료하는 요청은 충돌로 알린다 — 종료는 상태 전이라
      * 조용히 넘기면 PM이 "종료했다고 생각한 배정"을 확인할 방법이 없다.
+     *
+     * <p><b>종료일을 함께 당긴다</b>(2026-08-23 결정): 이전에는 상태만 CLOSED로 바꾸고
+     * 종료 시점을 어디에도 남기지 않아, 위 문단이 약속한 "종료월 이후"를 데이터로
+     * 표현할 수 없었다 — 상태만 보고 거르면 종료한 순간 지난달 집계에서까지 사라지고,
+     * 상태를 무시하면 영영 빠지지 않는다. {@code endDate}를 종료월 말일로 당기면
+     * 겹침 판정 하나로 두 요구가 함께 성립한다.
+     *
+     * @param closedOn 종료 처리 시각의 날짜 — 호출자가 {@code Clock}에서 얻어 넘긴다
      */
-    public void close() {
+    public void close(LocalDate closedOn) {
         if (status == AssignmentStatus.CLOSED) {
             throw new ConflictException(ErrorCode.INVALID_TRANSITION, "이미 종료된 배정입니다");
         }
 
         this.status = AssignmentStatus.CLOSED;
+
+        LocalDate closingMonthEnd = YearMonth.from(closedOn).atEndOfMonth();
+        if (endDate == null || endDate.isAfter(closingMonthEnd)) {
+            // ASSUMPTION: 시작 전 배정을 종료하면 endDate가 startDate보다 앞서 빈 구간이
+            // 된다. 어느 달과도 겹치지 않아 "한 달도 세지 않는다"가 되는데, 시작하지 않은
+            // 채 끝난 배정에는 그것이 맞는 결과다. 기간 검증(requireValidPeriod)은 생성·
+            // 재조정 경로의 규칙이라 여기에 적용하지 않는다.
+            this.endDate = closingMonthEnd;
+        }
     }
 
     /**

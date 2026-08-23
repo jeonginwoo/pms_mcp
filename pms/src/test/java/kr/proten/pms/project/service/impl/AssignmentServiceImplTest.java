@@ -1,5 +1,8 @@
 package kr.proten.pms.project.service.impl;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
@@ -27,7 +30,7 @@ import kr.proten.pms.project.service.entity.ProjectAction;
 import kr.proten.pms.project.service.entity.ProjectAssignment;
 import kr.proten.pms.project.service.entity.ProjectFixtures;
 import kr.proten.pms.project.service.entity.ProjectRole;
-import kr.proten.pms.project.service.entity.ProjectStatus;
+import kr.proten.pms.project.ProjectStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -63,6 +66,9 @@ class AssignmentServiceImplTest {
     @Mock
     private ProjectViewFactory projectViewFactory;
 
+    private static final Clock FIXED_CLOCK =
+            Clock.fixed(Instant.parse("2026-08-23T00:00:00Z"), ZoneOffset.UTC);
+
     private AssignmentServiceImpl service;
 
     @BeforeEach
@@ -74,7 +80,8 @@ class AssignmentServiceImplTest {
                 personDirectoryService,
                 new AssignmentFactory(),
                 projectAuditRecorder,
-                projectViewFactory);
+                projectViewFactory,
+                FIXED_CLOCK);
     }
 
     @Test

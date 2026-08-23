@@ -1,5 +1,6 @@
 package kr.proten.pms.project.service.entity;
 
+import kr.proten.pms.project.ProjectStatus;
 import java.time.LocalDate;
 import org.springframework.test.util.ReflectionTestUtils;
 

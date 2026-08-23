@@ -1,8 +1,10 @@
 package kr.proten.pms.project.repository;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import kr.proten.pms.project.MonthlyAssignment;
 import kr.proten.pms.project.service.entity.AssignmentStatus;
 import kr.proten.pms.project.service.entity.ProjectAssignment;
 import kr.proten.pms.project.service.entity.ProjectRole;
@@ -44,4 +46,31 @@ public interface ProjectAssignmentRepository extends JpaRepository<ProjectAssign
     List<Long> findDistinctProjectIdsByPersonIds(
             @Param("personIds") Collection<Long> personIds,
             @Param("status") AssignmentStatus status);
+
+    /**
+     * 그 달과 겹치는 배정 — 가동률 분자의 원천 (AC C1-1, 모듈 밖 계약
+     * {@link kr.proten.pms.project.AssignmentDirectoryService}가 이 질의를 쓴다).
+     *
+     * <p>상태로 거르지 않고 <b>기간 겹침</b>만 본다: 종료 시 {@code endDate}가 종료월
+     * 말일로 당겨지므로(AC B2-1) 겹침 판정 하나로 "종료월 이후 제외"가 성립하고,
+     * 지난달을 오늘 조회해도 그때의 수치가 재현된다. 상태를 함께 보면 오늘 종료한
+     * 배정이 지난달 집계에서까지 사라진다.
+     *
+     * <p>기간이 열린 배정(경계가 null)은 그 방향으로 무한하다고 본다.
+     * 이름을 동봉하려고 {@code Project}를 함께 읽는다 — 호출자가 id로 되묻게 하면
+     * N+1이 모듈 경계를 넘어 생긴다.
+     */
+    @Query("""
+            select new kr.proten.pms.project.MonthlyAssignment(
+                    a.personId, a.projectId, p.name, p.status, a.monthlyMm)
+            from ProjectAssignment a, Project p
+            where p.id = a.projectId
+              and a.personId in :personIds
+              and (a.startDate is null or a.startDate <= :monthEnd)
+              and (a.endDate is null or a.endDate >= :monthStart)
+            """)
+    List<MonthlyAssignment> findOverlapping(
+            @Param("personIds") Collection<Long> personIds,
+            @Param("monthStart") LocalDate monthStart,
+            @Param("monthEnd") LocalDate monthEnd);
 }

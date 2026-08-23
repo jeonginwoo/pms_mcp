@@ -30,7 +30,7 @@ import kr.proten.pms.project.service.dto.ProjectSummary;
 import kr.proten.pms.project.service.dto.UpdateProgressCommand;
 import kr.proten.pms.project.service.entity.Engagement;
 import kr.proten.pms.project.service.entity.ProjectRole;
-import kr.proten.pms.project.service.entity.ProjectStatus;
+import kr.proten.pms.project.ProjectStatus;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

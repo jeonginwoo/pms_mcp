@@ -20,7 +20,7 @@ import kr.proten.pms.project.service.entity.Project;
 import kr.proten.pms.project.service.entity.ProjectAction;
 import kr.proten.pms.project.service.entity.ProjectAssignment;
 import kr.proten.pms.project.service.entity.ProjectRole;
-import kr.proten.pms.project.service.entity.ProjectStatus;
+import kr.proten.pms.project.ProjectStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

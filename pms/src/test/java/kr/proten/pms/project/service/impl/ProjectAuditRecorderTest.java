@@ -1,5 +1,6 @@
 package kr.proten.pms.project.service.impl;
 
+import java.time.LocalDate;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -12,7 +13,7 @@ import kr.proten.pms.project.service.entity.Project;
 import kr.proten.pms.project.service.entity.ProjectAssignment;
 import kr.proten.pms.project.service.entity.ProjectFixtures;
 import kr.proten.pms.project.service.entity.ProjectRole;
-import kr.proten.pms.project.service.entity.ProjectStatus;
+import kr.proten.pms.project.ProjectStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -158,7 +159,7 @@ class ProjectAuditRecorderTest {
         ProjectAssignment assignment =
                 ProjectFixtures.assignment(31L, PROJECT_ID, 105L, ProjectRole.PARTICIPANT);
         Map<String, Object> before = recorder.snapshot(assignment);
-        assignment.close();
+        assignment.close(LocalDate.of(2026, 8, 23));
 
         // When
         recorder.assignmentClosed(ACTOR_ID, assignment, before);

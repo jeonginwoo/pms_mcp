@@ -43,7 +43,7 @@
 
 세부 상태는 `docs/PRD-pms.md` §10(EPIC 기준 상태표)이 원장이고, 여기에는 **G1까지의 순서**만 둔다.
 
-- [ ] **project 계약을 모듈 루트로 승격 + 배정 조회 계약 신설** — 가동률 분자(Σ 인원×월 배정 M/M)를 얻을 경로가 없다. `project` 모듈 루트가 비어 있어(공개 API = 루트, PRD-pms §0) `resource`도 `/mcp`도 project를 부를 수 없다. **애플리케이션 서비스 API 추가 = 공용 결정 기록 경유**이므로 PMS 담당이 안을 올리고 MCP 담당이 확인한다. `/mcp` 승격의 선행 조건이기도 하므로 한 번에 설계한다 (`UtilizationQueryServiceImpl` TODO(C1-1))
+- [x] **project·person 루트에 가동률용 계약 신설** — **2026-08-23 완료**. `project.AssignmentDirectoryService`·`MonthlyAssignment`(그 달과 겹치는 배정을 행 단위로) + `person.WorkforceDirectoryService`·`WorkforceProfile`(capacity·billable·gradeCoeff·team·division·subtree 인원). 착수 전 가정("분자만 없다")이 실측에서 깨졌다 — 분모·모집단·계수·조직 표시까지 전부 경로가 없어 계약이 둘이 됐다. 부수로 AC B2-1 종료일 당김(`close()`가 종료 시점을 남기지 않아 "종료월 이후 제외"가 표현 불가였다). **MCP 담당 확인 요청 중**: 시그니처가 `UtilizationEntry`·`OverbookedEntry.Cause`를 채우기에 충분한가 · port 의존 방향(`project → mcp` 구현 vs `mcp → project` 호출 — 두 기록이 갈린다)
 - [ ] **감사 조회 2뷰 골격 채우기** (G1-3 `/api/audit` · G2-2 `/projects/{id}/audit`) — 권한·가시성 판정은 이미 실구현이라 최신순 파생 질의만 남았다. 가장 싼 항목
 - [ ] **projects 시드 적재** (`reference/seed/projects.json` 382건) — `/mcp` project port의 실데이터 전제. 위 계약 합의를 기다리는 동안 진행 가능
 - [ ] **EPIC C 가동률 실구현** (C1-1~C1-6) — 첫 항목 합의 후 착수. `get_utilization` port의 원천
