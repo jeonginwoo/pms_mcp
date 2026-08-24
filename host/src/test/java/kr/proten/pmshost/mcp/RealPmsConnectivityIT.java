@@ -1,19 +1,11 @@
 package kr.proten.pmshost.mcp;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import io.modelcontextprotocol.client.McpSyncClient;
 import io.modelcontextprotocol.client.transport.McpHttpClientTransportAuthorizationException;
 import io.modelcontextprotocol.spec.McpSchema;
+import kr.proten.pmshost.support.SeedLogin;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
@@ -47,7 +39,7 @@ class RealPmsConnectivityIT {
 
     @Test
     @DisplayName("로그인 토큰으로 initialize→tools/list(8종)→whoami가 그 사용자를 반환")
-    void connectsWithLoginTokenAndResolvesCaller() throws Exception {
+    void connectsWithLoginTokenAndResolvesCaller() {
         PmsMcpConnector connector = new PmsMcpConnector(PMS);
 
         try (McpSyncClient client = connector.connect(accessToken(GO_YERIM))) {
@@ -69,7 +61,7 @@ class RealPmsConnectivityIT {
 
     @Test
     @DisplayName("get_utilization(scope=ME)이 앵커 정본 수치를 그대로 준다 — 목업이 아닌 실 데이터")
-    void readsAnchorNumbersFromRealData() throws Exception {
+    void readsAnchorNumbersFromRealData() {
         PmsMcpConnector connector = new PmsMcpConnector(PMS);
 
         try (McpSyncClient client = connector.connect(accessToken(GO_YERIM))) {
@@ -92,7 +84,7 @@ class RealPmsConnectivityIT {
      */
     @Test
     @DisplayName("search_projects의 keyword는 이름뿐 아니라 solution도 본다 (eval B-01 앵커)")
-    void keywordMatchesSolutionNotOnlyName() throws Exception {
+    void keywordMatchesSolutionNotOnlyName() {
         PmsMcpConnector connector = new PmsMcpConnector(PMS);
 
         // 김문수(16) = AX솔루션사업부 부문장 — eval B-01의 화자
@@ -114,7 +106,7 @@ class RealPmsConnectivityIT {
 
     @Test
     @DisplayName("refresh 토큰으로는 /mcp에 붙지 못한다 — 패스스루가 access만 통한다")
-    void refreshTokenIsRejected() throws Exception {
+    void refreshTokenIsRejected() {
         PmsMcpConnector connector = new PmsMcpConnector(PMS);
 
         Throwable thrown = catchThrowable(() -> connector.connect(refreshToken(GO_YERIM)));
@@ -139,41 +131,16 @@ class RealPmsConnectivityIT {
         return false;
     }
 
-    // --- 로그인 (email은 시드 정본에서 읽는다) ----------------------------------
+    // --- 로그인 -------------------------------------------------------------
+    // 발급 규율(시드 정본에서 email → 실제 로그인)은 SeedLogin이 소유한다 —
+    // eval 러너도 같은 경로로 토큰을 받으므로 두 벌을 두지 않는다.
 
-    private static String accessToken(long personId) throws Exception {
-        return loginClaim(personId, "accessToken");
+    private static String accessToken(long personId) {
+        return SeedLogin.accessToken(PMS, personId);
     }
 
-    private static String refreshToken(long personId) throws Exception {
-        return loginClaim(personId, "refreshToken");
-    }
-
-    private static String loginClaim(long personId, String field) throws Exception {
-        String body = """
-                {"email":"%s","password":"proten1!"}""".formatted(seedEmail(personId));
-        HttpResponse<String> res = HttpClient.newHttpClient().send(
-                HttpRequest.newBuilder(URI.create(PMS + "/api/auth/login"))
-                        .header("Content-Type", "application/json")
-                        .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
-                        .build(),
-                HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
-        assertThat(res.statusCode()).as("로그인이 성공해야 한다 — 응답: %s", res.body()).isEqualTo(200);
-        Matcher m = Pattern.compile("\"" + field + "\"\\s*:\\s*\"([^\"]+)\"").matcher(res.body());
-        assertThat(m.find()).as("로그인 응답에서 %s를 찾아야 한다", field).isTrue();
-
-        return m.group(1);
-    }
-
-    /** `users` 시드 행 `(id, person_id, 'email', ...)`에서 그 사람의 로그인 id를 읽는다 */
-    private static String seedEmail(long personId) throws Exception {
-        String sql = Files.readString(
-                Path.of("..", "reference", "seed", "seed_org_proten.sql"), StandardCharsets.UTF_8);
-        Matcher m = Pattern.compile("\\(\\s*\\d+,\\s*" + personId + ",\\s*'([^']+@[^']+)'").matcher(sql);
-        assertThat(m.find()).as("시드에서 person %s의 로그인 email을 찾아야 한다", personId).isTrue();
-
-        return m.group(1);
+    private static String refreshToken(long personId) {
+        return SeedLogin.refreshToken(PMS, personId);
     }
 
 }

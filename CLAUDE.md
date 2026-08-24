@@ -106,6 +106,13 @@ bash host/scripts/pms-token.sh <personId|email>
 (cd host && ./gradlew test -Dpms.real.e2e=true)
                          # host↔real pms /mcp through-line IT (pms must be running)
 
+bash host/scripts/eval-run.sh [--only A-05,H-01] [--no-reset]
+                         # eval run: reset the DB (compose volume) → boot pms →
+                         # run the 36-case ledger against the real LLM → record the
+                         # round under docs/evals/results/<run>/. The DB reset is part
+                         # of the run (8 write cases). Needs an Anthropic API key.
+                         # Grading is not done here — the round record is its input.
+
 (cd host && ./gradlew test -Dpms.mcp.e2e=true)
                          # host↔mock MCP through-line IT (mock must be running)
 
