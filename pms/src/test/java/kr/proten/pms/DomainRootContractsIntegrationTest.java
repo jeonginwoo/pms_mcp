@@ -175,8 +175,9 @@ class DomainRootContractsIntegrationTest {
     @DisplayName("scope=MY_TEAM·DIVISION — 화자만 주면 서버가 조직을 유도한다(챗 경로)")
     void scopeIsDerivedFromTheCaller() {
         // 화자를 딜리버리 조직에서 고르는 것이 이 테스트의 전제다: 전사 화자(박재완)는
-        // 경영관리팀 소속이고 그 팀은 전원 billable=false라 집계가 정당하게 비어,
-        // "유도가 됐는지"를 볼 수 없다(2026-08-24 실측 — 첫 판이 그렇게 실패했다).
+        // billable=false이고(재편 후에는 회사 직속이라 팀=부문=회사다) 그 주변 인원도
+        // 전원 false라 집계가 정당하게 비어, "유도가 됐는지"를 볼 수 없다
+        // (2026-08-24 실측 — 첫 판이 그렇게 실패했다).
         WorkforceProfile caller =
                 workforce.findProfiles(List.of(DELIVERY_TEAM_CALLER_ID)).getFirst();
         assertThat(caller.teamOrgUnitId()).isNotEqualTo(caller.divisionOrgUnitId());

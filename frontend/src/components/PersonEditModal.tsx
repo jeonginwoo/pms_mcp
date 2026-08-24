@@ -15,6 +15,7 @@
  */
 import { useState } from 'react'
 import { useStore } from '../store'
+import { flattenOrgTree, orgOptionLabel } from '../orgTree'
 import { ErrorText, Field, Modal, ModalActions } from './ui'
 import type { PersonSummary } from '../types/api'
 
@@ -111,8 +112,8 @@ export default function PersonEditModal({ person, onClose }: {
         <Field label="소속 조직" hint="바꾸면 가시성이 즉시 따라 바뀝니다">
           <select value={form.orgUnitId} disabled={busy}
             onChange={(e) => set({ orgUnitId: e.target.value })}>
-            {orgUnits.map((unit) => (
-              <option key={unit.id} value={unit.id}>{unit.name}</option>
+            {flattenOrgTree(orgUnits).map((row) => (
+              <option key={row.unit.id} value={row.unit.id}>{orgOptionLabel(row)}</option>
             ))}
           </select>
         </Field>

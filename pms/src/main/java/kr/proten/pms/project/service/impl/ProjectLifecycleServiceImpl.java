@@ -144,6 +144,50 @@ public class ProjectLifecycleServiceImpl implements ProjectLifecycleService {
         return projectViewFactory.toDetail(saved);
     }
 
+    /**
+     * 역할 지정·교체 (AC A6-3·A6-6·A6-7).
+     *
+     * 권한은 PM 교체와 같은 `ASSIGN`이다 — 역할 지정은 자원 배분이라 한 역할로 좁힌다(§4-2).
+     *
+     * `version`을 받지 않는다: AC의 요청 본문이 `{personId, role}`이고, 바뀌는 행은
+     * 프로젝트가 아니라 **배정**이다(감사도 `ProjectAssignment` 엔티티로 남는다).
+     * 프로젝트의 version을 걸면 배정 목록을 고칠 때마다 프로젝트 version이 올라
+     * 열려 있던 다른 폼이 409를 받는다.
+     *
+     * 같은 역할을 다시 지정하는 요청은 그대로 성공한다 — AC에 없는 거절을 만들지 않고,
+     * 바뀐 것이 없으면 감사 행도 남지 않는다(`recordDiff`가 빈 diff를 버린다).
+     */
+    public ProjectDetail changeRole(
+            long callerPersonId,
+            long projectId,
+            long personId,
+            ProjectRole role) {
+        Project project = projectVisibilityService.requireVisible(callerPersonId, projectId);
+        projectActionPermission.require(callerPersonId, projectId, ProjectAction.ASSIGN);
+        requireAssignableRole(role);
+        requireKnownPerson(personId);
+        requireNotCurrentManager(project, personId);
+
+        Optional<ProjectAssignment> existing = assignmentRepository
+                .findByProjectIdAndPersonIdAndStatus(projectId, personId, AssignmentStatus.ACTIVE);
+
+        if (existing.isPresent()) {
+            ProjectAssignment assignment = existing.get();
+            Map<String, Object> before = projectAuditRecorder.snapshot(assignment);
+            assignment.changeRole(role);
+            projectAuditRecorder.assignmentChanged(callerPersonId,
+                    assignmentRepository.saveAndFlush(assignment), before);
+        } else {
+            // 미배정 대상에게 역할을 주면 배정을 함께 만든다 (A6-6) — PM·PL은 항상
+            // 배정 인원이고(§4-2), 참여자도 배정 없이 역할만 갖는 상태가 없다
+            ProjectAssignment created = assignmentRepository.save(assignmentFactory.create(
+                    project, new AssignmentSpec(personId, role, null, null, 0.0)));
+            projectAuditRecorder.assignmentCreated(callerPersonId, created);
+        }
+
+        return projectViewFactory.toDetail(project);
+    }
+
     private ProjectDetail transition(
             long callerPersonId,
             long projectId,
@@ -225,6 +269,27 @@ public class ProjectLifecycleServiceImpl implements ProjectLifecycleService {
      * 이미 PM인 사람을 다시 PM으로 지정하는 요청은 거절한다 — 아무것도 바뀌지 않는
      * 요청이 성공으로 보이면 화면이 "교체됐다"고 잘못 알린다.
      */
+    /** PM은 `/roles`로 지정하지 않는다 (AC A6-7) — A6-5 불변식 우회 차단. */
+    private void requireAssignableRole(ProjectRole role) {
+        if (role == ProjectRole.PM) {
+            throw new UnprocessableException(ErrorCode.INVALID_ROLE,
+                    "PM은 이 경로로 지정할 수 없습니다 — PM 교체를 쓰세요");
+        }
+    }
+
+    /**
+     * 현 PM을 PL·참여자로 내리는 요청도 거절한다 (A6-5 불변식).
+     *
+     * 이 경로로 허용하면 PM이 없는 프로젝트가 생긴다 — 새 PM 승격과 직전 PM 강등을
+     * 한 트랜잭션에서 하는 {@link #changeManager}만이 불변식을 지키며 PM을 바꾼다.
+     */
+    private void requireNotCurrentManager(Project project, long personId) {
+        if (project.getManagerId() == personId) {
+            throw new UnprocessableException(ErrorCode.INVALID_ROLE,
+                    "현 PM의 역할은 이 경로로 바꿀 수 없습니다 — 다른 사람을 PM으로 교체하세요");
+        }
+    }
+
     private void requireDifferentPerson(Project project, long personId) {
         if (project.getManagerId() == personId) {
             throw new UnprocessableException(ErrorCode.INVALID_ROLE, "이미 이 프로젝트의 PM입니다");

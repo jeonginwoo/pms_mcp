@@ -6,6 +6,7 @@ import kr.proten.pms.common.config.CallerPersonId;
 import kr.proten.pms.common.web.ApiResponse;
 import kr.proten.pms.common.web.PageResponse;
 import kr.proten.pms.project.controller.dto.ChangeManagerRequest;
+import kr.proten.pms.project.controller.dto.ChangeRoleRequest;
 import kr.proten.pms.project.controller.dto.CreateProjectRequest;
 import kr.proten.pms.project.controller.dto.EditProjectRequest;
 import kr.proten.pms.project.controller.dto.UpdateProgressRequest;
@@ -141,6 +142,19 @@ class ProjectController {
             @Valid @RequestBody ChangeManagerRequest request) {
         return ApiResponse.ok(projectLifecycleService.changeManager(callerPersonId, projectId,
                 request.personId(), request.version()));
+    }
+
+    /**
+     * 역할 지정·교체 (AC A6-3) — PL·참여자만. 미배정 대상이면 배정을 함께 만들고(A6-6),
+     * `role=PM`은 422다(A6-7 — PM 교체는 `/pm` 전용).
+     */
+    @PutMapping("/{projectId}/roles")
+    ApiResponse<ProjectDetail> changeRole(
+            @CallerPersonId long callerPersonId,
+            @PathVariable long projectId,
+            @Valid @RequestBody ChangeRoleRequest request) {
+        return ApiResponse.ok(projectLifecycleService.changeRole(callerPersonId, projectId,
+                request.personId(), request.role()));
     }
 
     /** 소프트 삭제 (AC A4-1) — PM 또는 프로젝트 생성 권한자만 (2026-08-22 결정). */

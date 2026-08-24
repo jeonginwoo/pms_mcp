@@ -87,7 +87,7 @@ class ProjectViewFactory {
             return List.of();
         }
 
-        Map<Long, String> personNames = personNames(assignments.stream()
+        Map<Long, PersonRef> people = personRefs(assignments.stream()
                 .map(ProjectAssignment::getPersonId)
                 .collect(Collectors.toUnmodifiableSet()));
 
@@ -95,7 +95,8 @@ class ProjectViewFactory {
                 .map(assignment -> new AssignmentView(
                         assignment.getId(),
                         assignment.getPersonId(),
-                        personNames.get(assignment.getPersonId()),
+                        nameOf(people, assignment.getPersonId()),
+                        activeOf(people, assignment.getPersonId()),
                         assignment.getRole(),
                         assignment.getStartDate(),
                         assignment.getEndDate(),
@@ -104,8 +105,29 @@ class ProjectViewFactory {
                 .toList();
     }
 
+    private Map<Long, PersonRef> personRefs(Set<Long> personIds) {
+        return personDirectoryService.findRefs(personIds).stream()
+                .collect(Collectors.toMap(PersonRef::id, ref -> ref));
+    }
+
     private Map<Long, String> personNames(Set<Long> personIds) {
         return personDirectoryService.findRefs(personIds).stream()
                 .collect(Collectors.toMap(PersonRef::id, PersonRef::name));
+    }
+
+    private static String nameOf(Map<Long, PersonRef> people, Long personId) {
+        PersonRef ref = people.get(personId);
+
+        return ref == null ? null : ref.name();
+    }
+
+    /**
+     * 참조를 못 찾으면 재직으로 본다 — 없는 사람의 배정은 데이터 결함이고, 그 경우
+     * "퇴사"라고 단정하면 모르는 것을 아는 척하는 것이다(이름도 함께 비어 나온다).
+     */
+    private static boolean activeOf(Map<Long, PersonRef> people, Long personId) {
+        PersonRef ref = people.get(personId);
+
+        return ref == null || ref.active();
     }
 }

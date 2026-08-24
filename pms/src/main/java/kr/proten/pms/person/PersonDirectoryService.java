@@ -15,7 +15,17 @@ public interface PersonDirectoryService {
     /** 활성 인원으로 존재하는가 — 참조 검증(예: AC A1-3 REF_NOT_FOUND)에 쓴다. */
     boolean existsActive(long personId);
 
-    /** 주어진 id 중 활성 인원만 참조 값으로. 부재 id는 결과에서 빠진다. */
+    /**
+     * 주어진 id의 표시용 참조 — <b>재직 여부를 가리지 않는다</b>(2026-08-24 규약 변경).
+     * 부재 id만 결과에서 빠지고, 퇴사자는 {@code active=false}로 함께 나온다.
+     *
+     * <p>구 규약은 활성 인원만 내주었는데, 그러면 <b>퇴사자가 남긴 과거 사실이 이름을
+     * 잃는다</b>: 배정은 종료돼도 행이 남고(AC B2-1) 감사 로그는 append-only라(G1-2)
+     * 지워진 사람을 영원히 가리키는데, 이름을 못 받은 화면은 그 자리에 {@code #17}을
+     * 그린다(2026-08-24 실측 — 배정 패널·감사 표 두 곳). 재직 여부가 <b>판정 근거</b>인
+     * 자리는 {@link #existsActive}가 이미 따로 답하므로, 표시 이름을 주는 이 창구가
+     * 활성 필터를 들 이유가 없다.
+     */
     List<PersonRef> findRefs(Collection<Long> personIds);
 
     /**

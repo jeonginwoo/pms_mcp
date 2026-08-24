@@ -43,6 +43,7 @@ import type {
   PersonSummary,
   ProgressUpdateResult,
   ProjectDetail,
+  ProjectRole,
   ProjectSummary,
   SiteBody,
   SiteView,
@@ -100,6 +101,7 @@ interface Store {
   complete: () => Promise<Result<ProjectDetail>>
   reopen: () => Promise<Result<ProjectDetail>>
   changeManager: (personId: number) => Promise<Result<ProjectDetail>>
+  changeRole: (personId: number, role: ProjectRole) => Promise<Result<ProjectDetail>>
   deleteProject: () => Promise<Result<null>>
   assign: (body: CreateAssignmentBody) => Promise<Result<AssignmentView>>
   updateAssignment: (assignmentId: number, body: UpdateAssignmentBody) =>
@@ -116,6 +118,7 @@ interface Store {
   deactivatePerson: (personId: number) => Promise<Result<null>>
   createOrgUnit: (body: CreateOrgUnitBody) => Promise<Result<OrgUnitView>>
   renameOrgUnit: (orgUnitId: number, name: string) => Promise<Result<OrgUnitView>>
+  moveOrgUnitParent: (orgUnitId: number, parentId: number) => Promise<Result<OrgUnitView>>
   deleteOrgUnit: (orgUnitId: number) => Promise<Result<null>>
   createGrade: (body: GradeBody) => Promise<Result<GradeDetail>>
   updateGrade: (gradeId: number, body: GradeBody) => Promise<Result<GradeDetail>>
@@ -425,6 +428,60 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return result
   }, [run])
 
+  /*
+   * 조회 동작은 **함수 정체성이 흔들리지 않게** 여기서 만든다 (2026-08-24 결함 수정).
+   *
+   * `value`의 useMemo 의존성에 `notifications`가 있어서, 알림을 한 번 읽으면 store 값이
+   * 새로 만들어지고 그 안에서 즉석으로 만들던 이 함수들의 정체성도 함께 바뀌었다.
+   * 화면들은 `useCallback(..., [loadX, ...])` + `useEffect(..., [fetchRows])`로 조회하므로
+   * (규약 §3 "의존성 배열 생략 금지") 그 변화가 곧 재조회이고, 표는 `loading` 상태로
+   * 되돌아갔다가 다시 그려진다 — **알림 벨을 열면 화면이 깜빡인 이유가 이것이다**.
+   * 벨은 더 나빴다: 열려 있는 동안 `loadNotifications`가 알림을 갱신 → 정체성 변화 →
+   * 벨의 effect 재실행 → 다시 조회로 **끝나지 않는 고리**가 됐다.
+   *
+   * `run`은 `[refreshProjects]`(빈 의존성)에만 매달려 있어 이미 안정적이므로, 조회
+   * 동작을 `run` 하나에 묶어 두면 store 값이 몇 번 다시 만들어지든 화면의 effect는
+   * 조용하다. 세터를 부르는 `loadNotifications`도 같은 이유로 여기 있다.
+   */
+  const loadUtilization = useCallback(
+    (query: UtilizationQuery) => run(() => api.utilization(query), { refresh: false }), [run])
+  const loadContracts = useCallback(
+    (query: ContractQuery) => run(() => api.maintenanceContracts(query), { refresh: false }),
+    [run])
+  const loadIssues = useCallback(
+    (query: IssueQuery) => run(() => api.maintenanceIssues(query), { refresh: false }), [run])
+  const loadAudit = useCallback(
+    (page: number) => run(() => api.audit(page), { refresh: false }), [run])
+  const loadProjectAudit = useCallback(
+    (projectId: number, page: number) =>
+      run(() => api.projectAudit(projectId, page), { refresh: false }), [run])
+  const loadNotifications = useCallback(async () => {
+    const result = await run(() => api.notifications(), { refresh: false })
+
+    if (result.ok) {
+      setNotifications(result.value.content)
+    }
+
+    return result
+  }, [run])
+  const markNotificationRead = useCallback(async (notificationId: number) => {
+    const result = await run(() => api.markNotificationRead(notificationId), { refresh: false })
+
+    if (result.ok) {
+      // 서버가 본문 없는 200을 주므로 화면 상태를 직접 옮긴다 — 목록을 다시 받으면
+      // 방금 읽은 줄이 사라지는 것처럼 보이고, 사용자는 무엇을 읽었는지 잃는다
+      setNotifications((current) => current.map((notification) =>
+        (notification.id === notificationId ? { ...notification, read: true } : notification)))
+    }
+
+    return result
+  }, [run])
+  const loadNotifPrefs = useCallback(
+    () => run(() => api.notifPrefs(), { refresh: false }), [run])
+  const updateNotifPrefs = useCallback(
+    (enabled: Record<NotificationType, boolean>) =>
+      run(() => api.updateNotifPrefs(enabled), { refresh: false }), [run])
+
   const value = useMemo<Store>(() => ({
     phase,
     bootError,
@@ -474,6 +531,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       () => api.changeManager(requireDetail(detail).id, personId,
         requireDetail(detail).version),
       { detail: requireDetail(detail).id }),
+    changeRole: (personId, role) => run(
+      () => api.changeRole(requireDetail(detail).id, personId, role),
+      { detail: requireDetail(detail).id }),
     deleteProject: async () => {
       const projectId = requireDetail(detail).id
       const result = await run(() => api.deleteProject(projectId))
@@ -498,6 +558,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     createOrgUnit: (body) => runOrganization(() => api.createOrgUnit(body)),
     renameOrgUnit: (orgUnitId, name) =>
       runOrganization(() => api.renameOrgUnit(orgUnitId, { name })),
+    moveOrgUnitParent: (orgUnitId, parentId) =>
+      runOrganization(() => api.moveOrgUnitParent(orgUnitId, parentId)),
     deleteOrgUnit: (orgUnitId) => runOrganization(() => api.deleteOrgUnit(orgUnitId)),
     createGrade: (body) => runOrganization(() => api.createGrade(body)),
     updateGrade: (gradeId, body) => runOrganization(() => api.updateGrade(gradeId, body)),
@@ -513,43 +575,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     addSite: (contractId, body) => runContract(() => api.addSite(contractId, body), contractId),
     updateSite: (siteId, body) =>
       runContract(() => api.updateSite(siteId, body), contract?.id),
-    // 조회라서 프로젝트 목록을 다시 읽지 않는다 — run은 에러 봉투 정규화만 쓴다
-    loadUtilization: (query) => run(() => api.utilization(query), { refresh: false }),
-    loadContracts: (query) => run(() => api.maintenanceContracts(query), { refresh: false }),
-    loadIssues: (query) => run(() => api.maintenanceIssues(query), { refresh: false }),
-    loadAudit: (page) => run(() => api.audit(page), { refresh: false }),
-    loadProjectAudit: (projectId, page) =>
-      run(() => api.projectAudit(projectId, page), { refresh: false }),
+    // 조회 동작은 위에서 안정화한 것을 그대로 싣는다 — 여기서 즉석으로 만들면
+    // store 값이 다시 만들어질 때마다 화면의 조회 effect가 함께 깨어난다
+    loadUtilization,
+    loadContracts,
+    loadIssues,
+    loadAudit,
+    loadProjectAudit,
     notifications,
     unreadNotifications: notifications.filter((notification) => !notification.read).length,
-    loadNotifications: async () => {
-      const result = await run(() => api.notifications(), { refresh: false })
-
-      if (result.ok) {
-        setNotifications(result.value.content)
-      }
-
-      return result
-    },
-    markNotificationRead: async (notificationId) => {
-      const result = await run(() => api.markNotificationRead(notificationId),
-        { refresh: false })
-
-      if (result.ok) {
-        // 서버가 본문 없는 200을 주므로 화면 상태를 직접 옮긴다 — 목록을 다시 받으면
-        // 방금 읽은 줄이 사라지는 것처럼 보이고, 사용자는 무엇을 읽었는지 잃는다
-        setNotifications((current) => current.map((notification) =>
-          (notification.id === notificationId ? { ...notification, read: true } : notification)))
-      }
-
-      return result
-    },
-    loadNotifPrefs: () => run(() => api.notifPrefs(), { refresh: false }),
-    updateNotifPrefs: (enabled) => run(() => api.updateNotifPrefs(enabled), { refresh: false }),
+    loadNotifications,
+    markNotificationRead,
+    loadNotifPrefs,
+    updateNotifPrefs,
   }), [phase, bootError, sessionMode, me, people, roster, orgUnits, grades, permissionGroups,
     projects, totalProjects, route, detail, contract, toast, loginError, submitLogin,
     enterAsCaller, logout, reload, openProject, closeProject, openContract, closeContract,
-    showToast, run, runOrganization, runContract, notifications])
+    showToast, run, runOrganization, runContract, notifications,
+    loadUtilization, loadContracts, loadIssues, loadAudit, loadProjectAudit,
+    loadNotifications, markNotificationRead, loadNotifPrefs, updateNotifPrefs])
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>
 }
