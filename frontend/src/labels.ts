@@ -7,6 +7,8 @@ import type {
   AuditAction,
   ContractStatus,
   Engagement,
+  IssueStatus,
+  IssueType,
   NotificationType,
   ProjectPhase,
   ProjectRole,
@@ -152,6 +154,7 @@ export const NOTIFICATION_TYPE_LABEL: Record<NotificationType, string> = {
   PROJECT_COMPLETED: '프로젝트 완료',
   DEADLINE_NEAR: '마감 임박',
   COMPLETION_OVERDUE: '완료 지연',
+  ISSUE_ASSIGNED: '이슈 담당 지정',
 }
 
 /** 가시성 범위 (상위 PRD §4-4) — 권한 그룹 관리 화면의 select 표기 */
@@ -179,4 +182,41 @@ export const CONTRACT_STATUS_ORDER: ContractStatus[] = ['PLANNED', 'NEW', 'ACTIV
 export const CONTACT_PARTY_LABEL: Record<'CONTRACTOR' | 'CLIENT', string> = {
   CONTRACTOR: '계약사',
   CLIENT: '고객사',
+}
+
+/**
+ * 이슈 상태 (AC D3-2) · 이슈 유형 (§4) — 목록 필터와 처리 화면이 공유한다.
+ *
+ * 질의는 열거 이름으로 보내고 표시는 서버가 준 한국어 라벨을 쓰는 것이 원칙이지만
+ * (`types/api.ts`의 비대칭 주석), **필터 버튼과 상태 전이 버튼은 서버 응답이 없는
+ * 상태에서 그려야** 해서 여기에 표가 필요하다. 서버 열거가 늘면 여기도 한 줄 늘고,
+ * 그 누락은 타입 검사가 잡는다(`Record<IssueStatus, ...>`).
+ */
+export const ISSUE_STATUS_LABEL: Record<IssueStatus, string> = {
+  RECEIVED: '접수',
+  IN_PROGRESS: '처리중',
+  AWAITING_CLIENT: '고객확인대기',
+  DONE: '완료',
+}
+
+export const ISSUE_TYPE_LABEL: Record<IssueType, string> = {
+  INCIDENT: '장애',
+  INQUIRY: '문의',
+  REQUEST: '요청',
+}
+
+/**
+ * 그 상태에서 갈 수 있는 다음 상태 (AC D3-2) — **서버 `IssueStatus.canTransitionTo`의
+ * 사본**이다. 화면이 이 표를 갖는 이유는 버튼을 그리려면 눌러 보기 전에 알아야
+ * 하기 때문이고, 정본은 서버다: 여기서 허용한 전이도 서버가 409로 거절할 수 있고
+ * 그때는 화면이 그 오류를 그대로 보여 준다(막는 쪽을 두 벌 두지 않는다).
+ *
+ * 고객확인대기는 선택이라 처리중에서 완료로 바로 갈 수 있고, 역방향은 재개
+ * (완료 → 처리중) 하나만 열려 있다.
+ */
+export const ISSUE_NEXT_STATUSES: Record<IssueStatus, IssueStatus[]> = {
+  RECEIVED: ['IN_PROGRESS'],
+  IN_PROGRESS: ['AWAITING_CLIENT', 'DONE'],
+  AWAITING_CLIENT: ['DONE'],
+  DONE: ['IN_PROGRESS'],
 }

@@ -14,14 +14,17 @@ import { useStore } from '../store'
 import { Empty, Metric } from '../components/ui'
 import ContractEditModal from '../components/ContractEditModal'
 import SiteEditModal from '../components/SiteEditModal'
+import IssueRegisterModal from '../components/IssueRegisterModal'
 import { period, shortDate } from '../labels'
 import type { SiteView } from '../types/api'
 
 export default function MaintenanceContract() {
-  const { me, contract, closeContract, openProject } = useStore()
+  const { me, contract, closeContract, openProject, openContract } = useStore()
   const [editing, setEditing] = useState(false)
   // undefined = 닫힘 · null = 신규 등록 · SiteView = 그 사이트 수정
   const [siteDraft, setSiteDraft] = useState<SiteView | null | undefined>(undefined)
+  // 이 계약에 이슈를 등록한다 — 사이트가 이미 여기 있어 선택이 한 단계다(D3-1)
+  const [registeringIssue, setRegisteringIssue] = useState(false)
   const writable = me?.manageContracts === true
 
   if (!contract) {
@@ -91,11 +94,16 @@ export default function MaintenanceContract() {
         )}
       </section>
 
-      <Sites sites={contract.sites} writable={writable}
+      <Sites sites={contract.sites} writable={writable} onAddIssue={() => setRegisteringIssue(true)}
         onAdd={() => setSiteDraft(null)} onEdit={setSiteDraft} />
 
       {editing && (
         <ContractEditModal contract={contract} onClose={() => setEditing(false)} />
+      )}
+      {registeringIssue && (
+        <IssueRegisterModal contractId={contract.id}
+          onClose={() => setRegisteringIssue(false)}
+          onRegistered={() => openContract(contract.id)} />
       )}
       {siteDraft !== undefined && (
         <SiteEditModal contractId={contract.id} site={siteDraft}
@@ -105,11 +113,17 @@ export default function MaintenanceContract() {
   )
 }
 
-function Sites({ sites, writable, onAdd, onEdit }: {
+/**
+ * 사이트 목록 — **이슈 등록 버튼이 여기 있다**: 이슈는 사이트에 붙으므로(D3-1) 계약
+ * 상세에서 열면 사이트 선택이 한 단계로 끝난다. 그 버튼은 계약 쓰기와 달리
+ * `writable`을 보지 않는다 — US-D3은 로그인 사용자 전체다.
+ */
+function Sites({ sites, writable, onAdd, onEdit, onAddIssue }: {
   sites: SiteView[]
   writable: boolean
   onAdd: () => void
   onEdit: (site: SiteView) => void
+  onAddIssue: () => void
 }) {
   return (
     <section className="card">
@@ -117,9 +131,12 @@ function Sites({ sites, writable, onAdd, onEdit }: {
         <h3>사이트 <span className="muted2" style={{ fontWeight: 500, fontSize: 12.5 }}>
           {sites.length}곳
         </span></h3>
-        {writable && (
-          <button className="btn btn-primary btn-sm" onClick={onAdd}>+ 사이트 등록</button>
-        )}
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button className="btn btn-ghost btn-sm" onClick={onAddIssue}>+ 이슈 등록</button>
+          {writable && (
+            <button className="btn btn-primary btn-sm" onClick={onAdd}>+ 사이트 등록</button>
+          )}
+        </div>
       </div>
 
       {sites.map((site) => (

@@ -7,12 +7,16 @@
  *
  * 전사 공개다(D4-3) — 화자에 따라 목록이 달라지지 않는다.
  *
- * 이슈 등록·상태 변경 버튼은 없다: D3-1~D3-3 쓰기는 서버에 라우트가 없다.
+ * 쓰기가 붙었다(2026-08-24 — D3-1·D3-2·D3-3): 등록은 헤더의 버튼, 처리·코멘트는 행을
+ * 눌러 여는 모달이다. **권한으로 감추지 않는다** — US-D3은 로그인 사용자 전체다
+ * (계약 쓰기가 "계약 관리" 플래그로 감추는 것과 다른 자리다).
  */
 import { useCallback, useEffect, useState } from 'react'
 import { useStore } from '../store'
 import { Empty, ErrorText } from '../components/ui'
 import { shortDate } from '../labels'
+import IssueRegisterModal from '../components/IssueRegisterModal'
+import IssueDetailModal from '../components/IssueDetailModal'
 import type { IssueStatus, IssueType, IssueView } from '../types/api'
 
 /** 질의는 이름으로, 표시는 서버가 준 라벨로 (types/api.ts의 비대칭 주석 참조). */
@@ -42,6 +46,9 @@ export default function MaintenanceIssues() {
   const [type, setType] = useState<IssueType | 'ALL'>('ALL')
   const [scope, setScope] = useState<'ALL' | 'MINE' | 'UNASSIGNED'>('ALL')
   const [load, setLoad] = useState<Load>({ phase: 'loading' })
+  const [registering, setRegistering] = useState(false)
+  // 행을 누르면 그 이슈의 처리·코멘트 모달이 열린다
+  const [opened, setOpened] = useState<IssueView | null>(null)
 
   const fetchRows = useCallback(async () => {
     setLoad({ phase: 'loading' })
@@ -79,6 +86,8 @@ export default function MaintenanceIssues() {
           <button className={`chip-btn ${scope === 'UNASSIGNED' ? 'on' : ''}`}
             title="담당 엔지니어가 지정되지 않은 이슈"
             onClick={() => setScope('UNASSIGNED')}>미배정</button>
+          <button className="btn btn-primary btn-sm" style={{ marginLeft: 6 }}
+            onClick={() => setRegistering(true)}>+ 이슈 등록</button>
         </div>
       </div>
 
@@ -117,9 +126,13 @@ export default function MaintenanceIssues() {
           {load.rows.map((issue) => (
             <div key={issue.id} className="trow" style={{ gridTemplateColumns: GRID }}>
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <button style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden',
+                  textOverflow: 'ellipsis', background: 'none', border: 'none', padding: 0,
+                  cursor: 'pointer', color: 'inherit', font: 'inherit', textAlign: 'left',
+                  maxWidth: '100%' }}
+                  title="처리·코멘트" onClick={() => setOpened(issue)}>
                   {issue.title}
-                </div>
+                </button>
                 {/* 계약에 붙지 않은 이슈가 시드에 절반이다 — 링크는 있을 때만 그린다 */}
                 {issue.contractId !== null && (
                   <button className="muted2"
@@ -152,8 +165,19 @@ export default function MaintenanceIssues() {
       )}
 
       <div className="muted2" style={{ fontSize: 11.5, marginTop: 12 }}>
-        전사 공개입니다(D4-3). 이슈 등록·처리는 아직 서버에 없습니다 — 지금은 조회만 됩니다.
+        전사 공개입니다(D4-3) — 등록·처리·코멘트는 로그인 사용자 전체가 할 수 있습니다(US-D3).
+        제목을 누르면 상태 전이·담당 재배정·코멘트를 볼 수 있습니다.
       </div>
+      {registering && (
+        <IssueRegisterModal onClose={() => setRegistering(false)}
+          onRegistered={() => void fetchRows()} />
+      )}
+
+      {/* 처리·코멘트 뒤에 목록을 다시 읽는다 — 상태·담당·코멘트 수가 표에 있다 */}
+      {opened !== null && (
+        <IssueDetailModal issue={opened} onClose={() => setOpened(null)}
+          onChanged={() => void fetchRows()} />
+      )}
     </section>
   )
 }
