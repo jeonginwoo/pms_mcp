@@ -2,6 +2,7 @@ package kr.proten.pms;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
  * 재구축 PMS 앱 진입점 — 도메인별 Modulith 모듈러 모놀리스.
@@ -10,6 +11,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * 각 모듈은 3계층(controller → service → repository)으로 구성된다.
  */
 @SpringBootApplication
+@EnableAsync
 public class PmsApplication {
     public static void main(String[] args) {
         SpringApplication.run(PmsApplication.class, args);

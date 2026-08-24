@@ -19,9 +19,13 @@ import kr.proten.pms.project.service.dto.EditProjectCommand;
 import kr.proten.pms.project.service.dto.ProjectDetail;
 import kr.proten.pms.project.service.entity.Project;
 import kr.proten.pms.project.service.entity.ProjectAction;
+import kr.proten.pms.project.AssignmentChanged;
 import kr.proten.pms.project.service.entity.ProjectAssignment;
 import kr.proten.pms.project.service.entity.ProjectKey;
 import kr.proten.pms.project.service.entity.ProjectRole;
+import java.time.Clock;
+import java.time.YearMonth;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,6 +53,8 @@ public class ProjectCommandServiceImpl implements ProjectCommandService {
     private final AssignmentFactory assignmentFactory;
     private final ProjectAuditRecorder projectAuditRecorder;
     private final ProjectViewFactory projectViewFactory;
+    private final Clock clock;
+    private final ApplicationEventPublisher events;
 
     public ProjectCommandServiceImpl(
             ProjectRepository projectRepository,
@@ -59,7 +65,9 @@ public class ProjectCommandServiceImpl implements ProjectCommandService {
             OrgPermissionService orgPermissionService,
             AssignmentFactory assignmentFactory,
             ProjectAuditRecorder projectAuditRecorder,
-            ProjectViewFactory projectViewFactory) {
+            ProjectViewFactory projectViewFactory,
+            Clock clock,
+            ApplicationEventPublisher events) {
         this.projectRepository = projectRepository;
         this.assignmentRepository = assignmentRepository;
         this.projectVisibilityService = projectVisibilityService;
@@ -69,6 +77,8 @@ public class ProjectCommandServiceImpl implements ProjectCommandService {
         this.assignmentFactory = assignmentFactory;
         this.projectAuditRecorder = projectAuditRecorder;
         this.projectViewFactory = projectViewFactory;
+        this.clock = clock;
+        this.events = events;
     }
 
     /** 프로젝트를 만들고 지정 역할로 배정한다 (AC A1-1~A1-6). */
@@ -94,6 +104,16 @@ public class ProjectCommandServiceImpl implements ProjectCommandService {
                 assignments.stream().map(spec -> assignmentFactory.create(project, spec)).toList());
         // 생성은 이력 1건이다 (AC A1-1) — 함께 만들어진 배정은 생성 요청의 일부다
         projectAuditRecorder.created(callerPersonId, project);
+        // 이력은 1건이지만 **이벤트는 배정마다**다 (§8 MemberAssignedToProject):
+        // 프로젝트를 만들며 붙인 배정도 배정이고, 그것이 가동률을 바꾸고 알림을 만든다.
+        // 이 경로가 빠져 있으면 "새 프로젝트로 과부하가 된 사람"을 아무도 모른다(실측 발견)
+        saved.forEach(assignment -> events.publishEvent(new AssignmentChanged(
+                AssignmentChanged.Kind.ASSIGNED,
+                project.getId(),
+                project.getName(),
+                assignment.getPersonId(),
+                AssignmentChanged.monthsOf(assignment.getStartDate(), assignment.getEndDate(),
+                        YearMonth.now(clock)))));
 
         return projectViewFactory.toDetail(project, saved);
     }

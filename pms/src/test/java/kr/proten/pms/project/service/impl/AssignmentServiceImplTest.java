@@ -69,6 +69,9 @@ class AssignmentServiceImplTest {
     private static final Clock FIXED_CLOCK =
             Clock.fixed(Instant.parse("2026-08-23T00:00:00Z"), ZoneOffset.UTC);
 
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher events;
+
     private AssignmentServiceImpl service;
 
     @BeforeEach
@@ -81,7 +84,8 @@ class AssignmentServiceImplTest {
                 new AssignmentFactory(),
                 projectAuditRecorder,
                 projectViewFactory,
-                FIXED_CLOCK);
+                FIXED_CLOCK,
+                events);
     }
 
     @Test

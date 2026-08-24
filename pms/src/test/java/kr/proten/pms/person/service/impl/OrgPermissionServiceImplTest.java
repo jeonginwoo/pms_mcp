@@ -34,7 +34,8 @@ class OrgPermissionServiceImplTest {
     @BeforeEach
     void setUp() {
         service = new OrgPermissionServiceImpl(
-                new RequesterResolver(personRepository, permissionGroupRepository));
+                new RequesterResolver(personRepository, permissionGroupRepository),
+                personRepository);
     }
 
     @Test

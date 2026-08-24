@@ -39,6 +39,9 @@ dependencies {
     // pms-old의 M0 승격분을 2026-08-23에 재승격했다. Streamable HTTP 전송은 이
     // 스타터가 /mcp 엔드포인트로 제공한다 — 직접 매핑하는 컨트롤러는 없다
     implementation 'org.springframework.ai:spring-ai-starter-mcp-server-webmvc'
+    // 도메인 이벤트 (2026-08-24 EPIC F). @ApplicationModuleListener만 쓰므로
+    // events-api 하나면 된다 — 커밋 후 · 비동기 · 새 트랜잭션을 한 어노테이션이 뜻한다.
+    implementation 'org.springframework.modulith:spring-modulith-events-api'
     // 이벤트 발행 **레지스트리**(spring-modulith-starter-jpa)는 아직 넣지 않는다
     // (2026-08-24 사용자 결정). 도메인 이벤트는 이번에 도입했지만 @ApplicationModuleListener는
     // 레지스트리 없이도 돌고, 레지스트리를 켜면 라이브러리 내부 테이블(event_publication)이
@@ -51,6 +54,8 @@ dependencies {
     runtimeOnly 'org.flywaydb:flyway-database-postgresql'
     runtimeOnly 'org.postgresql:postgresql'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    // 비동기 이벤트 단정용 — @ApplicationModuleListener는 커밋 후에 돌아 즉시 확인이 안 된다
+    testImplementation 'org.awaitility:awaitility'
     testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
     // MockMvc 웹 슬라이스 — Boot 4에서 모듈 분리(@WebMvcTest·@AutoConfigureMockMvc가 이 스타터에)
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
