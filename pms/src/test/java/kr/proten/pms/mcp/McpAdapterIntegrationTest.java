@@ -71,6 +71,10 @@ class McpAdapterIntegrationTest {
     private static final String JUNIOR_EMAIL = "20240008@proten.co.kr";       // 고예림(19) 팀원
     private static final String SUPPORT_LEAD_EMAIL = "pro0007@proten.co.kr";  // 천용우(2) 경영관리팀
     private static final String SEED_PASSWORD = "proten1!";
+    // 조회 6도구 + whoami — 쓰기(update_progress)만 빠진 7종이다
+    private static final List<String> READ_ONLY_TOOLS = List.of("whoami", "find_person",
+            "search_projects", "get_utilization", "list_overbooked", "search_maintenance",
+            "list_maintenance_logs");
     // 도구 결과가 오류로 표시됐는지 — SDK가 실패를 이 플래그로 싣는다
     private static final String ERROR_FLAG = "\"isError\":true";
     // 목록 건수를 파서 없이 세는 기준 필드 — 프로젝트 항목마다 정확히 한 번 실린다
@@ -179,6 +183,34 @@ class McpAdapterIntegrationTest {
         assertThat(body).contains("whoami", "find_person", "search_projects", "get_utilization",
                 "list_overbooked", "search_maintenance", "list_maintenance_logs",
                 "update_progress");
+    }
+
+    @Test
+    @DisplayName("카탈로그 힌트 — 조회 7종은 readOnly, destructive는 쓰기 1종뿐")
+    void toolCatalog_declaresReadOnlyHints() {
+        Map<String, Map<String, Boolean>> hints =
+                McpHttp.toolHintsOf(mcp.call(accessToken(ADMIN_EMAIL), McpHttp.TOOLS_LIST));
+
+        // 선언을 빠뜨리면 SDK 기본값이 붙는다(readOnlyHint=false·destructiveHint=true) —
+        // 2026-08-24 eval 러너가 카탈로그를 받아 오다 8종 전부 그 상태인 것을 잡았다.
+        // 읽기 전용 도구를 파괴적이라고 광고하면 모델이 조회를 망설일 근거가 된다.
+        for (String tool : READ_ONLY_TOOLS) {
+            assertThat(hints).containsKey(tool);
+            assertThat(hints.get(tool)).as(tool)
+                    .containsEntry("readOnlyHint", true)
+                    .containsEntry("destructiveHint", false);
+        }
+
+        // 유일한 쓰기 도구는 반대로 선언한다 — 안전한 쪽으로 광고해야 클라이언트가
+        // 2단계 확인을 건너뛸 이유를 얻지 못한다(구조 원칙 5)
+        assertThat(hints.get("update_progress")).as("update_progress")
+                .containsEntry("readOnlyHint", false)
+                .containsEntry("destructiveHint", true)
+                .containsEntry("idempotentHint", false);
+
+        // 사내 DB만 본다 — 외부 세계를 여는 도구가 하나도 없다는 것도 카탈로그의 사실이다
+        assertThat(hints.values()).allSatisfy(
+                tool -> assertThat(tool).containsEntry("openWorldHint", false));
     }
 
     @Test

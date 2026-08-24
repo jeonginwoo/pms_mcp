@@ -2,8 +2,6 @@ package kr.proten.pmshost.eval;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,19 +27,13 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class EvalCasesDriftTest {
 
-    private static final Path LEDGER = Path.of("..", "docs", "evals", "eval-cases.md");
-
-    /** `| A-01 | 박재완 (관리자) | …` — 첫 칸이 케이스 id인 행만 집는다 */
-    private static final Pattern ROW = Pattern.compile("^\\|\\s*([A-H]-\\d{2})\\s*\\|([^|]*)\\|",
-            Pattern.MULTILINE);
-
     /** `## A. 가동률 (8) — …` — 분류 문자와 그 분류가 선언한 케이스 수 */
     private static final Pattern SECTION = Pattern.compile("^## ([A-H])\\. [^(]*\\((\\d+)\\)",
             Pattern.MULTILINE);
 
     @Test
     @DisplayName("cases.json의 id 목록과 순서가 원장 표와 같다 (36케이스)")
-    void idsMatchLedgerInOrder() throws Exception {
+    void idsMatchLedgerInOrder() {
         List<String> ledgerIds = ledgerRows().keySet().stream().toList();
         List<String> runnerIds = EvalCases.load().stream().map(EvalCases.Case::id).toList();
 
@@ -54,7 +46,7 @@ class EvalCasesDriftTest {
     @Test
     @DisplayName("분류별 개수가 원장 절 머리표가 선언한 수와 같다")
     void sectionCountsMatchHeadings() throws Exception {
-        String doc = Files.readString(LEDGER, StandardCharsets.UTF_8);
+        String doc = Files.readString(Ledger.PATH, StandardCharsets.UTF_8);
         Map<String, Long> actual = new LinkedHashMap<>();
         for (EvalCases.Case c : EvalCases.load()) {
             actual.merge(c.id().substring(0, 1), 1L, Long::sum);
@@ -74,7 +66,7 @@ class EvalCasesDriftTest {
 
     @Test
     @DisplayName("화자가 원장의 화자 칸과 같다 — 같은 입력도 화자가 다르면 기대값이 다르다")
-    void speakersMatchLedger() throws Exception {
+    void speakersMatchLedger() {
         Map<String, String> ledger = ledgerRows();
 
         for (EvalCases.Case c : EvalCases.load()) {
@@ -90,21 +82,16 @@ class EvalCasesDriftTest {
         }
     }
 
-    /** 원장 표에서 (id → 화자 칸)을 순서대로 읽는다 */
-    private static Map<String, String> ledgerRows() throws Exception {
-        String doc = Files.readString(LEDGER, StandardCharsets.UTF_8);
+    /**
+     * 원장 표에서 (id → 화자 칸)을 순서대로 읽는다. 파서는 {@link Ledger} 한 벌이다 —
+     * 채점층이 읽는 것과 <b>같은 파서</b>로 대조해야, 드리프트 테스트가 통과하는데
+     * 채점층은 다른 행을 보는 일이 생기지 않는다.
+     */
+    private static Map<String, String> ledgerRows() {
         Map<String, String> rows = new LinkedHashMap<>();
-        List<String> duplicates = new ArrayList<>();
-
-        Matcher m = ROW.matcher(doc);
-        while (m.find()) {
-            if (rows.put(m.group(1), m.group(2).trim()) != null) {
-                duplicates.add(m.group(1));
-            }
-        }
+        Ledger.byId().forEach((id, rubric) -> rows.put(id, rubric.speaker()));
 
         assertThat(rows).as("원장에서 케이스 행을 읽어야 한다").isNotEmpty();
-        assertThat(duplicates).as("원장에 같은 케이스 id가 두 번 나오면 안 된다").isEmpty();
 
         return rows;
     }

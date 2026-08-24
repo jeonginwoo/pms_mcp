@@ -43,6 +43,16 @@ final class TurnObserver implements AutoCloseable {
     private static final String MARKER = "CallToolRequest[";
     private static final Pattern NAME = Pattern.compile("^name=([^,]+),");
 
+    /** 응답 쪽 표식 — {@code McpClientSession}이 받은 전문을 이 접두사로 찍는다 */
+    private static final String RESPONSE_MARKER = "Received response: ";
+    /**
+     * 도구 결과만 고른다. 같은 로거에 initialize({@code protocolVersion=})와
+     * tools/list({@code tools=[}) 응답도 실려 오는데, 그것들을 F1 대조 말뭉치에 넣으면
+     * <b>카탈로그 문구에 있는 수치가 답의 출처가 되어</b> 환각이 통과한다
+     * (도구 description에 "최근 50건"이 있다). {@code CallToolResult}만 이 필드를 갖는다.
+     */
+    private static final String TOOL_RESULT_MARKER = "content=";
+
     private final Tap mcp;
     private final Tap chat;
 
@@ -54,19 +64,54 @@ final class TurnObserver implements AutoCloseable {
         this.chat = new Tap(context, CHAT_LOGGER, Level.WARN, true);
     }
 
-    /** 지금까지 관측한 도구 호출을 돌려주고 비운다 (턴 경계에서 부른다) */
-    List<ToolCall> drainToolCalls() {
+    /**
+     * 지금까지 관측한 증거를 돌려주고 비운다 (턴 경계에서 부른다).
+     *
+     * <p><b>한 번에 가른다</b> — 요청과 결과가 같은 로거에 섞여 오므로 두 번 드레인하면
+     * 먼저 부른 쪽이 상대의 줄까지 버린다.
+     */
+    Evidence drain() {
         List<ToolCall> calls = new ArrayList<>();
+        List<ToolResult> results = new ArrayList<>();
         for (String message : mcp.drain()) {
             int at = message.indexOf(MARKER);
-            if (at < 0) {
+            if (at >= 0) {
+                calls.add(parse(message.substring(at)));
                 continue;
             }
-            String fragment = message.substring(at);
-            calls.add(parse(fragment));
+            if (message.startsWith(RESPONSE_MARKER)) {
+                ToolResult result = parseResult(message);
+                if (result != null) {
+                    results.add(result);
+                }
+            }
         }
 
-        return calls;
+        return new Evidence(calls, results);
+    }
+
+    /**
+     * 도구 결과 한 건 — 봉투를 벗기고 {@code result=…}만 남긴다.
+     *
+     * <p>봉투를 남기면 {@code id=3}·{@code jsonrpc=2.0}의 숫자가 대조 말뭉치에 섞여,
+     * 답에 있는 "3건"이 <b>도구가 준 적 없는데도</b> 출처를 얻는다. F1은 "도구 결과에
+     * 없는 수치"를 잡는 것이므로 말뭉치가 넓어지면 판정이 조용히 무력해진다.
+     *
+     * @return 도구 결과가 아니면 null
+     */
+    static ToolResult parseResult(String message) {
+        if (!message.contains(TOOL_RESULT_MARKER)) {
+            return null;
+        }
+        String raw = message.substring(RESPONSE_MARKER.length());
+        int payload = raw.indexOf("result=");
+        int error = raw.lastIndexOf(", error=");
+        if (payload < 0 || error < payload) {
+            // 형식이 바뀌었다 — 원문을 버리지 않는다(조용히 비면 "도구가 답을 안 줬다"로 오독된다)
+            return new ToolResult(null, raw);
+        }
+
+        return new ToolResult(raw.substring(payload + "result=".length(), error), raw);
     }
 
     /**
@@ -126,6 +171,17 @@ final class TurnObserver implements AutoCloseable {
      * @param raw       로그 원문. 파싱이 형식 변화로 깨져도 증거는 남는다
      */
     record ToolCall(String name, String arguments, String raw) {
+    }
+
+    /**
+     * @param payload 서버가 준 결과 본문 — F1(수치 환각) 대조의 <b>말뭉치</b>다
+     * @param raw     로그 원문. 형식이 바뀌어도 증거는 남는다
+     */
+    record ToolResult(String payload, String raw) {
+    }
+
+    /** 한 턴이 남긴 증거 한 벌 */
+    record Evidence(List<ToolCall> calls, List<ToolResult> results) {
     }
 
     /** 한 로거에 붙은 수집기 — 원래 레벨은 되돌린다 */

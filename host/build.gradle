@@ -45,9 +45,17 @@ tasks.named('test') {
     if (System.getProperty('eval.only')) {
         systemProperty 'eval.only', System.getProperty('eval.only')
     }
+    // 채점층(EvalGraderIT)도 opt-in이다 — Judge가 실 LLM이라 비용이 든다.
+    // 실행과 달리 pms·DB는 필요 없다(입력이 회차 기록뿐). --rules-only는 eval.judge=false
+    systemProperty 'eval.grade', System.getProperty('eval.grade', 'false')
+    systemProperty 'eval.judge', System.getProperty('eval.judge', 'true')
+    if (System.getProperty('eval.run.id')) {
+        systemProperty 'eval.run.id', System.getProperty('eval.run.id')
+    }
     // 러너는 시간이 오래 걸린다(36케이스 × 실 LLM) — Gradle 기본 타임아웃에 걸리지 않게
     testLogging {
-        showStandardStreams = System.getProperty('eval.run') == 'true'
+        showStandardStreams = System.getProperty('eval.run') == 'true' ||
+                System.getProperty('eval.grade') == 'true'
         events 'passed', 'failed', 'skipped'
     }
 }

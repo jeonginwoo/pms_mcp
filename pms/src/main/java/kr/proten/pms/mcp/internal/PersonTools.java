@@ -28,7 +28,9 @@ public class PersonTools {
     @McpTool(name = "whoami", description = """
             현재 사용자 본인의 id·이름·팀·부문·권한 그룹명을 반환한다.
             "나", "내" 같은 표현의 대상을 확정하거나, 본인 id가 필요할 때 사용한다.
-            가동률 본인 조회는 이 도구 없이 get_utilization(scope=ME)로 바로 가능하다.""")
+            가동률 본인 조회는 이 도구 없이 get_utilization(scope=ME)로 바로 가능하다.""",
+            annotations = @McpTool.McpAnnotations(
+                    readOnlyHint = true, destructiveHint = false, openWorldHint = false))
     public WhoamiResult whoami() {
         PersonIdentity me = ToolCalls.translating(() -> people.identityOf(caller.callerId()));
 
@@ -39,7 +41,9 @@ public class PersonTools {
     @McpTool(name = "find_person", description = """
             이름 또는 팀으로 사람을 검색해 id·이름·팀·직급 목록을 반환한다.
             다른 도구에 personId가 필요한데 id를 모를 때 사용한다.
-            조회 가능한 범위(가시성)는 서버가 판정한다.""")
+            조회 가능한 범위(가시성)는 서버가 판정한다.""",
+            annotations = @McpTool.McpAnnotations(
+                    readOnlyHint = true, destructiveHint = false, openWorldHint = false))
     public List<PersonSummary> findPerson(
             @McpToolParam(description = "이름(부분 일치)", required = false) String name,
             @McpToolParam(description = "팀 이름(부분 일치)", required = false) String team) {
