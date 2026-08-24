@@ -3,22 +3,32 @@
  * (관리자=전사 · 부문장=부문 · 팀장·팀원=소속 팀 subtree — 2026-08-22 팀원 scope 변경).
  *
  * 관리 권한("사용자/조직/권한 관리" 플래그 — 기본 그룹 중 관리자만)이 있을 때만
- * 등록·삭제·조직 관리 UI가 보인다. 삭제는 서버에서 soft 비활성이다(E2-3) — 과거
- * 배정·감사 이력이 이 인원을 가리키고 있어 행을 지울 수 없다. 수정(E2-2)은 아직 없다.
+ * 등록·수정·삭제·조직/직급/권한 그룹 관리 UI가 보인다. 삭제는 서버에서 soft
+ * 비활성이다(E2-3) — 과거 배정·감사 이력이 이 인원을 가리키고 있어 행을 지울 수 없다.
+ *
+ * 부록 A는 이 기능들을 `/settings` 3탭에 두지만 이 앱은 인력·조직을 `/people`에
+ * 두고 감사만 별 항목으로 뒀다(2026-08-24 결정 · PRD-pms §12 미해결 등재).
+ * 직급·권한 그룹 관리는 그 배치를 따라 조직 패널 아래에 붙였다 — 부록 A의
+ * "조직 관리 탭"이 조직 트리(좌)와 직급·권한 그룹(우)을 한 화면에 두는 구성이다.
  */
 import { useMemo, useState } from 'react'
 import { useStore } from '../store'
 import { Empty, ErrorText } from '../components/ui'
+import GradePanel from '../components/GradePanel'
 import OrgUnitPanel from '../components/OrgUnitPanel'
+import PermissionGroupPanel from '../components/PermissionGroupPanel'
 import PersonCreateModal from '../components/PersonCreateModal'
+import PersonEditModal from '../components/PersonEditModal'
+import type { PersonSummary } from '../types/api'
 
-const GRID = 'minmax(0,1.2fr) minmax(0,1.4fr) minmax(80px,110px) 64px'
+const GRID = 'minmax(0,1.2fr) minmax(0,1.4fr) minmax(80px,110px) 116px'
 
 export default function People() {
   const { me, people, deactivatePerson, showToast } = useStore()
   const [keyword, setKeyword] = useState('')
   const [pending, setPending] = useState<number | null>(null)
   const [creating, setCreating] = useState(false)
+  const [editing, setEditing] = useState<PersonSummary | null>(null)
   const [error, setError] = useState<{ code: string; message: string } | null>(null)
   const manageable = me?.manageOrg === true
 
@@ -81,7 +91,7 @@ export default function People() {
             <span style={{ fontWeight: 600 }}>{person.name}</span>
             <span className="muted">{person.orgUnit}</span>
             <span className="muted">{person.grade}</span>
-            {manageable && person.id !== me?.id && (
+            {manageable && (
               pending === person.id ? (
                 <span style={{ display: 'flex', gap: 4 }}>
                   <button className="btn btn-danger btn-sm"
@@ -90,11 +100,21 @@ export default function People() {
                     onClick={() => setPending(null)}>취소</button>
                 </span>
               ) : (
-                <button className="btn btn-danger-ghost btn-sm"
-                  title="삭제 — 로그인 차단·목록 제외(과거 배정·감사 이력은 보존된다)"
-                  onClick={() => { setPending(person.id); setError(null) }}>
-                  삭제
-                </button>
+                <span style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                  <button className="btn btn-ghost btn-sm"
+                    title="이름·소속·직급·권한 그룹 수정 (E2-2·E1-1)"
+                    onClick={() => { setEditing(person); setError(null) }}>
+                    수정
+                  </button>
+                  {/* 본인 삭제는 서버가 422로 막는다 — 버튼 자체를 두지 않는다 */}
+                  {person.id !== me?.id && (
+                    <button className="btn btn-danger-ghost btn-sm"
+                      title="삭제 — 로그인 차단·목록 제외(과거 배정·감사 이력은 보존된다)"
+                      onClick={() => { setPending(person.id); setError(null) }}>
+                      삭제
+                    </button>
+                  )}
+                </span>
               )
             )}
           </div>
@@ -113,8 +133,18 @@ export default function People() {
         </div>
       </section>
 
-      {manageable ? <OrgUnitPanel /> : <OrgUnitSummary />}
+      {manageable ? (
+        <div style={{ display: 'grid', gap: 16 }}>
+          <OrgUnitPanel />
+          <GradePanel />
+          <PermissionGroupPanel />
+        </div>
+      ) : <OrgUnitSummary />}
+
       {creating && <PersonCreateModal onClose={() => setCreating(false)} />}
+      {editing && (
+        <PersonEditModal person={editing} onClose={() => setEditing(null)} />
+      )}
     </div>
   )
 }

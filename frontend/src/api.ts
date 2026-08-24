@@ -15,6 +15,7 @@
 import type {
   AssignmentView,
   AuditRecord,
+  ContractBody,
   ContractDetail,
   ContractQuery,
   ContractSummary,
@@ -23,19 +24,31 @@ import type {
   CreatePersonBody,
   CreateProjectBody,
   EditProjectBody,
+  GradeBody,
+  GradeDetail,
   IssueQuery,
   IssueView,
   ApiEnvelope,
   MeView,
+  MoveOrgUnitBody,
+  NotificationPreferences,
+  NotificationType,
+  NotificationView,
+  OrgUnitMoveResult,
   OrgUnitView,
   PageResponse,
-  PersonRef,
+  PermissionGroupBody,
+  PermissionGroupDetail,
+  PersonSummary,
   ProgressUpdateResult,
   ProjectDetail,
   ProjectSummary,
-  ReferenceItem,
+  RenameOrgUnitBody,
+  SiteBody,
+  SiteView,
   TokenResponse,
   UpdateAssignmentBody,
+  UpdatePersonBody,
   UpdateProgressBody,
   UtilizationQuery,
   UtilizationView,
@@ -291,6 +304,13 @@ const MAINTENANCE_PAGE_SIZE = 200
  */
 const AUDIT_PAGE_SIZE = 50
 
+/**
+ * 알림 벨의 드롭다운이 한 번에 보여 주는 수. 페이지네이션을 두지 않는 이유는
+ * 알림이 **최근 것만 의미가 있는** 목록이기 때문이다 — 오래된 알림을 거슬러
+ * 올라가는 화면은 부록 A에 없다(벨은 "미읽음 수 + 목록 + 읽음 처리"다).
+ */
+const NOTIFICATION_PAGE_SIZE = 20
+
 /** 값이 있는 것만 싣는다 — 서버는 파라미터의 부재를 "필터 없음"으로 읽는다. */
 function queryOf(entries: Record<string, string | number | boolean | null | undefined>): string {
   const params = new URLSearchParams()
@@ -325,23 +345,75 @@ function utilizationParams({ month, personId, orgUnitId, overbooked }: Utilizati
 
 export const api = {
   me: () => request<MeView>('/api/me'),
-  people: () => request<PersonRef[]>('/api/people'),
-  person: (personId: number) => request<PersonRef>(`/api/people/${personId}`),
+  people: () => request<PersonSummary[]>('/api/people'),
+  person: (personId: number) => request<PersonSummary>(`/api/people/${personId}`),
   deactivatePerson: (personId: number) =>
     request<null>(`/api/people/${personId}`, { method: 'DELETE' }),
 
   createPerson: (body: CreatePersonBody) =>
-    request<PersonRef>('/api/people', { method: 'POST', body: JSON.stringify(body) }),
+    request<PersonSummary>('/api/people', { method: 'POST', body: JSON.stringify(body) }),
+
+  /** 인력 수정 (E2-2) — 권한 그룹 부여도 이 경로다. 409 STALE_VERSION이 있다 */
+  updatePerson: (personId: number, body: UpdatePersonBody) =>
+    request<PersonSummary>(`/api/people/${personId}`,
+      { method: 'PUT', body: JSON.stringify(body) }),
+
+  /**
+   * 소속 이동 (E1-1) — 진행 중 배정이 있어도 **성공**하고 경고가 함께 온다(E1-2).
+   * 그래서 응답이 `PersonSummary`가 아니라 `OrgUnitMoveResult`다.
+   */
+  movePersonOrgUnit: (personId: number, body: MoveOrgUnitBody) =>
+    request<OrgUnitMoveResult>(`/api/people/${personId}/org-unit`,
+      { method: 'PUT', body: JSON.stringify(body) }),
 
   orgUnits: () => request<OrgUnitView[]>('/api/org-units'),
   createOrgUnit: (body: CreateOrgUnitBody) =>
     request<OrgUnitView>('/api/org-units', { method: 'POST', body: JSON.stringify(body) }),
+  /** 조직 개명 (E3-2) — 같은 부모 밑 동명은 서버가 막지 않는다(AC에 없다) */
+  renameOrgUnit: (orgUnitId: number, body: RenameOrgUnitBody) =>
+    request<OrgUnitView>(`/api/org-units/${orgUnitId}`,
+      { method: 'PUT', body: JSON.stringify(body) }),
   deleteOrgUnit: (orgUnitId: number) =>
     request<null>(`/api/org-units/${orgUnitId}`, { method: 'DELETE' }),
 
-  // 인력 등록 폼의 선택 목록 — 관리 화면 전용이라 같은 판정을 거친다
-  grades: () => request<ReferenceItem[]>('/api/grades'),
-  permissionGroups: () => request<ReferenceItem[]>('/api/permission-groups'),
+  // 관리 화면 전용 라우트다 — 플래그가 없으면 서버가 403이다.
+  // 인력 등록 폼은 이 목록의 id·이름만 쓰고, 관리 화면이 계수·플래그·인원 수를 쓴다.
+  grades: () => request<GradeDetail[]>('/api/grades'),
+  createGrade: (body: GradeBody) =>
+    request<GradeDetail>('/api/grades', { method: 'POST', body: JSON.stringify(body) }),
+  updateGrade: (gradeId: number, body: GradeBody) =>
+    request<GradeDetail>(`/api/grades/${gradeId}`,
+      { method: 'PUT', body: JSON.stringify(body) }),
+  /** 쓰는 인원이 있으면 409 IN_USE (E4-3) */
+  deleteGrade: (gradeId: number) =>
+    request<null>(`/api/grades/${gradeId}`, { method: 'DELETE' }),
+
+  permissionGroups: () => request<PermissionGroupDetail[]>('/api/permission-groups'),
+  createPermissionGroup: (body: PermissionGroupBody) =>
+    request<PermissionGroupDetail>('/api/permission-groups',
+      { method: 'POST', body: JSON.stringify(body) }),
+  /** systemFixed(관리자) 그룹은 422 IMMUTABLE_GROUP — 마지막 관리자의 자기 잠금 방지 */
+  updatePermissionGroup: (groupId: number, body: PermissionGroupBody) =>
+    request<PermissionGroupDetail>(`/api/permission-groups/${groupId}`,
+      { method: 'PUT', body: JSON.stringify(body) }),
+  deletePermissionGroup: (groupId: number) =>
+    request<null>(`/api/permission-groups/${groupId}`, { method: 'DELETE' }),
+
+  /**
+   * 내 알림 (F1-3) — 조회는 언제나 본인 것이라 대상 지정 파라미터가 없다.
+   * `read=false`면 미읽음만. SSE(F1-4)는 서버에 아직 없어 목록을 열 때 다시 읽는다.
+   */
+  notifications: (read?: boolean) =>
+    request<PageResponse<NotificationView>>(
+      `/api/notifications?${queryOf({ read, size: NOTIFICATION_PAGE_SIZE })}`),
+  markNotificationRead: (notificationId: number) =>
+    request<null>(`/api/notifications/${notificationId}/read`, { method: 'PATCH' }),
+
+  /** 알림 설정 (H1-4) — 유형 전체가 오고, PUT은 전체 교체다 */
+  notifPrefs: () => request<NotificationPreferences>('/api/me/notif-prefs'),
+  updateNotifPrefs: (enabled: Record<NotificationType, boolean>) =>
+    request<NotificationPreferences>('/api/me/notif-prefs',
+      { method: 'PUT', body: JSON.stringify({ enabled }) }),
 
   projects: () =>
     request<PageResponse<ProjectSummary>>(
@@ -408,6 +480,24 @@ export const api = {
   maintenanceIssues: (query: IssueQuery = {}) =>
     request<PageResponse<IssueView>>(
       `/api/maintenance/issues?${queryOf({ ...query, size: MAINTENANCE_PAGE_SIZE })}`),
+
+  /**
+   * 유지보수 쓰기 (US-D2) — "계약 관리" 플래그가 없으면 서버가 403이다.
+   * 삭제 라우트가 없는 것은 누락이 아니다: 계약 종료는 상태 `ENDED`로 표현한다(D2-2).
+   */
+  createContract: (body: ContractBody) =>
+    request<ContractDetail>('/api/maintenance/contracts',
+      { method: 'POST', body: JSON.stringify(body) }),
+  updateContract: (contractId: number, body: ContractBody) =>
+    request<ContractDetail>(`/api/maintenance/contracts/${contractId}`,
+      { method: 'PUT', body: JSON.stringify(body) }),
+  addSite: (contractId: number, body: SiteBody) =>
+    request<SiteView>(`/api/maintenance/contracts/${contractId}/sites`,
+      { method: 'POST', body: JSON.stringify(body) }),
+  /** 연락처는 **전체 교체**다(§7 PUT) — 빼고 보내면 지워진다 */
+  updateSite: (siteId: number, body: SiteBody) =>
+    request<SiteView>(`/api/maintenance/sites/${siteId}`,
+      { method: 'PUT', body: JSON.stringify(body) }),
 
   assign: (projectId: number, body: CreateAssignmentBody) =>
     request<AssignmentView>(`/api/projects/${projectId}/assignments`,

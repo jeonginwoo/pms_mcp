@@ -68,7 +68,8 @@ class MaintenanceViewFactory {
                         label(site.getChannel()),
                         site.getServerSpec(),
                         site.getEngineerId() == null ? null : engineers.get(site.getEngineerId()),
-                        toContactViews(contactsBySite.getOrDefault(site.getId(), List.of()))))
+                        toContactViews(contactsBySite.getOrDefault(site.getId(), List.of())),
+                        site.getVersion()))
                 .toList();
     }
 
@@ -89,6 +90,7 @@ class MaintenanceViewFactory {
                 .map(contact -> new ContactView(
                         contact.getId(),
                         contact.getParty().label(),
+                        contact.getParty(),
                         contact.getName(),
                         contact.getTitle(),
                         contact.getPhone(),

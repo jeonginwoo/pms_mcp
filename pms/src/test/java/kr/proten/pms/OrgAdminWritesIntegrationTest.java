@@ -9,7 +9,6 @@ import kr.proten.pms.audit.AuditQueryService;
 import kr.proten.pms.audit.AuditRecord;
 import kr.proten.pms.common.exception.UnprocessableException;
 import kr.proten.pms.person.OrgPermission;
-import kr.proten.pms.person.PersonRef;
 import kr.proten.pms.person.repository.GradeRepository;
 import kr.proten.pms.person.repository.OrgUnitRepository;
 import kr.proten.pms.person.repository.PermissionGroupRepository;
@@ -17,6 +16,7 @@ import kr.proten.pms.person.repository.PersonRepository;
 import kr.proten.pms.person.service.OrgUnitService;
 import kr.proten.pms.person.service.PersonService;
 import kr.proten.pms.person.service.dto.OrgUnitMoveResult;
+import kr.proten.pms.person.service.dto.PersonSummary;
 import kr.proten.pms.person.service.dto.UpdatePersonCommand;
 import kr.proten.pms.person.service.entity.Grade;
 import kr.proten.pms.person.service.entity.OrgUnit;
@@ -146,7 +146,7 @@ class OrgAdminWritesIntegrationTest extends PostgresTestBase {
     @Test
     @DisplayName("E2-2 — 이름·직급·그룹을 바꾸면 바뀐 필드만 감사에 남는다")
     void updatePersonRecordsOnlyChangedFields() {
-        PersonRef updated = personService.update(ADMIN_ID, new UpdatePersonCommand(
+        PersonSummary updated = personService.update(ADMIN_ID, new UpdatePersonCommand(
                 IDLE_ID, "E개명됨", PersonFixtures.OTHER_DIVISION_ID, SENIOR_GRADE_ID,
                 MEMBER_GROUP_ID, 0));
 

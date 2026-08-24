@@ -57,4 +57,23 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
 
     /** 이 권한 그룹에 속한 인원이 있는가 (AC E5-4 `409 IN_USE`) — 위와 같은 이유로 비활성 포함. */
     boolean existsByGroupId(Long groupId);
+
+    /**
+     * 직급·권한 그룹별 인원 수 — 관리 화면이 "n명"과 삭제 버튼 노출에 쓴다(부록 A).
+     *
+     * <p>기준을 {@code existsBy…}와 <b>같게</b> 맞춘다(비활성 포함): 화면이 "0명"이라
+     * 보여 준 행을 지웠는데 서버가 409를 내면 그것은 두 규칙이 갈린 것이다.
+     *
+     * <p>행마다 세지 않고 한 번에 묶어 받는다 — 직급 9·그룹 4개라 N+1이 눈에 띄지는
+     * 않지만, 개수 질문을 목록마다 반복할 이유가 없다(conventions §6).
+     */
+    @Query("select p.gradeId, count(p) from Person p group by p.gradeId")
+    List<Object[]> countByGrade();
+
+    @Query("select p.groupId, count(p) from Person p group by p.groupId")
+    List<Object[]> countByGroup();
+
+    long countByGradeId(Long gradeId);
+
+    long countByGroupId(Long groupId);
 }

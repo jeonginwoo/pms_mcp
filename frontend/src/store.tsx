@@ -18,6 +18,7 @@ import {
 import type {
   AssignmentView,
   AuditRecord,
+  ContractBody,
   ContractDetail,
   ContractQuery,
   ContractSummary,
@@ -26,17 +27,27 @@ import type {
   CreatePersonBody,
   CreateProjectBody,
   EditProjectBody,
+  GradeBody,
+  GradeDetail,
   IssueQuery,
   IssueView,
   MeView,
+  NotificationPreferences,
+  NotificationType,
+  NotificationView,
+  OrgUnitMoveResult,
   OrgUnitView,
   PageResponse,
-  PersonRef,
+  PermissionGroupBody,
+  PermissionGroupDetail,
+  PersonSummary,
   ProgressUpdateResult,
   ProjectDetail,
   ProjectSummary,
-  ReferenceItem,
+  SiteBody,
+  SiteView,
   UpdateAssignmentBody,
+  UpdatePersonBody,
   UtilizationQuery,
   UtilizationView,
 } from './types/api'
@@ -56,13 +67,13 @@ interface Store {
   /** token = 로그인 세션 · caller = 로그인 없이 화자 지정(인증 OFF 전용) */
   sessionMode: 'token' | 'caller' | null
   me: MeView | null
-  people: PersonRef[]
+  people: PersonSummary[]
   /** 개발 모드 화자 전환용 명부 — 지금까지 본 인원의 누적(가시성 축소 후에도 되돌아갈 수 있게) */
-  roster: PersonRef[]
+  roster: PersonSummary[]
   orgUnits: OrgUnitView[]
   /** 인력 등록 폼의 선택 목록 — 관리 권한자만 채워진다 */
-  grades: ReferenceItem[]
-  permissionGroups: ReferenceItem[]
+  grades: GradeDetail[]
+  permissionGroups: PermissionGroupDetail[]
   projects: ProjectSummary[]
   /** 서버가 알려 준 전체 건수 — 한 번에 받은 수와 다르면 화면이 안내한다 */
   totalProjects: number
@@ -94,10 +105,30 @@ interface Store {
   updateAssignment: (assignmentId: number, body: UpdateAssignmentBody) =>
     Promise<Result<AssignmentView>>
   closeAssignment: (assignmentId: number) => Promise<Result<null>>
-  createPerson: (body: CreatePersonBody) => Promise<Result<PersonRef>>
+  createPerson: (body: CreatePersonBody) => Promise<Result<PersonSummary>>
+  /** 인력 수정 (E2-2) — 권한 그룹 부여도 이 경로다 */
+  updatePerson: (personId: number, body: UpdatePersonBody) => Promise<Result<PersonSummary>>
+  /**
+   * 소속 이동 (E1-1) — 성공해도 경고가 실려 올 수 있다(E1-2).
+   * 화면은 그 경고를 오류가 아니라 안내로 보여 준다: 이동은 실제로 일어났다.
+   */
+  movePersonOrgUnit: (personId: number, orgUnitId: number) => Promise<Result<OrgUnitMoveResult>>
   deactivatePerson: (personId: number) => Promise<Result<null>>
   createOrgUnit: (body: CreateOrgUnitBody) => Promise<Result<OrgUnitView>>
+  renameOrgUnit: (orgUnitId: number, name: string) => Promise<Result<OrgUnitView>>
   deleteOrgUnit: (orgUnitId: number) => Promise<Result<null>>
+  createGrade: (body: GradeBody) => Promise<Result<GradeDetail>>
+  updateGrade: (gradeId: number, body: GradeBody) => Promise<Result<GradeDetail>>
+  deleteGrade: (gradeId: number) => Promise<Result<null>>
+  createPermissionGroup: (body: PermissionGroupBody) => Promise<Result<PermissionGroupDetail>>
+  updatePermissionGroup: (groupId: number, body: PermissionGroupBody) =>
+    Promise<Result<PermissionGroupDetail>>
+  deletePermissionGroup: (groupId: number) => Promise<Result<null>>
+  /** 유지보수 계약·사이트 쓰기 (US-D2) — 성공하면 열려 있는 계약을 다시 읽는다 */
+  createContract: (body: ContractBody) => Promise<Result<ContractDetail>>
+  updateContract: (contractId: number, body: ContractBody) => Promise<Result<ContractDetail>>
+  addSite: (contractId: number, body: SiteBody) => Promise<Result<SiteView>>
+  updateSite: (siteId: number, body: SiteBody) => Promise<Result<SiteView>>
   /**
    * 가동률 조회 — **라우트에 들어올 때 부른다**(부팅 때 미리 받지 않는다).
    * 이유: 질의에 기준 월이 있어 부팅 시점에 고를 값이 없고, 월·필터를 바꾸면
@@ -115,6 +146,20 @@ interface Store {
   /** 프로젝트별 이력 (G2-2) — 가시성 밖은 404 은닉이다 */
   loadProjectAudit: (projectId: number, page: number) =>
     Promise<Result<PageResponse<AuditRecord>>>
+  // ── 알림 (EPIC F · H1-4) ──
+  /**
+   * 알림은 **부팅 때 한 번 읽고 벨을 열 때 다시 읽는다**.
+   * SSE(F1-4)가 서버에 아직 없어 즉시 푸시가 불가능한데, 폴링을 두면 44명 규모에
+   * 끊임없는 요청이 생긴다 — 부록 A가 요구하는 "미읽음 수"는 이 두 시점으로 충분하다.
+   * 서버에 스트림이 열리면 이 자리가 구독으로 바뀐다.
+   */
+  notifications: NotificationView[]
+  unreadNotifications: number
+  loadNotifications: () => Promise<Result<PageResponse<NotificationView>>>
+  markNotificationRead: (notificationId: number) => Promise<Result<null>>
+  loadNotifPrefs: () => Promise<Result<NotificationPreferences>>
+  updateNotifPrefs: (enabled: Record<NotificationType, boolean>) =>
+    Promise<Result<NotificationPreferences>>
 }
 
 const StoreContext = createContext<Store | null>(null)
@@ -135,11 +180,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [sessionMode, setSessionMode] =
     useState<'token' | 'caller' | null>(currentSession()?.mode ?? null)
   const [me, setMe] = useState<MeView | null>(null)
-  const [people, setPeople] = useState<PersonRef[]>([])
-  const [roster, setRoster] = useState<PersonRef[]>(restoreRoster)
+  const [people, setPeople] = useState<PersonSummary[]>([])
+  const [roster, setRoster] = useState<PersonSummary[]>(restoreRoster)
   const [orgUnits, setOrgUnits] = useState<OrgUnitView[]>([])
-  const [grades, setGrades] = useState<ReferenceItem[]>([])
-  const [permissionGroups, setPermissionGroups] = useState<ReferenceItem[]>([])
+  const [grades, setGrades] = useState<GradeDetail[]>([])
+  const [permissionGroups, setPermissionGroups] = useState<PermissionGroupDetail[]>([])
   const [projects, setProjects] = useState<ProjectSummary[]>([])
   const [totalProjects, setTotalProjects] = useState(0)
   const [route, setRoute] = useState<Route>('home')
@@ -147,6 +192,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [contract, setContract] = useState<ContractDetail | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [loginError, setLoginError] = useState<string | null>(null)
+  const [notifications, setNotifications] = useState<NotificationView[]>([])
 
   const showToast = useCallback((message: string) => {
     setToast(message)
@@ -166,16 +212,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setPhase('loading')
 
     try {
-      const [profile, visiblePeople, page] = await Promise.all([
+      const [profile, visiblePeople, page, notified] = await Promise.all([
         api.me(),
         api.people(),
         api.projects(),
+        api.notifications(),
       ])
       setMe(profile)
       setPeople(visiblePeople)
       setRoster((current) => mergeRoster(current, visiblePeople))
       setProjects(page.content)
       setTotalProjects(page.totalElements)
+      setNotifications(notified.content)
       // 조직 관리 화면은 관리 권한자만 쓸 수 있다 — 없는 사람에게 403을 만들지 않는다
       if (profile.manageOrg) {
         const [units, gradeList, groupList] = await Promise.all([
@@ -258,6 +306,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setProjects([])
     setDetail(null)
     setContract(null)
+    setNotifications([])
     setRoute('home')
     setLoginError(null)
     setPhase('anon')
@@ -272,12 +321,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   /** 인력·조직 관리 후 다시 읽는다 — 목록에서 빠진 결과가 바로 보여야 한다. */
   const refreshOrganization = useCallback(async () => {
-    const [visiblePeople, units] = await Promise.all([
+    // 직급·권한 그룹까지 함께 읽는다: 그룹을 지우면 인원의 그룹 이름이 바뀌고,
+    // 인원을 옮기면 그룹의 memberCount가 바뀐다 — 네 목록이 서로의 표시를 정한다
+    const [visiblePeople, units, gradeList, groupList] = await Promise.all([
       api.people(),
       me?.manageOrg ? api.orgUnits() : Promise.resolve([] as OrgUnitView[]),
+      me?.manageOrg ? api.grades() : Promise.resolve([] as GradeDetail[]),
+      me?.manageOrg
+        ? api.permissionGroups()
+        : Promise.resolve([] as PermissionGroupDetail[]),
     ])
     setPeople(visiblePeople)
     setOrgUnits(units)
+    setGrades(gradeList)
+    setPermissionGroups(groupList)
   }, [me?.manageOrg])
 
   const openProject = useCallback(async (projectId: number) => {
@@ -349,6 +406,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return result
   }, [run, refreshOrganization])
 
+  /**
+   * 유지보수 쓰기 공통 (US-D2) — 성공하면 열려 있는 계약 상세를 서버 값으로 다시 읽는다.
+   *
+   * 응답만 화면에 반영하지 않는 이유는 계약 상세가 **합성 값**이기 때문이다: 사이트를
+   * 추가하면 사이트 목록·연락처·이슈 요약이 함께 바뀌는데 `SiteView` 하나로는 그것을
+   * 알 수 없다. 낙관적 락 충돌(409)일 때도 다시 읽는다 — 최신 version을 보고 재시도할
+   * 수 있어야 한다(프로젝트 쪽 `run`과 같은 규칙).
+   */
+  const runContract = useCallback(async <T,>(
+      action: () => Promise<T>, contractId?: number): Promise<Result<T>> => {
+    const result = await run(action, { refresh: false })
+
+    if (contractId !== undefined) {
+      setContract(await api.maintenanceContract(contractId).catch(() => null))
+    }
+
+    return result
+  }, [run])
+
   const value = useMemo<Store>(() => ({
     phase,
     bootError,
@@ -415,9 +491,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     closeAssignment: (assignmentId) => run(
       () => api.closeAssignment(assignmentId), { detail: requireDetail(detail).id }),
     createPerson: (body) => runOrganization(() => api.createPerson(body)),
+    updatePerson: (personId, body) => runOrganization(() => api.updatePerson(personId, body)),
+    movePersonOrgUnit: (personId, orgUnitId) =>
+      runOrganization(() => api.movePersonOrgUnit(personId, { orgUnitId })),
     deactivatePerson: (personId) => runOrganization(() => api.deactivatePerson(personId)),
     createOrgUnit: (body) => runOrganization(() => api.createOrgUnit(body)),
+    renameOrgUnit: (orgUnitId, name) =>
+      runOrganization(() => api.renameOrgUnit(orgUnitId, { name })),
     deleteOrgUnit: (orgUnitId) => runOrganization(() => api.deleteOrgUnit(orgUnitId)),
+    createGrade: (body) => runOrganization(() => api.createGrade(body)),
+    updateGrade: (gradeId, body) => runOrganization(() => api.updateGrade(gradeId, body)),
+    deleteGrade: (gradeId) => runOrganization(() => api.deleteGrade(gradeId)),
+    createPermissionGroup: (body) => runOrganization(() => api.createPermissionGroup(body)),
+    updatePermissionGroup: (groupId, body) =>
+      runOrganization(() => api.updatePermissionGroup(groupId, body)),
+    deletePermissionGroup: (groupId) =>
+      runOrganization(() => api.deletePermissionGroup(groupId)),
+    createContract: (body) => runContract(() => api.createContract(body)),
+    updateContract: (contractId, body) =>
+      runContract(() => api.updateContract(contractId, body), contractId),
+    addSite: (contractId, body) => runContract(() => api.addSite(contractId, body), contractId),
+    updateSite: (siteId, body) =>
+      runContract(() => api.updateSite(siteId, body), contract?.id),
     // 조회라서 프로젝트 목록을 다시 읽지 않는다 — run은 에러 봉투 정규화만 쓴다
     loadUtilization: (query) => run(() => api.utilization(query), { refresh: false }),
     loadContracts: (query) => run(() => api.maintenanceContracts(query), { refresh: false }),
@@ -425,10 +520,36 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     loadAudit: (page) => run(() => api.audit(page), { refresh: false }),
     loadProjectAudit: (projectId, page) =>
       run(() => api.projectAudit(projectId, page), { refresh: false }),
+    notifications,
+    unreadNotifications: notifications.filter((notification) => !notification.read).length,
+    loadNotifications: async () => {
+      const result = await run(() => api.notifications(), { refresh: false })
+
+      if (result.ok) {
+        setNotifications(result.value.content)
+      }
+
+      return result
+    },
+    markNotificationRead: async (notificationId) => {
+      const result = await run(() => api.markNotificationRead(notificationId),
+        { refresh: false })
+
+      if (result.ok) {
+        // 서버가 본문 없는 200을 주므로 화면 상태를 직접 옮긴다 — 목록을 다시 받으면
+        // 방금 읽은 줄이 사라지는 것처럼 보이고, 사용자는 무엇을 읽었는지 잃는다
+        setNotifications((current) => current.map((notification) =>
+          (notification.id === notificationId ? { ...notification, read: true } : notification)))
+      }
+
+      return result
+    },
+    loadNotifPrefs: () => run(() => api.notifPrefs(), { refresh: false }),
+    updateNotifPrefs: (enabled) => run(() => api.updateNotifPrefs(enabled), { refresh: false }),
   }), [phase, bootError, sessionMode, me, people, roster, orgUnits, grades, permissionGroups,
     projects, totalProjects, route, detail, contract, toast, loginError, submitLogin,
     enterAsCaller, logout, reload, openProject, closeProject, openContract, closeContract,
-    showToast, run, runOrganization])
+    showToast, run, runOrganization, runContract, notifications])
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>
 }
@@ -447,17 +568,17 @@ function requireDetail(detail: ProjectDetail | null): ProjectDetail {
  * 이유: 팀원으로 전환하면 보이는 인원이 본인뿐이라 셀렉트가 비어 되돌아갈 수 없다.
  * 관리자로 한 번 들어와 본 명부를 기억해 두면 어느 화자에서든 전환할 수 있다.
  */
-function restoreRoster(): PersonRef[] {
+function restoreRoster(): PersonSummary[] {
   try {
     const stored: unknown = JSON.parse(localStorage.getItem(ROSTER_KEY) ?? '[]')
 
-    return Array.isArray(stored) ? (stored as PersonRef[]) : []
+    return Array.isArray(stored) ? (stored as PersonSummary[]) : []
   } catch {
     return []
   }
 }
 
-function mergeRoster(current: PersonRef[], loaded: PersonRef[]): PersonRef[] {
+function mergeRoster(current: PersonSummary[], loaded: PersonSummary[]): PersonSummary[] {
   const byId = new Map(current.map((person) => [person.id, person]))
   loaded.forEach((person) => byId.set(person.id, person))
   const merged = [...byId.values()].sort((a, b) => a.id - b.id)

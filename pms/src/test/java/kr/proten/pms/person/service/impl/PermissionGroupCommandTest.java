@@ -9,6 +9,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 import kr.proten.pms.common.exception.ConflictException;
 import kr.proten.pms.common.exception.ErrorCode;
@@ -20,6 +21,7 @@ import kr.proten.pms.person.repository.PersonRepository;
 import kr.proten.pms.person.service.dto.PermissionGroupCommand;
 import kr.proten.pms.person.service.dto.PermissionGroupDetail;
 import kr.proten.pms.person.service.entity.PermissionGroup;
+import kr.proten.pms.person.service.entity.PersonFixtures;
 import kr.proten.pms.person.service.entity.VisibilityScope;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -55,8 +57,31 @@ class PermissionGroupCommandTest {
     void setUp() {
         lenient().when(orgPermissionService.has(ADMIN_ID, OrgPermission.MANAGE_ORG))
                 .thenReturn(true);
+        lenient().when(permissionGroupRepository.saveAndFlush(any()))
+                .thenAnswer(call -> call.getArgument(0));
         service = new PermissionGroupServiceImpl(permissionGroupRepository, personRepository,
                 new OrgManagePermission(orgPermissionService), auditRecorder);
+    }
+
+    @Test
+    @DisplayName("E5 — 목록은 부록 A의 그룹 행이 필요로 하는 것을 전부 싣는다")
+    void listCarriesWhatTheAdminScreenNeeds() {
+        // Given: 부록 A의 행은 "n명 · 가시성 · 기능 토글 · 수정 · (0명일 때만) 삭제"다
+        when(permissionGroupRepository.findAll()).thenReturn(List.of(
+                PersonFixtures.group(GROUP_ID, "팀장", VisibilityScope.TEAM,
+                        OrgPermission.CREATE_PROJECT)));
+        when(personRepository.countByGroup())
+                .thenReturn(List.<Object[]>of(new Object[] {GROUP_ID, 7L}));
+
+        // When
+        PermissionGroupDetail group = service.list(ADMIN_ID).getFirst();
+
+        // Then
+        assertThat(group.memberCount()).isEqualTo(7L);
+        assertThat(group.visibilityScope()).isEqualTo("TEAM");
+        assertThat(group.createProject()).isTrue();
+        assertThat(group.manageOrg()).isFalse();
+        assertThat(group.systemFixed()).isFalse();
     }
 
     @Test

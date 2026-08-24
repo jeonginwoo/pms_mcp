@@ -11,9 +11,9 @@ log). `verify.sh`/CI only look at `pms/gradlew`, so `pms-old/` is not verified.
 
 ## Structure (2026-08-21 decisions — shared decision log)
 
-- **One domain, one module.** Current modules: `person` · `auth` · `project` ·
-  `resource` · `notification` (domain) + `audit` (cross-cutting) + `mcp`
-  (inbound adapter) — and `common`, which is wiring, not a module.
+- **One domain, one module.** Current modules (8): `person` · `auth` · `project` ·
+  `resource` · `notification` · `maintenance` (domain) + `audit` (cross-cutting) +
+  `mcp` (inbound adapter) — and `common`, which is wiring, not a module.
   `audit` moved out of `common` on 2026-08-22: it is cross-cutting in *use*, but it
   owns an entity, a repository and use cases of its own, so it does not belong in
   the layer every module depends on. What that surfaced: `AuditSourceResolver` was
@@ -21,8 +21,8 @@ log). `verify.sh`/CI only look at `pms/gradlew`, so `pms-old/` is not verified.
   `controller/` and `common/`. The fix was to move the *reading* down to
   `common/config/RequestPathResolver` and leave audit only the mapping to WEB/MCP —
   not to relax the rule. `mcp` joined on 2026-08-23 as the 7th module (MCP dev —
-  see the `/mcp` section below); `maintenance` is still added by its owner when
-  that work starts.
+  see the `/mcp` section below) and `maintenance` as the 8th on the same day
+  (EPIC D — reads first, writes from 2026-08-24).
   `resource` and `notification` were scaffolded ahead of their logic on
   2026-08-22 by explicit user decision — that suspends the former "no empty
   modules ahead of time" rule **for those two only**; it still holds for
@@ -74,6 +74,7 @@ log). `verify.sh`/CI only look at `pms/gradlew`, so `pms-old/` is not verified.
   | person (cross-module) | `PersonDirectoryService` · `OrgVisibilityService` · `OrgPermissionService` · `PersonLookupService` · `WorkforceDirectoryService` | **different consumers** — these earn the split |
   | project (cross-module) | `AssignmentDirectoryService` · `ProjectLookupService` · `ProgressCommandService` | one more consumer set (resource · `/mcp`) — 2026-08-23 |
   | resource (cross-module) | `UtilizationLookupService` | `/mcp` only — the web takes `?orgUnitId=`, chat takes a `UtilizationScope` (2026-08-24) |
+  | maintenance | `MaintenanceQueryService` · `IssueQueryService` · `ContractCommandService` | **read vs write is a real axis here** — reads are company-wide and take no caller (D4-3), writes are gated on the "계약 관리" flag and take one (D2-3). Same split, same reason, as audit's `AuditTrail` / `AuditQueryService` (2026-08-24) |
 
   Implementations stay decomposed where the work is: `ProjectActionPermission`,
   `ProjectVisibilityService`, `ProjectAuditRecorder`, `ProjectViewFactory`,
@@ -148,8 +149,12 @@ disappears, and it now has.
   auth and access-log masking are one unit. Registered gap: **a status transition also
   creates overbooking** (계약대기 → 진행중 pulls that person's assignment into the
   numerator) and §8 has no event for it — look at it with F2/F3.
-- **EPIC D writes** — D1 handover · D2 contract/site · D3 issues. D3-1's assignee
-  notification was blocked on EPIC F and **is now unblocked**; D-c still needs the
+- **EPIC D writes — D2 landed 2026-08-24; D1 and D3 remain.** D2 (contract + site
+  registration/edit) is live, so maintenance is no longer read-only. **D3** (issue
+  register/handle/comment) was deliberately split off: D3-1's assignee notification
+  pulls two decisions with it — a new `NotificationType` value (which shows up in the
+  H1-4 preferences screen) and the registered question of where notification's four
+  root contracts belong (PRD-pms §12). **D1 handover** still needs the
   module-direction decision (the route is project's, the contract is maintenance's,
   and D1-2 wants one transaction).
 - project ACs **A6-3** (role assignment) · **A8** (per-project permission matrix),
@@ -284,7 +289,11 @@ POST /api/auth/refresh        rotate the pair
 GET  /api/auth/jwks           public keys (the /mcp decoder consumes this)
 
 GET  /api/me                  caller identity + group flags — the front-end gates UI on this
-GET  /api/people              visible people (43 seeded, system account hidden)
+GET  /api/people              visible people (43 seeded, system account hidden) — returns
+                              `PersonSummary`: display names **plus** orgUnitId/gradeId/
+                              groupId/version, because §7 has no person-detail route and this
+                              list is what the E2-2 edit form is filled from. The module-root
+                              `PersonRef` stays narrow — `/mcp` shares it (구현_노트 §5)
 GET  /api/people/{id}          404 conceals both absence and out-of-visibility
 DELETE /api/people/{id}       200 {success:true}, soft deactivate — "사용자/조직/권한 관리" flag (E2-3)
 GET  /api/org-units           tree + counts + deletable, same flag
@@ -292,11 +301,15 @@ DELETE /api/org-units/{id}    200 {success:true}, empty nodes only — 409 IN_US
 
 POST /api/people              201 + person — creates the login account too (E2-1)
 POST /api/org-units           201 + node — arbitrary depth, one company root (E3-1)
-GET  /api/grades              form choices for the admin screen (same flag)
-GET  /api/permission-groups   form choices for the admin screen (same flag)
+GET  /api/grades              `GradeDetail[]` — name, coeff, memberCount, version (same flag)
+GET  /api/permission-groups   `PermissionGroupDetail[]` — scope, 4 flags, systemFixed,
+                              memberCount, version (same flag). Both used to return
+                              `{id,name}`; the admin screens (E4/E5) could not be driven
+                              from that, and §7 gives them no detail route (2026-08-24)
 
 --- all live since 2026-08-24 (these were the last 501 scaffolds) ---
-PUT  /api/people/{id}              edit name·org·grade·group (E2-2)
+PUT  /api/people/{id}              edit name·org·grade·group (E2-2) — {version} required,
+                                   409 STALE_VERSION (the check was missing until 2026-08-24)
 PUT  /api/people/{id}/org-unit     move only (E1-1) — 200 carries a **warning** when the
                                    person has live assignments (E1-2, not an error)
 PUT  /api/org-units/{id}           rename (E3-2) — duplicate names under one parent are
@@ -324,12 +337,45 @@ POST /api/projects/{id}/reopen     {version} — 완료 → 진행중, progress=
 POST   /api/projects/{id}/assignments   201 + assignment view      (B1-1)
 PUT    /api/assignments/{id}            period + monthly M/M       (B1-4)
 DELETE /api/assignments/{id}            200 {success:true}, status=CLOSED (row kept) (B2-1)
+
+GET  /api/maintenance/contracts        ?status&contractor&endedBefore&keyword  (D4-1)
+GET  /api/maintenance/contracts/{id}   detail + sites + contacts + issue counts (D4-2)
+GET  /api/maintenance/issues           ?status&assigneeId&siteId&contractId    (D3-4)
+--- writes live since 2026-08-24 (D2) ---
+POST /api/maintenance/contracts            201 — direct registration, no sourceProjectId (D2-1)
+PUT  /api/maintenance/contracts/{id}       {version} in the body (D2-2). **No DELETE**:
+                                           ending a contract is status=종료
+POST /api/maintenance/contracts/{id}/sites 201 + site view, contacts embedded (D2-4)
+PUT  /api/maintenance/sites/{id}           {version}; the contacts list is a full
+                                           replacement, not a merge (§7 PUT) (D2-4)
 ```
+
+Maintenance **reads** take no caller (company-wide, D4-3) but **writes** take one: the
+"계약 관리" flag decides, so `ContractWriteGuard` runs before anything else
+(`MaintenanceWriteAuthorizationTest` locks all four routes).
 
 No assignment list route: the project detail already carries them (A3-3).
 Not routed yet, on purpose: A6-3 (`/roles`), A8 (`/permissions`), `?phase=`, and
 the SSE stream `GET /api/notifications/stream` (its `?access_token=` auth and the
 access-log masking are one unit — opening the route first leaks tokens into logs).
+
+## Optimistic locking on writes (read this before adding a write path)
+
+Two failures showed up together on 2026-08-24 and both are easy to reintroduce.
+
+- **Take the version, then actually check it.** `PUT /api/people/{id}`, `PUT /api/grades/{id}`
+  and `PUT /api/permission-groups/{id}` all *accepted* a `version` and never compared it,
+  so the last write won silently — while their command DTOs' javadoc had promised
+  `409 STALE_VERSION` from the start. Entities now carry `requireVersion(expected)`
+  (`Project`, `ProjectAssignment`, `MaintenanceContract`, `MaintenanceSite`, `Person`,
+  `Grade`, `PermissionGroup`) and the use case calls it right after loading.
+- **Return the flushed version.** A response built inside the same transaction carries the
+  *pre-increment* `@Version`, so the client saves, gets `version` back, edits again — and is
+  rejected by the lock it never violated. `saveAndFlush` before building the response; project
+  already did this and the comment there says why.
+- Corollary (conventions §4): **query before you mutate.** A query on a dirty session flushes
+  first, so one use case increments `@Version` twice — `moveOrgUnit` was asking for the
+  assignment count *after* moving the person.
 
 ## Audit (recording and reading both live)
 

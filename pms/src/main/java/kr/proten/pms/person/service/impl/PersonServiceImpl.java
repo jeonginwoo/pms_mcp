@@ -20,6 +20,7 @@ import kr.proten.pms.person.service.PersonService;
 import kr.proten.pms.person.AssignmentCountPort;
 import kr.proten.pms.person.service.dto.CreatePersonCommand;
 import kr.proten.pms.person.service.dto.MeView;
+import kr.proten.pms.person.service.dto.PersonSummary;
 import kr.proten.pms.person.service.dto.OrgUnitMoveResult;
 import kr.proten.pms.person.service.dto.UpdatePersonCommand;
 import kr.proten.pms.person.service.entity.PermissionGroup;
@@ -86,15 +87,15 @@ public class PersonServiceImpl implements PersonService {
 
     /** 가시성 범위 내 인원 목록 — 시스템 계정·비활성 인원은 제외한다. */
     @Transactional(readOnly = true)
-    public List<PersonRef> listVisible(long callerPersonId) {
+    public List<PersonSummary> listVisible(long callerPersonId) {
         OrgVisibility visibility = orgVisibilityService.visibilityOf(callerPersonId);
 
         if (visibility.unrestricted()) {
-            return personRefFactory.toRefs(
+            return personRefFactory.toSummaries(
                     personRepository.findByActiveTrueAndSystemFalseOrderByIdAsc());
         }
 
-        return personRefFactory.toRefs(
+        return personRefFactory.toSummaries(
                 personRepository.findByIdInAndActiveTrueAndSystemFalseOrderByIdAsc(
                         visibility.visiblePersonIds()));
     }
@@ -105,7 +106,7 @@ public class PersonServiceImpl implements PersonService {
      * 404다 — 사유가 응답으로 새면 존재 자체가 드러난다.
      */
     @Transactional(readOnly = true)
-    public PersonRef getPerson(long callerPersonId, long personId) {
+    public PersonSummary getPerson(long callerPersonId, long personId) {
         Person target = personRepository.findByIdAndActiveTrue(personId)
                 .filter(person -> !person.isSystem())
                 .orElseThrow(NotFoundException::new);
@@ -114,7 +115,7 @@ public class PersonServiceImpl implements PersonService {
             throw new NotFoundException();
         }
 
-        return personRefFactory.toRef(target);
+        return personRefFactory.toSummary(target);
     }
 
     /**
@@ -149,7 +150,7 @@ public class PersonServiceImpl implements PersonService {
      * 계정 생성은 `AccountPort`(auth 구현)에 맡긴다 — 초기 비밀번호·해시 방식은
      * person이 알 일이 아니고, 같은 트랜잭션에 참여하므로 원자성은 그대로다.
      */
-    public PersonRef create(long callerPersonId, CreatePersonCommand command) {
+    public PersonSummary create(long callerPersonId, CreatePersonCommand command) {
         orgManagePermission.require(callerPersonId);
         requireText(command.name(), "name");
         requireText(command.email(), "email");
@@ -169,7 +170,7 @@ public class PersonServiceImpl implements PersonService {
         accountPort.createInitialAccount(saved.getId(), command.email());
         personAuditRecorder.personCreated(callerPersonId, saved);
 
-        return personRefFactory.toRef(saved);
+        return personRefFactory.toSummary(saved);
     }
 
     /**
@@ -184,10 +185,13 @@ public class PersonServiceImpl implements PersonService {
      * 403이 뒤늦게 생긴다. 없는 것은 로직이지 권한이 아니다.
      *
      */
-    public PersonRef update(long callerPersonId, UpdatePersonCommand command) {
+    public PersonSummary update(long callerPersonId, UpdatePersonCommand command) {
         orgManagePermission.require(callerPersonId);
 
         Person target = requireEditable(command.personId());
+        // 2026-08-24 결함 수정: 요청의 version을 받아 두고 검사하지 않아 마지막 쓰기가
+        // 조용히 이기고 있었다. `UpdatePersonCommand`의 javadoc은 처음부터 409를 적고 있었다
+        target.requireVersion(command.version());
         requireReferences(command.orgUnitId(), command.gradeId(), command.groupId());
 
         // 바꾸기 직전에 떠 둔다 — 바뀐 필드만 이력에 남고, 바뀐 것이 없으면 행도 없다
@@ -197,9 +201,12 @@ public class PersonServiceImpl implements PersonService {
                 command.orgUnitId(),
                 command.gradeId(),
                 command.groupId());
-        personAuditRecorder.personChanged(callerPersonId, target, before);
+        // flush 해야 응답의 version이 커밋 뒤 값이 된다 — 안 하면 화면이 옛 version으로
+        // 다시 저장하려다 409를 받는다(project·maintenance가 같은 이유로 saveAndFlush)
+        Person saved = personRepository.saveAndFlush(target);
+        personAuditRecorder.personChanged(callerPersonId, saved, before);
 
-        return personRefFactory.toRef(target);
+        return personRefFactory.toSummary(saved);
     }
 
     /**
@@ -223,13 +230,16 @@ public class PersonServiceImpl implements PersonService {
         Person target = requireEditable(personId);
         requireExists(orgUnitRepository.existsById(orgUnitId), "조직", orgUnitId);
 
+        // 배정 건수는 엔티티를 바꾸기 **전에** 묻는다 — 더러워진 세션에 질의하면 JPA가
+        // 먼저 flush 해 version이 한 유스케이스에서 두 번 오른다(conventions §4)
+        long activeAssignments = assignmentCountPort.countActiveAssignments(personId);
         Map<String, Object> before = personAuditRecorder.snapshot(target);
         target.moveTo(orgUnitId);
+        Person saved = personRepository.saveAndFlush(target);
         // 소속 이동도 UPDATE다 — STATE_CHANGE는 §5 프로젝트 상태 전이 전용(v2.1 정리)
-        personAuditRecorder.personChanged(callerPersonId, target, before);
+        personAuditRecorder.personChanged(callerPersonId, saved, before);
 
-        return OrgUnitMoveResult.of(
-                personRefFactory.toRef(target), assignmentCountPort.countActiveAssignments(personId));
+        return OrgUnitMoveResult.of(personRefFactory.toSummary(saved), activeAssignments);
     }
 
     public void deactivate(long callerPersonId, long personId) {

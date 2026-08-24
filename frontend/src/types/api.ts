@@ -17,12 +17,31 @@ export type Engagement = 'REMOTE' | 'ONSITE' | 'PARTIAL_ONSITE'
 
 export type ProjectRole = 'PM' | 'PL' | 'PARTICIPANT'
 
-/** GET /api/people — 인원 참조 값 */
+/** 인원 참조 값 — 프로젝트 배정·유지보수 담당자처럼 "누구"만 필요한 자리 */
 export interface PersonRef {
   id: number
   name: string
   orgUnit: string
   grade: string
+}
+
+/**
+ * GET /api/people — 인력 화면이 쓰는 인원 1행 (2026-08-24).
+ *
+ * `PersonRef`를 넓힌 것이 아니라 **서버가 화면용으로 따로 내주는 값**이다: 서버의
+ * `PersonRef`는 `/mcp` 도구도 쓰는 모듈 루트 계약이라 편집용 id·version이 실리면
+ * 도구 응답에도 나간다. 여기에 이름·id가 함께 있는 이유는 `PUT /api/people/{id}`가
+ * id와 version을 요구하는데 §7에 인원 상세 라우트가 따로 없기 때문이다.
+ *
+ * 권한 그룹은 **id만** 온다 — 이름은 관리자만 부를 수 있는 `/api/permission-groups`가
+ * 해석한다(가시성만으로 남의 권한 등급이 읽히지 않게).
+ */
+export interface PersonSummary extends PersonRef {
+  division: string
+  orgUnitId: number
+  gradeId: number
+  groupId: number
+  version: number
 }
 
 /**
@@ -42,10 +61,70 @@ export interface MeView {
   manageOrg: boolean
 }
 
-/** 직급·권한 그룹 선택 목록 (관리 화면 전용) */
-export interface ReferenceItem {
+/**
+ * GET /api/grades — 직급 1행 (US-E4. 관리 플래그 전용 라우트다).
+ * 인력 등록 폼은 `id`·`name`만 쓰고 관리 화면이 나머지를 쓴다.
+ */
+export interface GradeDetail {
   id: number
   name: string
+  /** 보정 가동률 가중치 — 바꾸면 다음 조회부터 반영된다(캐시 없음, E4-2) */
+  coeff: number
+  /** 이 직급을 쓰는 인원 수 — **비활성 포함**(서버의 409 IN_USE 판정과 같은 기준) */
+  memberCount: number
+  version: number
+}
+
+/** GET /api/permission-groups — 권한 그룹 1행 (US-E5 · 상위 PRD §4-3) */
+export interface PermissionGroupDetail {
+  id: number
+  name: string
+  visibilityScope: VisibilityScope
+  createProject: boolean
+  manageContracts: boolean
+  manageAllProjects: boolean
+  manageOrg: boolean
+  /** 시스템 고정(관리자) — 수정·삭제가 422다. 화면은 버튼을 잠근다 */
+  systemFixed: boolean
+  memberCount: number
+  version: number
+}
+
+export type VisibilityScope = 'COMPANY' | 'DIVISION' | 'TEAM' | 'SELF'
+
+// ── 알림 (EPIC F · H1-4) ──
+
+/** 알림 유형 — 설정(H1-4)이 켜고 끄는 단위이기도 하다 */
+export type NotificationType =
+  | 'ASSIGNED'
+  | 'OVERBOOKED'
+  | 'PROJECT_COMPLETED'
+  | 'DEADLINE_NEAR'
+  | 'COMPLETION_OVERDUE'
+
+/**
+ * GET /api/notifications 항목 (F1-3).
+ *
+ * `refType`·`refId`로 대상에 이동한다 — 메시지 문자열에서 id를 파싱하면 문구가
+ * 바뀌는 순간 깨진다(서버 DTO 주석과 같은 이유).
+ */
+export interface NotificationView {
+  id: number
+  type: NotificationType
+  refType: string
+  refId: number | null
+  message: string
+  read: boolean
+  createdAt: string
+}
+
+/**
+ * GET·PUT /api/me/notif-prefs (H1-4) — 유형 전체를 담는다(끈 것만 false).
+ * PUT은 **전체 교체**다: 보내지 않은 유형을 "그대로 둔다"로 읽으면 유형이 늘 때
+ * 화면과 서버가 갈린다.
+ */
+export interface NotificationPreferences {
+  enabled: Record<NotificationType, boolean>
 }
 
 /** POST /api/people — 등록 시 로그인 계정도 함께 만들어진다 (초기 비밀번호는 서버 규칙) */
@@ -192,6 +271,8 @@ export interface ContactView {
   id: number
   /** 한국어 라벨 ("계약사" | "고객사") */
   party: string
+  /** 열거 이름 — 연락처 수정 폼이 되채우는 값 (라벨 표를 클라이언트에 두지 않으려고 서버가 함께 준다) */
+  partyCode: "CONTRACTOR" | "CLIENT"
   name: string | null
   title: string | null
   phone: string | null
@@ -206,6 +287,8 @@ export interface SiteView {
   serverSpec: string | null
   engineer: PersonRef | null
   contacts: ContactView[]
+  /** 낙관적 락 (D2-4 PUT /sites/{id}) */
+  version: number
 }
 
 /** GET /api/maintenance/contracts/{id} (D4-2) — sourceProjectId는 이관으로 생긴 계약에만 있다 */
@@ -214,7 +297,10 @@ export interface ContractDetail {
   sourceProjectId: number | null
   contractor: string
   name: string
+  /** 한국어 라벨 (예: "유지") — 표시용 */
   status: string
+  /** 열거 이름 (ACTIVE) — 수정 폼이 상태 select를 되채우는 값 (D2-2) */
+  statusCode: ContractStatus
   sheetSection: string | null
   contractDate: string | null
   contractDateNote: string | null
@@ -398,4 +484,100 @@ export interface UpdateAssignmentBody {
   endDate?: string | null
   monthlyMm: number
   version: number
+}
+
+/** PUT /api/people/{id} (E2-2) — 권한 그룹 부여도 이 경로다(그룹은 사람의 속성이다) */
+export interface UpdatePersonBody {
+  name: string
+  orgUnitId: number
+  gradeId: number
+  groupId: number
+  version: number
+}
+
+/** PUT /api/people/{id}/org-unit (E1-1) — 소속만 옮긴다 */
+export interface MoveOrgUnitBody {
+  orgUnitId: number
+}
+
+/**
+ * PUT /api/people/{id}/org-unit 응답 (E1-2).
+ * 진행 중 배정이 있어도 **막지 않고** 경고를 함께 준다 — 조직 개편을 시스템이
+ * 거부하면 안 되고, 조용히 넘기면 개편하는 사람이 파급을 모른다.
+ */
+export interface OrgUnitMoveResult {
+  person: PersonSummary
+  activeAssignments: number
+  warning: string | null
+}
+
+/** PUT /api/org-units/{id} (E3-2) — 개명. 같은 부모 밑 동명은 서버가 막지 않는다 */
+export interface RenameOrgUnitBody {
+  name: string
+}
+
+/** POST·PUT /api/grades (E4) — version은 수정에서만 의미가 있다 */
+export interface GradeBody {
+  name: string
+  coeff: number
+  version: number
+}
+
+/** POST·PUT /api/permission-groups (E5) */
+export interface PermissionGroupBody {
+  name: string
+  visibilityScope: VisibilityScope
+  createProject: boolean
+  manageContracts: boolean
+  manageAllProjects: boolean
+  manageOrg: boolean
+  version: number
+}
+
+// ── 유지보수 쓰기 (US-D2 — 2026-08-24) ──
+
+/**
+ * POST·PUT /api/maintenance/contracts (D2-1·D2-2).
+ * 등록과 수정이 같은 본문이고 차이는 `version` 하나다(서버 `ContractRequest`와 같은 이유).
+ * 시트 유래 필드(sheetSection·contractDateNote)는 화면이 채우지 않는다 — 원본 보존용이다.
+ */
+export interface ContractBody {
+  contractor: string
+  name: string
+  status: ContractStatus
+  contractDate?: string | null
+  startDate?: string | null
+  endDate?: string | null
+  amount?: number | null
+  monthlyAmount?: number | null
+  salesRepId?: number | null
+  category?: string | null
+  targetInfra?: string | null
+  regularCheck?: string | null
+  note?: string | null
+  /** 수정에서만 보낸다 */
+  version?: number | null
+}
+
+/** 사이트 연락처 입력 (D2-4) — 원문(raw)은 서버가 조각으로 조립한다 */
+export interface ContactBody {
+  party: 'CONTRACTOR' | 'CLIENT'
+  name?: string | null
+  title?: string | null
+  phone?: string | null
+  email?: string | null
+}
+
+/**
+ * POST /contracts/{id}/sites · PUT /sites/{id} (D2-4).
+ * `contacts`는 **전체 교체**다(§7 PUT 의미론) — 빼고 보내면 지워진다.
+ */
+export interface SiteBody {
+  name: string
+  channel?: 'OEM' | 'ENT' | null
+  serverSpec?: string | null
+  engineerId?: number | null
+  contacts: ContactBody[]
+  /** 수정에서만 보낸다 */
+  version?: number | null
 }

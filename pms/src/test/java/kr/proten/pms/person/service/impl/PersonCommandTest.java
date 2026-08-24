@@ -4,6 +4,7 @@ import kr.proten.pms.person.service.impl.requester.RequesterResolver;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -15,6 +16,7 @@ import kr.proten.pms.common.exception.ConflictException;
 import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.ForbiddenException;
 import kr.proten.pms.common.exception.NotFoundException;
+import kr.proten.pms.common.exception.StaleVersionException;
 import kr.proten.pms.common.exception.UnprocessableException;
 import kr.proten.pms.common.exception.ValidationException;
 import kr.proten.pms.person.AccountPort;
@@ -26,6 +28,7 @@ import kr.proten.pms.person.repository.OrgUnitRepository;
 import kr.proten.pms.person.repository.PermissionGroupRepository;
 import kr.proten.pms.person.repository.PersonRepository;
 import kr.proten.pms.person.service.dto.CreatePersonCommand;
+import kr.proten.pms.person.service.dto.UpdatePersonCommand;
 import kr.proten.pms.person.service.entity.Person;
 import kr.proten.pms.person.service.entity.PersonFixtures;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +38,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * 인력 등록·비활성 유스케이스 단위 테스트 — AC E2-1·E2-3~E2-5.
@@ -88,6 +92,23 @@ class PersonCommandTest {
                 personRefFactory,
                 personAuditRecorder,
                 assignmentCountPort);
+    }
+
+    @Test
+    @DisplayName("E2-2 — version이 어긋나면 409 STALE_VERSION이고 아무것도 바뀌지 않는다")
+    void update_staleVersion_isRejected() {
+        // Given: 두 관리자가 같은 사람을 동시에 열어 두는 화면이라 마지막 쓰기가
+        //        조용히 이기면 앞사람의 변경이 흔적 없이 사라진다 (§7 동시성 규약)
+        givenManageOrg(true);
+        Person target = givenActivePerson(TARGET_ID, "팀원");
+        ReflectionTestUtils.setField(target, "version", 3L);
+
+        // When · Then
+        assertThatExceptionOfType(StaleVersionException.class)
+                .isThrownBy(() -> service.update(ADMIN_ID, new UpdatePersonCommand(
+                        TARGET_ID, "바뀐이름", PersonFixtures.SI_TEAM_ID, 1L, 4L, 2L)));
+        assertThat(target.getName()).isEqualTo("팀원");
+        verify(personAuditRecorder, never()).personChanged(anyLong(), any(), any());
     }
 
     @Test

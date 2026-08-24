@@ -1,10 +1,10 @@
 package kr.proten.pms.person.service;
 
 import java.util.List;
-import kr.proten.pms.person.PersonRef;
 import kr.proten.pms.person.service.dto.CreatePersonCommand;
 import kr.proten.pms.person.service.dto.MeView;
 import kr.proten.pms.person.service.dto.OrgUnitMoveResult;
+import kr.proten.pms.person.service.dto.PersonSummary;
 import kr.proten.pms.person.service.dto.UpdatePersonCommand;
 
 /**
@@ -25,10 +25,10 @@ import kr.proten.pms.person.service.dto.UpdatePersonCommand;
 public interface PersonService {
 
     /** 가시성 범위 내 인원 목록 — 시스템 계정·비활성 인원은 제외한다. */
-    List<PersonRef> listVisible(long callerPersonId);
+    List<PersonSummary> listVisible(long callerPersonId);
 
     /** 인원 단건 조회 — 노출 대상이 아닌 인원과 가시성 밖 인원은 같은 404다. */
-    PersonRef getPerson(long callerPersonId, long personId);
+    PersonSummary getPerson(long callerPersonId, long personId);
 
     /**
      * 화자 자신의 신원과 권한 그룹 플래그 (AC H1-1 · MCP `whoami`와 같은 서비스).
@@ -37,13 +37,13 @@ public interface PersonService {
     MeView me(long callerPersonId);
 
     /** 인원을 등록하고 로그인 계정을 함께 만든다 (AC E2-1). */
-    PersonRef create(long callerPersonId, CreatePersonCommand command);
+    PersonSummary create(long callerPersonId, CreatePersonCommand command);
 
     /**
      * 인원 정보를 수정한다 (AC E2-2) — 이름·소속·직급·권한 그룹.
      * 시스템 계정은 `422 IMMUTABLE_ACCOUNT`다 (E2-5 — 수정도 삭제와 같이 막힌다).
      */
-    PersonRef update(long callerPersonId, UpdatePersonCommand command);
+    PersonSummary update(long callerPersonId, UpdatePersonCommand command);
 
     /**
      * 소속 조직만 옮긴다 (AC E1-1) — 가시성이 즉시 따라 바뀐다.

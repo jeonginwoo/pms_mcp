@@ -3,24 +3,27 @@ package kr.proten.pms.person.service.impl;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import kr.proten.pms.common.exception.ConflictException;
 import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.NotFoundException;
 import kr.proten.pms.common.exception.UnprocessableException;
 import kr.proten.pms.common.exception.ValidationException;
 import kr.proten.pms.person.repository.PersonRepository;
-import kr.proten.pms.person.service.entity.VisibilityScope;
 import kr.proten.pms.person.repository.PermissionGroupRepository;
 import kr.proten.pms.person.service.PermissionGroupService;
 import kr.proten.pms.person.service.dto.PermissionGroupCommand;
 import kr.proten.pms.person.service.dto.PermissionGroupDetail;
-import kr.proten.pms.person.service.dto.ReferenceItem;
 import kr.proten.pms.person.service.entity.PermissionGroup;
+import kr.proten.pms.person.service.entity.VisibilityScope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 권한 그룹 관리 — 목록은 동작하고 등록·수정·삭제는 아직 골격이다 (2026-08-22).
+ * 권한 그룹 관리 — 조회·등록·수정·삭제 전량 실구현 (US-E5. 골격은 2026-08-24에 걷혔다).
+ *
+ * 목록이 `ReferenceItem`이 아니라 `PermissionGroupDetail`인 것은 2026-08-24 변경이다:
+ * 부록 A의 권한 그룹 행(n명·가시성·기능 토글·수정·삭제)을 그리려면 id·이름으로는 부족하다.
  *
  * 쓰기에서 이미 정해져 있는 것:
  * - `systemFixed` 그룹은 수정·삭제 둘 다 `422 IMMUTABLE_GROUP`(E5-3) — 관리자 그룹이
@@ -55,12 +58,14 @@ public class PermissionGroupServiceImpl implements PermissionGroupService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ReferenceItem> list(long callerPersonId) {
+    public List<PermissionGroupDetail> list(long callerPersonId) {
         orgManagePermission.require(callerPersonId);
+
+        Map<Long, Long> members = memberCounts();
 
         return permissionGroupRepository.findAll().stream()
                 .sorted(Comparator.comparing(PermissionGroup::getId))
-                .map(group -> new ReferenceItem(group.getId(), group.getName()))
+                .map(group -> detailOf(group, members.getOrDefault(group.getId(), 0L)))
                 .toList();
     }
 
@@ -89,6 +94,8 @@ public class PermissionGroupServiceImpl implements PermissionGroupService {
         orgManagePermission.require(callerPersonId);
 
         PermissionGroup group = requireEditable(command.groupId());
+        // 2026-08-24 결함 수정 — 받아만 두고 검사하지 않던 version이다(PersonServiceImpl 참조)
+        group.requireVersion(command.version());
         Map<String, Object> before = auditRecorder.snapshot(group);
         group.update(
                 name(command.name()),
@@ -97,11 +104,12 @@ public class PermissionGroupServiceImpl implements PermissionGroupService {
                 command.manageContracts(),
                 command.manageAllProjects(),
                 command.manageOrg());
-        auditRecorder.permissionGroupChanged(callerPersonId, group, before);
+        PermissionGroup saved = permissionGroupRepository.saveAndFlush(group);
+        auditRecorder.permissionGroupChanged(callerPersonId, saved, before);
 
         // 판정·가시성·404 은닉은 저장된 값이 아니라 이 그룹을 읽어 정해지므로
         // 다음 요청부터 새 정의를 탄다 (E5-2)
-        return detailOf(group);
+        return detailOf(saved);
     }
 
     @Override
@@ -170,7 +178,17 @@ public class PermissionGroupServiceImpl implements PermissionGroupService {
                 "가시성 범위는 COMPANY/DIVISION/TEAM/SELF 중 하나여야 합니다");
     }
 
-    private static PermissionGroupDetail detailOf(PermissionGroup group) {
+    /** 그룹별 인원 수 — 목록에서 행마다 세지 않으려고 한 번에 묶어 받는다. */
+    private Map<Long, Long> memberCounts() {
+        return personRepository.countByGroup().stream()
+                .collect(Collectors.toMap(row -> (Long) row[0], row -> (Long) row[1]));
+    }
+
+    private PermissionGroupDetail detailOf(PermissionGroup group) {
+        return detailOf(group, personRepository.countByGroupId(group.getId()));
+    }
+
+    private static PermissionGroupDetail detailOf(PermissionGroup group, long memberCount) {
         return new PermissionGroupDetail(
                 group.getId(),
                 group.getName(),
@@ -180,6 +198,7 @@ public class PermissionGroupServiceImpl implements PermissionGroupService {
                 group.isManageAllProjects(),
                 group.isManageOrg(),
                 group.isSystemFixed(),
+                memberCount,
                 group.getVersion());
     }
 

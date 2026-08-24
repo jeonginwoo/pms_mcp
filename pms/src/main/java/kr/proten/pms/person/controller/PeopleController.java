@@ -4,12 +4,12 @@ import jakarta.validation.Valid;
 import java.util.List;
 import kr.proten.pms.common.config.CallerPersonId;
 import kr.proten.pms.common.web.ApiResponse;
-import kr.proten.pms.person.PersonRef;
 import kr.proten.pms.person.controller.dto.CreatePersonRequest;
 import kr.proten.pms.person.controller.dto.MoveOrgUnitRequest;
 import kr.proten.pms.person.controller.dto.UpdatePersonRequest;
 import kr.proten.pms.person.service.PersonService;
 import kr.proten.pms.person.service.dto.OrgUnitMoveResult;
+import kr.proten.pms.person.service.dto.PersonSummary;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,14 +40,14 @@ class PeopleController {
     /** 인력 등록 (AC E2-1) — 로그인 계정도 함께 만들어진다. */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    ApiResponse<PersonRef> create(
+    ApiResponse<PersonSummary> create(
             @CallerPersonId long callerPersonId,
             @Valid @RequestBody CreatePersonRequest request) {
         return ApiResponse.ok(personService.create(callerPersonId, request.toCommand()));
     }
 
     @GetMapping
-    ApiResponse<List<PersonRef>> list(@CallerPersonId long callerPersonId) {
+    ApiResponse<List<PersonSummary>> list(@CallerPersonId long callerPersonId) {
         return ApiResponse.ok(personService.listVisible(callerPersonId));
     }
 
@@ -57,13 +57,13 @@ class PeopleController {
      * 화면 대응 최소 GET을 추가한다(모듈 내부 라우트 — 협업 접점 아님).
      */
     @GetMapping("/{personId}")
-    ApiResponse<PersonRef> get(@CallerPersonId long callerPersonId, @PathVariable long personId) {
+    ApiResponse<PersonSummary> get(@CallerPersonId long callerPersonId, @PathVariable long personId) {
         return ApiResponse.ok(personService.getPerson(callerPersonId, personId));
     }
 
     /** 인력 수정 (AC E2-2) — 권한 그룹 부여도 이 경로다(그룹은 사람의 속성이다). */
     @PutMapping("/{personId}")
-    ApiResponse<PersonRef> update(
+    ApiResponse<PersonSummary> update(
             @CallerPersonId long callerPersonId,
             @PathVariable long personId,
             @Valid @RequestBody UpdatePersonRequest request) {

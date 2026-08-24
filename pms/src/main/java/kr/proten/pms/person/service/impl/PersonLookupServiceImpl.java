@@ -59,9 +59,13 @@ public class PersonLookupServiceImpl implements PersonLookupService {
 
     @Override
     public List<PersonRef> search(long callerPersonId, String name, String team) {
+        // 화면 뷰(PersonSummary)를 루트 계약(PersonRef)으로 좁혀 내보낸다 — 도구 응답에
+        // 편집용 id·version이 실리지 않게 한다(구현_노트 §5 "도구 응답은 화면 응답이 아니다").
         return personService.listVisible(callerPersonId).stream()
                 .filter(person -> matches(person.name(), name))
                 .filter(person -> matches(person.orgUnit(), team))
+                .map(person -> new PersonRef(person.id(), person.name(), person.orgUnit(),
+                        person.division(), person.grade()))
                 .toList();
     }
 

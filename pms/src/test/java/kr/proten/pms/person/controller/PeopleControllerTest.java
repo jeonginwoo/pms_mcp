@@ -10,7 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.List;
 import kr.proten.pms.common.exception.NotFoundException;
-import kr.proten.pms.person.PersonRef;
+import kr.proten.pms.person.service.dto.PersonSummary;
 import kr.proten.pms.person.service.PersonService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,8 +37,8 @@ class PeopleControllerTest {
     @DisplayName("목록 — 호출자 헤더의 personId로 서비스에 위임한다")
     void list_delegatesWithCallerFromHeader() throws Exception {
         when(personService.listVisible(102L)).thenReturn(List.of(
-                new PersonRef(102L, "팀장", "SI팀", "SI부문", "수석"),
-                new PersonRef(103L, "팀원", "SI팀", "SI부문", "주임")));
+                new PersonSummary(102L, "팀장", "SI팀", "SI부문", "수석", 3L, 1L, 2L, 0L),
+                new PersonSummary(103L, "팀원", "SI팀", "SI부문", "주임", 3L, 2L, 3L, 0L)));
 
         mockMvc.perform(get("/api/people").header(CALLER_HEADER, "102"))
                 .andExpect(status().isOk())
@@ -51,7 +51,7 @@ class PeopleControllerTest {
     @DisplayName("단건 — 경로 변수와 호출자를 함께 넘긴다")
     void get_passesPathVariableAndCaller() throws Exception {
         when(personService.getPerson(102L, 103L))
-                .thenReturn(new PersonRef(103L, "팀원", "SI팀", "SI부문", "주임"));
+                .thenReturn(new PersonSummary(103L, "팀원", "SI팀", "SI부문", "주임", 3L, 2L, 3L, 0L));
 
         mockMvc.perform(get("/api/people/103").header(CALLER_HEADER, "102"))
                 .andExpect(status().isOk())

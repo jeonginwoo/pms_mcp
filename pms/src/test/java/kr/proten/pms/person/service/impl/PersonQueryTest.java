@@ -14,7 +14,7 @@ import kr.proten.pms.person.AccountPort;
 import kr.proten.pms.person.OrgPermissionService;
 import kr.proten.pms.person.OrgVisibility;
 import kr.proten.pms.person.OrgVisibilityService;
-import kr.proten.pms.person.PersonRef;
+import kr.proten.pms.person.service.dto.PersonSummary;
 import kr.proten.pms.person.repository.GradeRepository;
 import kr.proten.pms.person.repository.OrgUnitRepository;
 import kr.proten.pms.person.repository.PermissionGroupRepository;
@@ -88,12 +88,34 @@ class PersonQueryTest {
         givenNameTables();
 
         // When
-        List<PersonRef> people = service.listVisible(102L);
+        List<PersonSummary> people = service.listVisible(102L);
 
         // Then
-        assertThat(people).map(PersonRef::name).containsExactly("팀장", "팀원");
+        assertThat(people).map(PersonSummary::name).containsExactly("팀장", "팀원");
         assertThat(people.getFirst().orgUnit()).isEqualTo("SI팀");
         assertThat(people.getFirst().grade()).isEqualTo("수석");
+    }
+
+    @Test
+    @DisplayName("목록 — 수정 폼이 필요로 하는 id·version을 함께 싣는다 (E2-2의 전제)")
+    void listVisible_carriesEditableIdsAndVersion() {
+        // Given: §7에 인원 상세 라우트가 없어 이 목록이 곧 사용자 관리 화면의 원천이다
+        when(orgVisibilityService.visibilityOf(102L))
+                .thenReturn(OrgVisibility.of(102L, Set.of(103L)));
+        when(personRepository.findByIdInAndActiveTrueAndSystemFalseOrderByIdAsc(
+                Set.of(102L, 103L)))
+                .thenReturn(List.of(
+                        PersonFixtures.person(103L, "팀원", PersonFixtures.SI_TEAM_ID, 4L)));
+        givenNameTables();
+
+        // When
+        PersonSummary person = service.listVisible(102L).getFirst();
+
+        // Then — 이름만으로는 PUT /api/people/{id}를 채울 수 없다
+        assertThat(person.orgUnitId()).isEqualTo(PersonFixtures.SI_TEAM_ID);
+        assertThat(person.gradeId()).isEqualTo(1L);
+        assertThat(person.groupId()).isEqualTo(4L);
+        assertThat(person.version()).isZero();
     }
 
     @Test
@@ -107,10 +129,10 @@ class PersonQueryTest {
         givenNameTables();
 
         // When
-        List<PersonRef> people = service.listVisible(1L);
+        List<PersonSummary> people = service.listVisible(1L);
 
         // Then
-        assertThat(people).map(PersonRef::name).containsExactly("타부문원");
+        assertThat(people).map(PersonSummary::name).containsExactly("타부문원");
     }
 
     @Test
@@ -124,7 +146,7 @@ class PersonQueryTest {
         givenNameTables();
 
         // When
-        PersonRef found = service.getPerson(102L, 103L);
+        PersonSummary found = service.getPerson(102L, 103L);
 
         // Then
         assertThat(found.id()).isEqualTo(103L);

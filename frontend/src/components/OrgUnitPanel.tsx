@@ -3,15 +3,20 @@
  *
  * 삭제 가능 여부(`deletable`)는 서버가 판정해 준 값을 그대로 쓴다 — "빈 노드만 삭제"
  * 규칙을 화면이 다시 구현하지 않는다. 신설(E3-1)은 상위 조직을 골라 만든다 —
- * 회사(root)는 하나뿐이라 상위 없는 생성은 서버가 거절한다. 이름 변경(E3-2)은 아직 없다.
+ * 회사(root)는 하나뿐이라 상위 없는 생성은 서버가 거절한다.
+ *
+ * 개명(E3-2, 2026-08-24 추가)은 **그 자리에서 고친다**: 이름 하나를 바꾸려고 모달을
+ * 여는 것은 과하고, 소속 인원·프로젝트의 표시는 참조라 저절로 따라온다. 같은 부모
+ * 밑의 동명은 서버가 막지 않는다 — AC에 없는 규칙이라 화면도 막지 않는다.
  */
 import { useState } from 'react'
 import { useStore } from '../store'
 import { Empty, ErrorText } from './ui'
 
 export default function OrgUnitPanel() {
-  const { orgUnits, createOrgUnit, deleteOrgUnit, showToast } = useStore()
+  const { orgUnits, createOrgUnit, renameOrgUnit, deleteOrgUnit, showToast } = useStore()
   const [pending, setPending] = useState<number | null>(null)
+  const [renaming, setRenaming] = useState<{ id: number; name: string } | null>(null)
   const [adding, setAdding] = useState(false)
   const [form, setForm] = useState({ parentId: '', name: '' })
   const [error, setError] = useState<{ code: string; message: string } | null>(null)
@@ -39,6 +44,26 @@ export default function OrgUnitPanel() {
     if (result.ok) {
       setError(null)
       showToast(`${name}을(를) 삭제했습니다`)
+
+      return
+    }
+
+    setError({ code: result.error.code, message: result.error.message })
+  }
+
+  const runRename = async () => {
+    if (!renaming || renaming.name.trim() === '') {
+      return
+    }
+
+    setBusy(true)
+    const result = await renameOrgUnit(renaming.id, renaming.name.trim())
+    setBusy(false)
+
+    if (result.ok) {
+      setError(null)
+      setRenaming(null)
+      showToast(`${result.value.name}(으)로 이름을 바꿨습니다`)
 
       return
     }
@@ -107,28 +132,50 @@ export default function OrgUnitPanel() {
 
       {orgUnits.map((unit) => (
         <div key={unit.id} className="trow"
-          style={{ gridTemplateColumns: 'minmax(0,1fr) 54px 56px', gap: 6, padding: '8px 2px' }}>
-          <span style={{ paddingLeft: depthOf(unit.parentId) * 12, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {unit.name}
-          </span>
+          style={{ gridTemplateColumns: 'minmax(0,1fr) 46px 96px', gap: 6, padding: '8px 2px' }}>
+          {renaming?.id === unit.id ? (
+            <input value={renaming.name} autoFocus disabled={busy}
+              onChange={(e) => setRenaming({ id: unit.id, name: e.target.value })}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') { void runRename() }
+                if (e.key === 'Escape') { setRenaming(null) }
+              }}
+              style={{ marginLeft: depthOf(unit.parentId) * 12, fontSize: 12.5, padding: '4px 7px', borderRadius: 6 }} />
+          ) : (
+            <span style={{ paddingLeft: depthOf(unit.parentId) * 12, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {unit.name}
+            </span>
+          )}
           <span className="muted2" style={{ fontSize: 11.5, textAlign: 'right' }}>
             {unit.memberCount}명
           </span>
-          {pending === unit.id ? (
+          {renaming?.id === unit.id ? (
+            <span style={{ display: 'flex', gap: 4 }}>
+              <button className="btn btn-primary btn-sm" disabled={busy}
+                onClick={() => void runRename()}>저장</button>
+              <button className="btn btn-ghost btn-sm" onClick={() => setRenaming(null)}>취소</button>
+            </span>
+          ) : pending === unit.id ? (
             <span style={{ display: 'flex', gap: 4 }}>
               <button className="btn btn-danger btn-sm"
                 onClick={() => void runDelete(unit.id, unit.name)}>확인</button>
               <button className="btn btn-ghost btn-sm" onClick={() => setPending(null)}>취소</button>
             </span>
           ) : (
-            <button className="btn btn-danger-ghost btn-sm" disabled={!unit.deletable}
-              title={unit.deletable
-                ? '빈 노드 삭제'
-                : `소속 인원 ${unit.memberCount}명 · 하위 조직 ${unit.childCount}개가 있어 삭제할 수 없습니다`}
-              style={{ opacity: unit.deletable ? 1 : .35 }}
-              onClick={() => { setPending(unit.id); setError(null) }}>
-              삭제
-            </button>
+            <span style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+              <button className="btn btn-ghost btn-sm" title="이름 변경 (E3-2)"
+                onClick={() => { setRenaming({ id: unit.id, name: unit.name }); setError(null) }}>
+                개명
+              </button>
+              <button className="btn btn-danger-ghost btn-sm" disabled={!unit.deletable}
+                title={unit.deletable
+                  ? '빈 노드 삭제'
+                  : `소속 인원 ${unit.memberCount}명 · 하위 조직 ${unit.childCount}개가 있어 삭제할 수 없습니다`}
+                style={{ opacity: unit.deletable ? 1 : .35 }}
+                onClick={() => { setPending(unit.id); setError(null) }}>
+                삭제
+              </button>
+            </span>
           )}
         </div>
       ))}

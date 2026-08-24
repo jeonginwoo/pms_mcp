@@ -7,7 +7,6 @@ import kr.proten.pms.common.web.ApiResponse;
 import kr.proten.pms.person.controller.dto.PermissionGroupRequest;
 import kr.proten.pms.person.service.PermissionGroupService;
 import kr.proten.pms.person.service.dto.PermissionGroupDetail;
-import kr.proten.pms.person.service.dto.ReferenceItem;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,7 +34,7 @@ class PermissionGroupController {
     }
 
     @GetMapping
-    ApiResponse<List<ReferenceItem>> list(@CallerPersonId long callerPersonId) {
+    ApiResponse<List<PermissionGroupDetail>> list(@CallerPersonId long callerPersonId) {
         return ApiResponse.ok(permissionGroupService.list(callerPersonId));
     }
 

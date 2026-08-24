@@ -3,7 +3,6 @@ package kr.proten.pms.person.service;
 import java.util.List;
 import kr.proten.pms.person.service.dto.PermissionGroupCommand;
 import kr.proten.pms.person.service.dto.PermissionGroupDetail;
-import kr.proten.pms.person.service.dto.ReferenceItem;
 
 /**
  * 권한 그룹 관리 유스케이스 — US-E5 (2026-08-09 ⑦ 채택. 규칙 원본은 상위 PRD §4-3).
@@ -15,7 +14,7 @@ import kr.proten.pms.person.service.dto.ReferenceItem;
 public interface PermissionGroupService {
 
     /** 선택 목록 — 인력 등록 폼이 고를 그룹들. 관리 화면과 같은 판정을 거친다. */
-    List<ReferenceItem> list(long callerPersonId);
+    List<PermissionGroupDetail> list(long callerPersonId);
 
     /** 그룹을 만든다 (AC E5-1). */
     PermissionGroupDetail create(long callerPersonId, PermissionGroupCommand command);

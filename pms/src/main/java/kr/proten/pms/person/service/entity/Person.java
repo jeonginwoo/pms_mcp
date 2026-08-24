@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import kr.proten.pms.common.exception.StaleVersionException;
 
 /**
  * 사람 — 조직·직급·권한 그룹 소속과 가동률 속성 (PRD-pms §4).
@@ -145,6 +146,17 @@ public class Person {
 
     public boolean isActive() {
         return active;
+    }
+
+    /**
+     * 낙관적 락 검사 (AC E2-2) — 최신 version을 알려 재조회 후 재시도하게 한다.
+     * 관리 화면은 여러 관리자가 같은 행을 열어 두는 자리라 마지막 쓰기가 조용히
+     * 이기면 앞사람의 변경이 흔적 없이 사라진다 (§7 동시성 규약).
+     */
+    public void requireVersion(long expected) {
+        if (version != expected) {
+            throw new StaleVersionException("최신 인원 version " + version);
+        }
     }
 
     public long getVersion() {
