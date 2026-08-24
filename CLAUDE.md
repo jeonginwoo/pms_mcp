@@ -89,11 +89,22 @@ bash scripts/verify.sh [host|pms] [--quick]
                          #  cd pms-mcp-mock && ./gradlew printTestTokens)
 
 (cd host && ./gradlew bootRun)
-                         # AI host app on http://localhost:8081 (B2-3) — targets
-                         # the mock via pms.mcp.base-url; real LLM runs need an
-                         # Anthropic API key (host/application-local.yml, gitignored,
-                         # or ANTHROPIC_API_KEY env var — env wins). Chat:
-                         # POST /chat {"message": ...} with Authorization: Bearer <test JWT>
+                         # AI host app on http://localhost:8081 — targets the REAL
+                         # pms /mcp (8080) since 2026-08-24. To aim it at the mock
+                         # instead: --args='--pms.mcp.base-url=http://localhost:8090'.
+                         # Real LLM runs need an Anthropic API key
+                         # (host/application-local.yml, gitignored, or
+                         # ANTHROPIC_API_KEY env var — env wins). Chat:
+                         # POST /chat {"message": ...} with Authorization: Bearer <token>
+                         # (real server = a login access token, see pms-token.sh below)
+
+bash host/scripts/pms-token.sh <personId|email>
+                         # mint a real login access token for /mcp and /chat
+                         # (email + password come from reference/seed/; pms mints a
+                         #  fresh signing key each boot, so re-run after a restart)
+
+(cd host && ./gradlew test -Dpms.real.e2e=true)
+                         # host↔real pms /mcp through-line IT (pms must be running)
 
 (cd host && ./gradlew test -Dpms.mcp.e2e=true)
                          # host↔mock MCP through-line IT (mock must be running)

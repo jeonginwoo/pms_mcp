@@ -31,6 +31,8 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
-    // 관통 IT(McpConnectivityIT)는 목업(8090) 기동 후 -Dpms.mcp.e2e=true 로 opt-in
+    // 관통 IT는 둘 다 서버 기동을 전제하므로 opt-in이다 — 켜지 않으면 스킵된다.
+    // 목업(8090) → McpConnectivityIT · 실 pms(8080) → RealPmsConnectivityIT
     systemProperty 'pms.mcp.e2e', System.getProperty('pms.mcp.e2e', 'false')
+    systemProperty 'pms.real.e2e', System.getProperty('pms.real.e2e', 'false')
 }
