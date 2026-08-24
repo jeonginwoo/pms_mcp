@@ -63,6 +63,9 @@ class ProjectEditTest {
 
     private ProjectCommandServiceImpl service;
 
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher events;
+
     @BeforeEach
     void setUp() {
         service = new ProjectCommandServiceImpl(
@@ -74,7 +77,9 @@ class ProjectEditTest {
                 orgPermissionService,
                 new AssignmentFactory(),
                 projectAuditRecorder,
-                projectViewFactory);
+                projectViewFactory,
+                java.time.Clock.systemUTC(),
+                events);
     }
 
     @Test

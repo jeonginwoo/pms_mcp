@@ -1,6 +1,9 @@
 package kr.proten.pms.person.service.impl;
 
+import java.util.List;
 import kr.proten.pms.person.OrgPermission;
+import kr.proten.pms.person.repository.PersonRepository;
+import kr.proten.pms.person.service.entity.Person;
 import kr.proten.pms.person.OrgPermissionService;
 import kr.proten.pms.person.service.entity.PermissionGroup;
 import kr.proten.pms.person.service.impl.requester.RequesterResolver;
@@ -19,15 +22,42 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class OrgPermissionServiceImpl implements OrgPermissionService {
     private final RequesterResolver requesterResolver;
+    private final PersonRepository personRepository;
 
-    public OrgPermissionServiceImpl(RequesterResolver requesterResolver) {
+    public OrgPermissionServiceImpl(
+            RequesterResolver requesterResolver, PersonRepository personRepository) {
         this.requesterResolver = requesterResolver;
+        this.personRepository = personRepository;
     }
 
     @Override
     public boolean has(long callerPersonId, OrgPermission permission) {
-        PermissionGroup group = requesterResolver.resolve(callerPersonId).group();
+        return granted(requesterResolver.resolve(callerPersonId).group(), permission);
+    }
 
+    @Override
+    public List<Long> findColleaguesWith(long personId, OrgPermission permission) {
+        Person target = personRepository.findByIdAndActiveTrue(personId).orElse(null);
+
+        if (target == null) {
+            // 없는·비활성 인원의 동료를 묻는 것은 답이 없는 질문이다 — 예외 대신 빈 목록.
+            // 호출자(알림 적재)는 "보낼 사람이 없다"와 같은 처리를 하면 된다
+            return List.of();
+        }
+
+        return personRepository.findByOrgUnitIdAndActiveTrue(target.getOrgUnitId()).stream()
+                .filter(colleague -> !colleague.getId().equals(target.getId()))
+                .filter(colleague -> !colleague.isSystem())
+                .filter(colleague -> granted(groupOf(colleague), permission))
+                .map(Person::getId)
+                .toList();
+    }
+
+    private PermissionGroup groupOf(Person person) {
+        return requesterResolver.resolve(person.getId()).group();
+    }
+
+    private static boolean granted(PermissionGroup group, OrgPermission permission) {
         return switch (permission) {
             case CREATE_PROJECT -> group.isCreateProject();
             case MANAGE_CONTRACTS -> group.isManageContracts();

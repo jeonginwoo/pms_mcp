@@ -35,6 +35,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * 프로젝트 생성 유스케이스 단위 테스트 — AC A1-1~A1-6.
@@ -66,6 +67,9 @@ class ProjectCommandServiceImplTest {
 
     private ProjectCommandServiceImpl service;
 
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher events;
+
     @BeforeEach
     void setUp() {
         // 배정 생성기는 순수 변환이라 실물을 쓴다 — 기본값 채움(A1-4)까지 함께 검증된다
@@ -78,7 +82,9 @@ class ProjectCommandServiceImplTest {
                 orgPermissionService,
                 new AssignmentFactory(),
                 projectAuditRecorder,
-                projectViewFactory);
+                projectViewFactory,
+                java.time.Clock.systemUTC(),
+                events);
     }
 
     @Test
@@ -267,7 +273,10 @@ class ProjectCommandServiceImplTest {
 
     /** 저장 결과 표현은 ProjectViewFactory의 몫이므로 여기서는 저장 인자만 되돌려준다. */
     private void givenSaveEchoesArgument() {
-        when(projectRepository.save(any(Project.class))).thenAnswer(call -> call.getArgument(0));
+        // 저장된 프로젝트에는 id가 있다 — 실제 저장이 채우는 값이고, 이제 배정 이벤트가
+        // 그것을 읽는다(§8). 목이 null id를 돌려주면 실물에 없는 실패가 만들어진다
+        when(projectRepository.save(any(Project.class))).thenAnswer(call ->
+                saved(call.getArgument(0)));
         when(assignmentRepository.saveAll(anyCollection()))
                 .thenAnswer(call -> List.copyOf(call.getArgument(0)));
     }
@@ -285,5 +294,16 @@ class ProjectCommandServiceImplTest {
         verify(assignmentRepository).saveAll(captor.capture());
 
         return captor.getValue();
+    }
+
+    /**
+     * 저장된 프로젝트에는 id가 있다 — 실제 저장이 채우는 값이고, 이제 배정 이벤트가
+     * 그것을 읽는다(§8 {@code MemberAssignedToProject}). 목이 null id를 돌려주면 실물에는
+     * 없는 실패가 만들어진다. 엔티티에 세터가 없으므로(도메인 모델) 리플렉션으로 채운다.
+     */
+    private static Project saved(Project project) {
+        ReflectionTestUtils.setField(project, "id", 1_000L);
+
+        return project;
     }
 }

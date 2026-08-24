@@ -2,6 +2,7 @@ package kr.proten.pms.project.service.impl;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.Map;
 import kr.proten.pms.common.exception.ConflictException;
 import kr.proten.pms.common.exception.ErrorCode;
@@ -16,8 +17,10 @@ import kr.proten.pms.project.service.dto.UpdateAssignmentCommand;
 import kr.proten.pms.project.service.entity.AssignmentStatus;
 import kr.proten.pms.project.service.entity.Project;
 import kr.proten.pms.project.service.entity.ProjectAction;
+import kr.proten.pms.project.AssignmentChanged;
 import kr.proten.pms.project.service.entity.ProjectAssignment;
 import kr.proten.pms.project.service.entity.ProjectRole;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +46,7 @@ public class AssignmentServiceImpl implements AssignmentService {
     private final ProjectAuditRecorder projectAuditRecorder;
     private final ProjectViewFactory projectViewFactory;
     private final Clock clock;
+    private final ApplicationEventPublisher events;
 
     public AssignmentServiceImpl(
             ProjectAssignmentRepository assignmentRepository,
@@ -52,7 +56,8 @@ public class AssignmentServiceImpl implements AssignmentService {
             AssignmentFactory assignmentFactory,
             ProjectAuditRecorder projectAuditRecorder,
             ProjectViewFactory projectViewFactory,
-            Clock clock) {
+            Clock clock,
+            ApplicationEventPublisher events) {
         this.assignmentRepository = assignmentRepository;
         this.projectVisibilityService = projectVisibilityService;
         this.projectActionPermission = projectActionPermission;
@@ -61,6 +66,7 @@ public class AssignmentServiceImpl implements AssignmentService {
         this.projectAuditRecorder = projectAuditRecorder;
         this.projectViewFactory = projectViewFactory;
         this.clock = clock;
+        this.events = events;
     }
 
     public AssignmentView assign(long callerPersonId, CreateAssignmentCommand command) {
@@ -74,6 +80,7 @@ public class AssignmentServiceImpl implements AssignmentService {
         ProjectAssignment saved =
                 assignmentRepository.save(assignmentFactory.create(project, command.toSpec()));
         projectAuditRecorder.assignmentCreated(callerPersonId, saved);
+        publish(AssignmentChanged.Kind.ASSIGNED, project, saved);
 
         return projectViewFactory.toView(saved);
     }
@@ -89,6 +96,7 @@ public class AssignmentServiceImpl implements AssignmentService {
         assignment.reschedule(command.startDate(), command.endDate(), command.monthlyMm());
         ProjectAssignment saved = assignmentRepository.saveAndFlush(assignment);
         projectAuditRecorder.assignmentChanged(callerPersonId, saved, before);
+        publish(AssignmentChanged.Kind.UPDATED, null, saved);
 
         return projectViewFactory.toView(saved);
     }
@@ -102,6 +110,27 @@ public class AssignmentServiceImpl implements AssignmentService {
         assignment.close(LocalDate.now(clock));
         ProjectAssignment saved = assignmentRepository.saveAndFlush(assignment);
         projectAuditRecorder.assignmentClosed(callerPersonId, saved, before);
+        publish(AssignmentChanged.Kind.CLOSED, null, saved);
+    }
+
+    /**
+     * 배정 변경을 알린다 (§8) — 구독자는 resource(가동률 재계산)와 notification(배정 알림)이다.
+     *
+     * <p>발행은 <b>감사 기록 뒤, 트랜잭션 안</b>이다: 구독자가 커밋 후에 도므로
+     * ({@code @ApplicationModuleListener}) 롤백되면 이벤트도 없던 일이 된다 —
+     * 일어나지 않은 변경으로 알림이 나가지 않는다.
+     *
+     * <p>프로젝트 이름은 알림 문구에 쓴다. 수정·종료 경로는 프로젝트를 이미 로드하지
+     * 않았으므로 저장소를 한 번 더 치지 않고 비운다 — 그 두 종류는 알림을 만들지 않는다.
+     */
+    private void publish(AssignmentChanged.Kind kind, Project project, ProjectAssignment saved) {
+        events.publishEvent(new AssignmentChanged(
+                kind,
+                saved.getProjectId(),
+                project == null ? null : project.getName(),
+                saved.getPersonId(),
+                AssignmentChanged.monthsOf(saved.getStartDate(), saved.getEndDate(),
+                        YearMonth.now(clock))));
     }
 
     /** 배정 부재와 가시성 밖 프로젝트의 배정은 같은 404다 (은닉 — A3-2와 같은 의미론). */

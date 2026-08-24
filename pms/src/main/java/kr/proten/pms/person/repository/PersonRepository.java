@@ -41,6 +41,9 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
     List<Person> findByNameAndActiveTrue(String name);
 
     /** 조직 노드 삭제 가능 판정 (AC E3-3) — 빈 노드만 지울 수 있다. */
+    /** 같은 조직의 활성 인원 (AC F1-1 수신자 후보 — 플래그 판정은 서비스가 한다). */
+    List<Person> findByOrgUnitIdAndActiveTrue(Long orgUnitId);
+
     long countByOrgUnitIdAndActiveTrue(Long orgUnitId);
 
     /**
