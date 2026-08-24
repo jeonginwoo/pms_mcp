@@ -3,6 +3,7 @@ package kr.proten.pms;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+import java.time.YearMonth;
 import java.util.List;
 import kr.proten.pms.common.exception.ValidationException;
 import kr.proten.pms.maintenance.ContractBrief;
@@ -14,6 +15,10 @@ import kr.proten.pms.person.WorkforceDirectoryService;
 import kr.proten.pms.person.WorkforceProfile;
 import kr.proten.pms.person.repository.PersonRepository;
 import kr.proten.pms.person.service.entity.Person;
+import kr.proten.pms.resource.OverbookedBrief;
+import kr.proten.pms.resource.UtilizationBrief;
+import kr.proten.pms.resource.UtilizationLookupService;
+import kr.proten.pms.resource.UtilizationScope;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +38,14 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @SpringBootTest(properties = "pms.seed.path=../reference/seed")
 @Testcontainers
 class DomainRootContractsIntegrationTest {
+    private static final YearMonth MONTH = YearMonth.of(2026, 8);
+    /** 박재완 — 시드에서 유일한 관리자(COMPANY scope) 실인원이다. */
+    private static final long COMPANY_SCOPE_CALLER_ID = 1L;
+    /** 윤종헌 — AX사업기획부라 billable=false다(시드 주석). 개인 지정은 그 규칙과 무관하다. */
+    private static final long NON_BILLABLE_PERSON_ID = 7L;
+    /** 이현창 — AX솔루션개발1팀(11) 팀장, 부문은 AX솔루션사업부(5). 팀≠부문인 화자다. */
+    private static final long DELIVERY_TEAM_CALLER_ID = 17L;
+
     @Container
     @ServiceConnection
     static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:17");
@@ -41,6 +54,8 @@ class DomainRootContractsIntegrationTest {
     private MaintenanceLookupService maintenance;
     @Autowired
     private WorkforceDirectoryService workforce;
+    @Autowired
+    private UtilizationLookupService utilization;
     @Autowired
     private MaintenanceSiteRepository siteRepository;
     @Autowired
@@ -134,6 +149,72 @@ class DomainRootContractsIntegrationTest {
         // 챗의 scope=MY_TEAM|DIVISION이 이 id로 subtree를 뽑는다
         assertThat(workforce.findPersonIdsInSubtree(profile.divisionOrgUnitId()))
                 .contains(someone.getId());
+    }
+
+    @Test
+    @DisplayName("get_utilization scope=PERSON — 9필드가 실 시드로 전부 채워진다")
+    void utilizationFillsToolResponse() {
+        // 윤종헌 182%는 개인 지정이라 billable=false와 무관하다(C1-5) — 부록 B 앵커
+        List<UtilizationBrief> found = utilization.find(
+                COMPANY_SCOPE_CALLER_ID, MONTH, UtilizationScope.PERSON, NON_BILLABLE_PERSON_ID);
+
+        assertThat(found).singleElement().satisfies(brief -> {
+            assertThat(brief.personId()).isEqualTo(NON_BILLABLE_PERSON_ID);
+            assertThat(brief.name()).isEqualTo("윤종헌");
+            assertThat(brief.team()).isNotBlank();
+            assertThat(brief.division()).isNotBlank();
+            assertThat(brief.month()).isEqualTo(MONTH);
+            assertThat(brief.assignedMm()).isPositive();
+            assertThat(brief.availableMm()).isPositive();
+            assertThat(Math.round(brief.basicPct())).isEqualTo(182L);
+            assertThat(brief.adjustedPct()).isPositive();
+        });
+    }
+
+    @Test
+    @DisplayName("scope=MY_TEAM·DIVISION — 화자만 주면 서버가 조직을 유도한다(챗 경로)")
+    void scopeIsDerivedFromTheCaller() {
+        // 화자를 딜리버리 조직에서 고르는 것이 이 테스트의 전제다: 전사 화자(박재완)는
+        // 경영관리팀 소속이고 그 팀은 전원 billable=false라 집계가 정당하게 비어,
+        // "유도가 됐는지"를 볼 수 없다(2026-08-24 실측 — 첫 판이 그렇게 실패했다).
+        WorkforceProfile caller =
+                workforce.findProfiles(List.of(DELIVERY_TEAM_CALLER_ID)).getFirst();
+        assertThat(caller.teamOrgUnitId()).isNotEqualTo(caller.divisionOrgUnitId());
+
+        // 웹은 ?orgUnitId=를 받지만 챗은 그 값이 없다 — 이 유도가 없으면 두 scope가 막힌다
+        List<UtilizationBrief> team =
+                utilization.find(DELIVERY_TEAM_CALLER_ID, MONTH, UtilizationScope.MY_TEAM, null);
+        List<UtilizationBrief> division =
+                utilization.find(DELIVERY_TEAM_CALLER_ID, MONTH, UtilizationScope.DIVISION, null);
+
+        // 화자 자신이 자기 팀 집계에 있다 — 엉뚱한 노드를 짚으면 이것부터 깨진다
+        assertThat(team).extracting(UtilizationBrief::personId)
+                .contains(DELIVERY_TEAM_CALLER_ID);
+        // 팀은 부문 subtree 안에 있다. 이 화자는 팀장(TEAM scope)이라 부문 쪽이 가시성으로
+        // 잘려 크기가 같을 수 있다 — 두 id를 뒤바꾸면 안 되는 것은 단위 테스트가 고정한다
+        assertThat(division).extracting(UtilizationBrief::personId)
+                .containsAll(team.stream().map(UtilizationBrief::personId).toList());
+    }
+
+    @Test
+    @DisplayName("list_overbooked — 부록 B 2명과 그 원인 배정이 함께 나온다")
+    void overbookedFillsCauses() {
+        List<OverbookedBrief> overbooked =
+                utilization.findOverbooked(COMPANY_SCOPE_CALLER_ID, MONTH);
+
+        // C1-5로 윤종헌(billable=false)이 빠져 2명이다 — ProjectSeedLoadIntegrationTest와 같은 앵커
+        assertThat(overbooked)
+                .extracting(brief -> "%s %d%%".formatted(brief.name(), Math.round(brief.basicPct())))
+                .containsExactlyInAnyOrder("이현창 191%", "김경민 133%");
+        assertThat(overbooked).allSatisfy(brief -> {
+            assertThat(brief.team()).isNotBlank();
+            // 원인이 비면 "왜 과부하인가"에 답할 수 없다 — 과부하는 배정에서만 나온다
+            assertThat(brief.causes()).isNotEmpty();
+            assertThat(brief.causes()).allSatisfy(cause -> {
+                assertThat(cause.projectName()).isNotBlank();
+                assertThat(cause.mm()).isPositive();
+            });
+        });
     }
 
     private long contractIdOfSite(String siteName) {

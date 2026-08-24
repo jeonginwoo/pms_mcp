@@ -3,7 +3,7 @@
 | 항목 | 내용 |
 |------|------|
 | 문서 | PMS 본체 구현명세 (코딩 에이전트용) · **소유: pms 트랙** |
-| 버전 / 상태 | v2.13 · **확정** (게이트 P 통과 2026-08-09. v2.6 = 가동률 의미 재정의 + 시드 정책 완결(2026-08-10 — MCP 담당 확인 완료). v2.7 = M-1 카탈로그 공백 2건 해소의 PMS 측 반영(2026-08-11 결정 기록, 2026-08-12 MCP 담당 확인 완료 — 양측 합의 성립·host 반영 완료). 이슈→계약 링크 기준 = 사이트명 포함 확정(2026-08-14 — 부록 B·결정 기록). v2.8 = 재구축·골격 확장 이후의 문서↔코드 정합(2026-08-23 — 결정 기록). v2.9 = 모듈 간 계약 2종 신설(가동률 분자·분모) + B2-1 종료일 규칙(2026-08-23 — MCP 담당 확인 요청). v2.10 = 프로젝트 시드 적재 + 인원 정본 확정(`seed_org_proten.sql`). v2.11 = 감사 조회 2뷰 실구현(G1-3·G2-2). v2.12 = maintenance 모듈 신설(EPIC D 조회분) + 시드↔모델 괴리 결정 7건. **v2.13 = 도메인 루트 계약 3종 승격(안 ② 이행) + 조직 id·시드 원본 id — 2026-08-23 결정 기록**) |
+| 버전 / 상태 | v2.14 · **확정** (게이트 P 통과 2026-08-09. v2.6 = 가동률 의미 재정의 + 시드 정책 완결(2026-08-10 — MCP 담당 확인 완료). v2.7 = M-1 카탈로그 공백 2건 해소의 PMS 측 반영(2026-08-11 결정 기록, 2026-08-12 MCP 담당 확인 완료 — 양측 합의 성립·host 반영 완료). 이슈→계약 링크 기준 = 사이트명 포함 확정(2026-08-14 — 부록 B·결정 기록). v2.8 = 재구축·골격 확장 이후의 문서↔코드 정합(2026-08-23 — 결정 기록). v2.9 = 모듈 간 계약 2종 신설(가동률 분자·분모) + B2-1 종료일 규칙(2026-08-23 — MCP 담당 확인 요청). v2.10 = 프로젝트 시드 적재 + 인원 정본 확정(`seed_org_proten.sql`). v2.11 = 감사 조회 2뷰 실구현(G1-3·G2-2). v2.12 = maintenance 모듈 신설(EPIC D 조회분) + 시드↔모델 괴리 결정 7건. v2.13 = 도메인 루트 계약 3종 승격(안 ② 이행) + 조직 id·시드 원본 id(2026-08-23 결정 기록). **v2.14 = `resource` 루트 계약 승격(`get_utilization`·`list_overbooked`가 붙을 면) + 승격 소유자 결정 선행 — 2026-08-24 결정 기록**) |
 | 작성일 | 2026-08-02 — 구 "PMS — AI 구현용 PRD" v1.0(2026-06-21, 전사본 `reference/PMS_구현용_PRD_v1.0.md`) 현행화 이관 |
 | 범위 | 프로텐 전사 1차 |
 | 규모 | 약 40명(시드 기준 44명) · 2인 개발(MCP 담당 + PMS 담당) |
@@ -172,6 +172,7 @@ B2-1 자연어 검증(2026-08-10)이 실증한 도구 카탈로그 공백 2건�
   | **`ProjectLookupService` · `ProjectBrief`·`ProjectDetailBrief`** | project | `mcp` | **`search_projects`** — 가시성 판정 포함(404 은닉), 팀·부문은 **PM 소속 파생** (2026-08-23 신설) |
   | **`ProgressCommandService` · `ProgressResult`** | project | `mcp` | **`update_progress`** — 2단계 확인은 내부 유스케이스가 갖는다(구조 원칙 5). 밖으로 여는 유일한 쓰기 (2026-08-23 신설) |
   | **`MaintenanceLookupService` · `ContractBrief`·`ContractIssues`·`IssueBrief`·`CommentBrief`** | maintenance | `mcp` | **`search_maintenance`·`list_maintenance_logs`** — 가시성 판정 없음(D4-3 전사 공개). 계약 우선 해석 (2026-08-23 신설) |
+  | **`UtilizationLookupService` · `UtilizationScope`·`UtilizationBrief`·`OverbookedBrief`** | resource | `mcp` | **`get_utilization`·`list_overbooked`** — 승격 소유자를 먼저 정한 첫 계약(2026-08-24 결정 기록 · git-workflow §3). `scope`(ME·MY_TEAM·DIVISION·COMPANY·PERSON) **해석을 도메인이 든다**: 웹은 `?orgUnitId=`를 호출자가 주지만 챗은 화자밖에 모르므로 서버가 팀·부문을 유도해야 하고(`WorkforceProfile`의 조직 id 2종), 그 판정이 어댑터에 남으면 챗과 화면의 범위가 갈릴 수 있다. `OverbookedBrief.Cause(projectName, mm)`는 과부하의 원인 배정 — 산식·모집단·`기본>100` 판정은 `UtilizationCalculator` 하나가 갖고 웹은 원인을 버린다(정본 한 벌) |
   | `PersonDirectoryService`에 **`findIdByExactName`** 추가 | person | maintenance | 시드가 사람을 이름으로 적어 둔 경우(유지보수 영업대표 3명). **정확히 한 명일 때만** 답한다 — 동명이인이면 이름은 식별자가 아니고 그때 조용히 틀린 사람을 가리킨다 (2026-08-23 신설) |
 
   신설 2종의 설계 근거: **`ProjectStatus`를 모듈 루트로 올려 배정 행에 함께 싣는다** — 가동률 모집단은 "진행중 프로젝트의 배정만"인데(2026-08-10 결정. 완료·수주확정까지 세면 시드 실측에서 정태휘가 **1171%** 로 왜곡된다) 그 규칙은 EPIC C의 것이므로 project는 상태라는 **사실만** 내주고 판정은 resource가 한다. project가 걸러 버리면 모집단 정의가 두 모듈에 나뉜다. **행 단위로 내준다**(합계가 아니라) — 과부하 응답이 원인을 프로젝트별로 보여 주므로(`Cause(projectName, mm)`) 합계만 주면 같은 행을 두 번 읽는다. **인원 명단을 받는다**(orgUnitId가 아니라) — 가시성·billable 판정은 person·resource의 몫이고 project는 조직을 알지 못한다. **`PersonRef`를 확장하지 않고 나눴다** — 그것은 project가 쓰는 표시용 참조라, capacity·billable을 얹으면 resource의 관심사가 project의 컴파일 면에 올라온다(conventions §5).
@@ -467,7 +468,7 @@ POST /api/chat    POST /api/chat/feedback        # chat BFF — AI 호스트 프
 
 성능: 조회 P95 < 1초 · 가동률 반영 < 2초 · 알림 SSE 즉시 푸시(재연결 복구 포함) · 권한 서버 최종판정 · 비밀번호 해시 · 낙관적 락 · 감사 append-only·source 구분 · 도메인 순수 단위테스트 · Modulith 경계 검증 · compose 로컬 기동 · 1요청=1트랜잭션 · 앱 무상태 재기동 복구
 
-## 10. 구현 상태 (EPIC 기준 — 2026-08-23 실측)
+## 10. 구현 상태 (EPIC 기준 — 2026-08-24 실측)
 
 **구 PMS-M0~M6 순차 라벨을 폐기하고 EPIC 기준 상태표로 대체했다** (2026-08-23 — 결정 기록). 폐기 근거는 라벨이 실제 진행과 맞지 않게 된 것이다: M6(프론트)이 M3~M5보다 먼저 끝났고(2026-08-22 실연동 재작성), M1의 "person + 인증"은 `auth` 모듈 분리로 두 단위가 됐고, M3·M5는 로직 없이 골격만 선 상태다. 순서를 지키지 못한 계획은 진행 상황을 숨긴다 — 대신 **어느 EPIC이 어디까지 서 있는지**를 원장으로 둔다. 구 라벨을 인용하는 문서(§12·PROGRESS 과거 기록)는 그 시점의 기록으로 읽는다.
 
@@ -477,7 +478,7 @@ POST /api/chat    POST /api/chat/feedback        # chat BFF — AI 호스트 프
 |------|------|---------|
 | **A 프로젝트** | 대부분 실구현 — A1 생성 · A2 진척률 2단계 · A3 조회·가시성 · A4 삭제 · A5 수정·상태전이 · A6-1·2·4·5 PM 교체 · A7 완료·재개 | **A6-3·A6-6·A6-7**(`PUT /projects/{id}/roles`) · **A8 전체**(`GET`/`PUT /permissions` — A8-5·A8-6이 진척률·배정 판정에 침투) · `?phase=` 목록 필터 |
 | **B 인력 배정** | 실구현 — B1-1·B1-2·B1-4 · B2-1 종료 | **B1-3**(커밋 후 가동률 재계산)은 C가 서기 전엔 성립하지 않는다 |
-| **C 가동률** | **구현 완료** (2026-08-23 — `GET /api/utilization`) | C1-1~C1-6 전부. 산식·분모(그 달 `Capacity` 우선)·모집단(진행중 배정 · 집계만 billable)·과부하(기본>100)·소속 동봉. **남은 것은 `/mcp` 쪽뿐**: `resource` 모듈 루트가 비어 있어 `get_utilization`·`list_overbooked`가 붙을 계약이 없다 — 승격 소유자를 먼저 정한다(git-workflow §3 "One promotion, one owner") |
+| **C 가동률** | **구현 완료** (2026-08-23 — `GET /api/utilization`) · **루트 계약 승격 완료** (2026-08-24) | 없다. C1-1~C1-6 전부 — 산식·분모(그 달 `Capacity` 우선)·모집단(진행중 배정 · 집계만 billable)·과부하(기본>100)·소속 동봉. `/mcp`가 붙을 면도 섰다: `UtilizationLookupService`(+`UtilizationScope`·`UtilizationBrief`·`OverbookedBrief`) — **chat의 `scope=MY_TEAM`·`DIVISION`을 도메인이 유도한다**(웹의 `?orgUnitId=`와 같은 조회 조건으로 옮기므로 두 경로의 답이 같다). 남은 것은 **어댑터 배선**(MCP 담당) |
 | **D 유지보수** | **조회 실구현**(2026-08-23) — 모듈·엔티티 4종·Flyway V9·시드 적재(계약 105·사이트 157·연락처·이슈 14) · D4-1 목록(keyword 3종 매칭) · D4-2 상세 · D4-3 전사 공개 · **D3-4 이슈 조회**(미배정 필터 포함) · `IssueComment` 표·조회(적재 0건 — 시드에 본문 없음) | **쓰기 전부**: D1 이관(§5에 완료→유지보수중 전이가 없어 `Project`에 전용 메서드 신설 필요 + 모듈 방향 결정) · D2 계약·사이트 등록/수정 · D3-1~D3-3 이슈 등록·처리·코멘트 |
 | **E 조직·사용자** | 절반 실구현 — E2-1 등록 · E2-3 비활성 · E2-5 시스템 계정 보호 · E3-1 생성 · E3-3 `IN_USE` 삭제 거절 · E3-4 subtree 가시성 · E2-4 플래그 403 | **골격 5종**: E1-1 소속 이동 · E2-2 수정 · E3-2 개명 · E4 직급 3종 · E5 권한 그룹 3종 |
 | **F 알림** | **골격** (`GET /api/notifications` · `PATCH /{id}/read` → 501) | F1 전부 · **SSE 라우트 미착수**(토큰 마스킹과 한 묶음) · **스케줄러 F2·F3 미착수** |
@@ -493,7 +494,7 @@ POST /api/chat    POST /api/chat/feedback        # chat BFF — AI 호스트 프
 | 응답 봉투 §7 · `ErrorCode` 열거 | 실구현 |
 | 시드 적재 | **조직·직급·권한 그룹·인원·User만**(`seed_org_proten.sql`). **`projects.json` 382건·`maintenance.json` 미적재** — A·C·D의 실데이터 전제이자 `/mcp` project port의 전제 |
 | 프론트엔드 (`frontend/`) | 실연동 TS 재작성 완료(2026-08-22) — 구현된 라우트만 사용 |
-| `/mcp` 어댑터 | **이 앱에 없음** — MCP 담당 소유이고 구현은 `pms-old/`에 보존(§3). **의존 방향이 미정이다**(2026-08-23 실측 — MCP 담당 결정 사항): M0 산출물은 port 인터페이스·DTO를 `mcp` 모듈 루트에 두고 **도메인이 그것을 구현**하는 형태여서(`internal/seed/TemporaryPortsConfig`, PROGRESS "각 도메인 모듈 서비스가 port 5종 구현") 의존이 `project → mcp` 한 방향이고 도메인 루트에 아무것도 올릴 필요가 없다. 반면 구조 원칙 3과 아래 줄은 "어댑터가 애플리케이션 서비스를 **호출**한다"(`mcp → project`)로 읽히고, 그 경우엔 도메인 루트가 필요한 면을 열어야 한다. 어느 쪽이든 **resource↔project 계약(위 §3 표)과는 무관**하다 |
+| `/mcp` 어댑터 | **이 앱의 8번째 모듈**(2026-08-23 재승격 — MCP 담당 소유, §3). **의존 방향 확정: `mcp` → 도메인 루트 한 방향**(구조 원칙 3 — 어댑터가 애플리케이션 서비스를 호출한다). 각 도메인이 자기 모듈 루트에 조회 계약을 올리고 어댑터는 그것만 부른다 — port 인터페이스를 `mcp` 루트에 두고 도메인이 구현하던 M0 방식은 폐기했다. 도구 8종 중 **6종 실연결**, 가동률 2종은 계약이 선 뒤(2026-08-24) 배선 대기 |
 
 ## 11. 완료 정의 (Definition of Done)
 

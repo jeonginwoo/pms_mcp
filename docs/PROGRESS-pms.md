@@ -10,7 +10,7 @@
 3. 구 구현은 `pms-old/`에 참고용 보존 — 게이트 M0 산출물(`/mcp` 어댑터·인증 체인·시드 적재기)이 거기 있다
 
 
-## 현재 상태 (2026-08-22 — auth 분리 + 모듈 골격 확장)
+## 현재 상태 (2026-08-22 기준 골격 서술 + 2026-08-24 진도 반영)
 
 - **auth 모듈 분리 완료**(사용자 선택 — 공용 결정 기록 2026-08-22 1행): `person/service/impl` 26개 중 **인증 인프라 7개**(AuthKeyConfig·AuthProperties·TokenProvider·NimbusTokenProvider·TokenClaimValidators·PasswordHasher·BCryptPasswordHasher)와 `User`·`UserRepository`·`AuthService`·`AuthController`·`ApiSecurityConfig`를 **`auth/`** 로 옮겼다. PRD §3의 개명 근거("identity는 계정·인증이 범위에서 빠진다")가 코드에서도 성립한다. **순환 회피가 이 분리의 핵심 설계 지점**: 로그인은 인원 활성 여부를 person에 물어야 하고(`PersonDirectoryService.existsActive`) 인력 등록(E2-1)은 계정을 함께 만들어야 해서 서로 부르면 `ModularityTest`가 막는다 → **person이 모듈 루트에 `AccountPort`를 정의하고 auth가 구현**(의존 auth → person 한 방향, 초기 비밀번호·해시는 auth 안에 잔류). `PersonSeedLoader`의 계정 섹션 검사도 이 포트를 탄다
 - **골격 신설**(로직 없음 — 미구현 유스케이스는 `NotImplementedException` → **501 `NOT_IMPLEMENTED`**, 각 자리에 `TODO(<AC>)`): **resource**(`GET /api/utilization` · `Capacity` 엔티티 = 월별 예외, 기본값은 `Person.capacity`) · **notification**(`GET /api/notifications`·`PATCH /{id}/read` · 멱등은 `(recipient_id, dedupe_key)` 유니크 제약으로 스키마에 박음) · **EPIC E 쓰기 5종**(E1-1·E2-2·E3-2·E4·E5 — `ReferenceController`를 자원별 `GradeController`·`PermissionGroupController`로 분리) · **감사 조회 2뷰**(G1-3·G2-2). Flyway **V7**(capacities·notifications). `PageResponse`는 원 주석의 예고대로 `common/web`으로 승격
@@ -21,9 +21,9 @@
 - **Codex 리뷰 P2 5건 + P3 3건 수정 완료**(공용 결정 기록 2026-08-22 1행): notification 계약을 모듈 루트로 · **골격의 403 선행**(`ScaffoldAuthorizationTest` 신설 — 없는 것은 로직이지 권한이 아니다) · 알림 회수를 **조건부 삭제 한 문장**으로(읽음 경쟁에서 먼저 커밋한 읽음이 이긴다) · 프런트 `unwrap`이 `success`를 검증 · `field` undefined → null 정규화 · 구 204 계약 문서 일괄 정정 · 501 로그를 INFO로
 - **부수 결함 1건 수정 — 타입 틀린 요청 값이 500으로 나가고 있었다**: `?month=2026-8-1`, `/api/projects/abc` 같은 요청이 `MethodArgumentTypeMismatchException`으로 전역 핸들러의 catch-all에 걸려 **500**이 됐다(2026-08-22 "매핑 없는 경로 500"과 같은 계열의 구멍이고, 골격 라우트의 바인딩 테스트를 쓰다 드러났다). 400 `VALIDATION_ERROR`(field=파라미터명)로 매핑 + 필수 파라미터 누락도 같이 처리 + 회귀 테스트
 - **검증**: `verify.sh pms` PASS — 테스트 **268개**. auth 분리·계약 통합 뒤에도 기존 검증(로그인·시드 관통·인증 ON 경로·프로젝트 관통)이 그대로 통과한다
-- **미해결 (공용 결정 필요) — resource가 배정 데이터를 읽을 경로가 없다**: 가동률 분자(Σ 월별 배정 M/M)를 얻으려면 project가 "인원×월 배정"을 내주는 서비스 계약이 필요한데 지금 공개된 것은 `ProjectQueryService`(목록·단건)·`AssignmentService`(쓰기)뿐이다. 배정 엔티티 직접 접근은 모듈 경계 위반이므로 **애플리케이션 서비스 API 추가**로 풀어야 하고, 그것은 공용 결정 기록 경유 사항이라 임의로 만들지 않았다(`UtilizationQueryServiceImpl` TODO)
-- **다음 작업:** **EPIC C 가동률** — 계약 2종·조직 id·시드가 다 서 있어 바로 착수 가능하고, 끝나면 `/mcp` 카탈로그 **8종이 완성**된다(`UtilizationTools`가 마지막 503). 그 뒤 EPIC E 쓰기 5종 · D 쓰기(D-b)·이관(D-c) · project 잔여 AC(A6-3·A8) · EPIC F·H. **G1 전 필수 선행**: 인물 이름 재매핑 194곳(PRD-pms §12 — host 트랙 소유 문서)
-- **차단 요소:** 없음. `/mcp` 어댑터 승격은 2026-08-23 완료(MCP 담당 — PR #22, 승격 방식 안 ②). 도메인 쪽 몫도 이행 완료라 남은 도구 1개(`UtilizationTools`)는 EPIC C 구현에만 묶여 있다
+- ~~**미해결 (공용 결정 필요) — resource가 배정 데이터를 읽을 경로가 없다**~~ — **2026-08-23 해소**: `project.AssignmentDirectoryService`·`MonthlyAssignment` 신설(공용 결정 기록). 배정을 합계가 아니라 **행**으로 내주기로 한 그 판단이 2026-08-24 `list_overbooked`의 원인 목록까지 그대로 열었다
+- **다음 작업:** **EPIC E 쓰기 5종 골격 채우기**(E1-1·E2-2·E3-2·E4·E5 — 501 골격 13 → 4, 라우트·권한 판정·DTO가 이미 서 있다) 또는 **EPIC D 쓰기(D-b)**(D3-1의 담당자 알림이 notification 골격에 걸려 "알림 없이 등록만" vs "F와 한 묶음" 결정이 선행이다). 그 뒤 D 이관(D-c) · project 잔여 AC(A6-3·A8) · EPIC F·H. **어느 것도 G1을 막지 않는다** — pms 절 G1 선행은 2026-08-24로 전량 끝났다. **G1 전 필수 선행(host 트랙 소유)**: 인물 이름 재매핑 194곳(PRD-pms §12)
+- **차단 요소:** 없음. 남은 가동률 도구 2종은 **어댑터 배선만** 기다린다(MCP 담당) — `resource` 루트 계약이 2026-08-24 섰고 소유자 결정도 결정 기록에 있다
 
 ## 이전 상태 (2026-08-21 — 재구축 · 시드 · 인증 · 감사 기록 · 프론트 실연동)
 
@@ -64,6 +64,20 @@
 - 미해결: <다음 세션으로 넘기는 것>
 - 다음 작업: <구체적으로>
 ```
+
+### 2026-08-24 — `resource` 루트 계약 승격 + 승격 소유자 결정 선행 (pms 몫 G1 종료)
+- 완료: ROADMAP M1 pms 절 신설 항목. **파일보다 결정을 먼저 썼다** — git-workflow §3("One promotion, one owner")를 처음 실제로 밟았고, 공용 결정 기록에 소유자(루트 파일 = PMS 담당 / 배선 = MCP 담당)를 등재한 뒤 코드를 시작했다. 루트 4종: `UtilizationLookupService`·`UtilizationScope`·`UtilizationBrief`·`OverbookedBrief`(+`Cause`). 검증 `verify.sh pms` PASS — 테스트 368 → **409**
+- **"패키지 이동뿐"이라는 착수 전 가정이 또 깨졌다**(#25의 project 승격과 같은 패턴이다). 실측한 공백 2건:
+  - **scope 해석의 주인이 없었다**: 웹 C1-1은 `?orgUnitId=`를 호출자가 주지만 `get_utilization(scope=ME|MY_TEAM|DIVISION|COMPANY|PERSON)`은 화자밖에 오지 않는다. **사용자 결정 — resource가 든다**: 어댑터가 조직 id로 바꿔 넘기면 "MY_TEAM이 누구인가"가 어댑터에 남고, 그때 "챗에서 보이는 것 = 화면에서 보이는 것"은 두 코드가 우연히 같아야 성립한다. 선례가 그쪽을 가리켰다 — `ProjectLookupService.search()`는 도구 파라미터인 한국어 상태 라벨을 그대로 받고 "모르는 라벨은 예외"라는 해석 규칙까지 갖는다
+  - **`Cause(projectName, mm)`를 낼 자리가 없었다**: `UtilizationView`가 프로젝트별 행을 버려 합계만 남긴다. **사용자 결정 — 계산기 추출**: 산식·모집단·`기본>100` 판정을 `UtilizationCalculator`로 뽑고 웹은 causes를 버리고 MCP는 싣는다. 루트 impl이 배정을 다시 조회하는 안은 "진행중 배정만"을 두 벌로 만든다 — **지난 세션이 시드 테스트에서 걷어낸 것과 똑같은 형태**라 같은 함정을 다시 파지 않았다
+- **`MonthlyAssignment`가 이 설계를 미리 적어 뒀다**: `projectName`을 싣는 이유로 javadoc이 "합계만 내주면 원인을 물을 때 한 번 더 부른다"를 이미 적고 있었다. #19에서 그 판단이 섰기에 이번에 project 계약을 손대지 않고 끝났다
+- **정본 두 벌 1건 제거**: `UtilizationView.overbooked()`가 `기본 > 100`을 갖고 있었는데 판정이 `PersonUtilization`으로 옮겨 가 두 곳이 됐다 → 웹 dto에서 제거(실측: 프론트도 이 메서드를 쓰지 않고, record 컴포넌트가 아니라 JSON에도 나가지 않았다)
+- **실 시드 관통 테스트가 잡아낸 것 2건** — 둘 다 단위 테스트로는 보이지 않았다:
+  - **0 M/M 배정이 과부하의 "원인"으로 나갔다**: 이현창의 causes에 `롯데관광 … mm=0.0`이 섞였다. 실무자가 따로 있는 프로젝트의 PM 배정은 M/M이 0이고 그것은 규칙이 정한 것이다(부록 B ③ · A6-7 — "체크 역할은 부하 없음") → **0인 기여는 원인 목록에서 뺀다**. 남기면 부하에 기여하지 않은 프로젝트를 과부하의 이유로 내놓는 셈이고, 분자에는 0을 더하므로 합계는 그대로다
+  - **전사 화자로는 `scope=MY_TEAM`을 검증할 수 없다**: 첫 판이 관리자 박재완(id 1)을 화자로 썼는데 빈 목록이 나왔다 — 그는 경영관리팀 소속이고 그 팀은 전원 `billable=false`라 **집계가 정당하게 비는** 경우다. 화자를 딜리버리 조직(이현창 — 팀 11, 부문 5)으로 바꿨다. "빈 목록"이 버그가 아니라 규칙의 결과일 수 있다는 것을 테스트 화자 선택이 놓치고 있었다
+- **문서 정정 3건**(코드와 어긋나 있던 것): ①`pms/CLAUDE.md` 소유권 절이 "MCP dev … plus the read contract each domain publishes for it"이라 **루트 계약 소유자가 반대로 읽혔다** — 2026-08-23 중복 승격의 원인이라 실제 관행대로 고쳤다 ②같은 파일이 "6 of the 8 MCP tools return 503"·"every audit row is still source=WEB"라고 적고 있었다(실측 2종·`source=MCP` 존재) ③공용 `PROGRESS.md` 미해결 이슈의 "가동률 계약에 조직 id가 없다"는 #25에서 이미 해소된 항목이었다
+- 미해결: 없음. 남은 pms 항목은 G1과 무관하다(D 쓰기·이관 · EPIC E 5종 · project A6-3·A8 · F · H)
+- 다음 작업: **EPIC E 쓰기 5종 골격 채우기**(E1-1·E2-2·E3-2·E4·E5 — 501 골격 13 → 4) 또는 **EPIC D 쓰기(D-b)**. D-b는 D3-1의 담당자 알림이 notification 골격에 걸려 "알림 없이 등록만" vs "F와 한 묶음" 결정이 선행이다
 
 ### 2026-08-23 — EPIC C 가동률 실구현 (C1-1~C1-6) — pms 절 G1 선행 완료
 - 완료: ROADMAP M1 pms 절 마지막 항목. `UtilizationQueryServiceImpl` 본문 + 모집단 판정을 **`UtilizationPopulation`으로 분리**(`ProjectVisibilityService` 선례 — 규칙이 개인 지정/집계 · 전사/제한 두 축으로 갈려 산식과 한 클래스에 두면 매번 되짚는다). 골격이 계약·DTO·엔티티·저장소·라우트까지 다 세워 둬서 **빈 것은 impl 본문 하나**였다. 검증 `verify.sh pms` PASS — 테스트 347 → **368**, 501 골격 14 → **13**
