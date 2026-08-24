@@ -16,6 +16,7 @@ import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.ForbiddenException;
 import kr.proten.pms.common.exception.UnprocessableException;
 import kr.proten.pms.person.PersonDirectoryService;
+import kr.proten.pms.project.HandoverPort;
 import kr.proten.pms.project.repository.ProjectAssignmentRepository;
 import kr.proten.pms.project.repository.ProjectRepository;
 import kr.proten.pms.project.service.entity.AssignmentStatus;
@@ -59,6 +60,8 @@ class ProjectManagerChangeTest {
     private ProjectAuditRecorder projectAuditRecorder;
     @Mock
     private ProjectViewFactory projectViewFactory;
+    @Mock
+    private HandoverPort handoverPort;
 
     private ProjectLifecycleServiceImpl service;
 
@@ -72,7 +75,8 @@ class ProjectManagerChangeTest {
                 personDirectoryService,
                 new AssignmentFactory(),
                 projectAuditRecorder,
-                projectViewFactory);
+                projectViewFactory,
+                handoverPort);
     }
 
     @Test

@@ -44,3 +44,14 @@ export function canUpdateProgress(me: MeView | null, detail: ProjectDetail | nul
 export function canDelete(me: MeView | null, detail: ProjectDetail | null): boolean {
   return myRole(me, detail) === 'PM' || me?.createProject === true
 }
+
+/**
+ * 유지보수 이관 (D1) — **PM만**이다.
+ *
+ * `canUpdateProgress`(배정 전원)나 `canAssign`을 빌려 쓰지 않는 이유는 서버와 같다:
+ * 판정 칸은 행위 하나당 하나다(`ProjectAction.HANDOVER`). 집합이 지금 `canAssign`과
+ * 같지만 뜻이 다르므로, 한쪽이 바뀔 때 다른 쪽이 조용히 따라가면 안 된다.
+ */
+export function canHandover(me: MeView | null, detail: ProjectDetail | null): boolean {
+  return myRole(me, detail) === 'PM'
+}

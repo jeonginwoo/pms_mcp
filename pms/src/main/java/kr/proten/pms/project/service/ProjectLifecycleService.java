@@ -1,5 +1,6 @@
 package kr.proten.pms.project.service;
 
+import kr.proten.pms.project.HandoverSpec;
 import kr.proten.pms.project.service.dto.ProgressUpdateResult;
 import kr.proten.pms.project.service.dto.ProjectDetail;
 import kr.proten.pms.project.service.dto.UpdateProgressCommand;
@@ -34,6 +35,20 @@ public interface ProjectLifecycleService {
     /** PM 교체 (AC A6-1) — 승격·강등·managerId 동기화가 한 트랜잭션이다. */
     ProjectDetail changeManager(
             long callerPersonId, long projectId, long personId, long version);
+
+    /**
+     * 유지보수로 이관한다 (AC D1-1) — 완료 → 유지보수중.
+     *
+     * <p><b>계약·사이트 생성과 상태 전이가 한 트랜잭션이다</b>(D1-2 원자성). 계약을
+     * 만드는 것은 maintenance의 몫이므로 {@code HandoverPort}를 거치고, 그 포트의
+     * 구현이 이 트랜잭션에 참여한다 — 전이가 롤백되면 계약도 남지 않는다.
+     *
+     * <p>완료 상태가 아니면 409 {@code INVALID_TRANSITION}이고 아무것도 바뀌지 않는다
+     * (D1-2). 계약 필수 정보가 모자라면 400이며 <b>상태 전이도 일어나지 않는다</b>
+     * (D1-3) — 그래서 입력 검증이 전이보다 앞선다.
+     */
+    ProjectDetail handover(
+            long callerPersonId, long projectId, HandoverSpec spec, long version);
 
     /**
      * 역할 지정·교체 (AC A6-3·A6-6·A6-7) — PL·참여자만 이 경로로 바꾼다.

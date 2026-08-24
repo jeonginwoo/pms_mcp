@@ -9,6 +9,7 @@ import kr.proten.pms.project.controller.dto.ChangeManagerRequest;
 import kr.proten.pms.project.controller.dto.ChangeRoleRequest;
 import kr.proten.pms.project.controller.dto.CreateProjectRequest;
 import kr.proten.pms.project.controller.dto.EditProjectRequest;
+import kr.proten.pms.project.controller.dto.HandoverRequest;
 import kr.proten.pms.project.controller.dto.UpdateProgressRequest;
 import kr.proten.pms.project.controller.dto.VersionRequest;
 import kr.proten.pms.project.service.ProjectCommandService;
@@ -132,6 +133,25 @@ class ProjectController {
             @Valid @RequestBody VersionRequest request) {
         return ApiResponse.ok(
                 projectLifecycleService.reopen(callerPersonId, projectId, request.version()));
+    }
+
+    /**
+     * 유지보수 이관 (AC D1-1) — 완료 → 유지보수중, 계약·사이트를 함께 만든다.
+     *
+     * <p>라우트가 project 경로인 것은 §7이 정한 것이고, 계약을 만드는 것은
+     * maintenance의 몫이다 — 그 사이는 {@code HandoverPort}가 잇는다(2026-08-25 결정).
+     * 완료 상태가 아니면 409, 계약 필수 정보가 모자라면 400, 담당 엔지니어로 없는
+     * 인원을 주면 422 {@code REF_NOT_FOUND}이고 <b>셋 다 아무것도
+     * 바꾸지 않는다</b>(D1-2·D1-3).
+     */
+    @PostMapping("/{projectId}/handover")
+    @ResponseStatus(HttpStatus.CREATED)
+    ApiResponse<ProjectDetail> handover(
+            @CallerPersonId long callerPersonId,
+            @PathVariable long projectId,
+            @Valid @RequestBody HandoverRequest request) {
+        return ApiResponse.ok(projectLifecycleService.handover(
+                callerPersonId, projectId, request.toSpec(), request.requiredVersion()));
     }
 
     /** PM 교체 (AC A6-1) — 대상이 미배정이면 배정을 함께 만든다. */

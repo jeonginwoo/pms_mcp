@@ -3,6 +3,7 @@ package kr.proten.pms.maintenance.repository;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import kr.proten.pms.maintenance.service.entity.MaintenanceContract;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +24,16 @@ import org.springframework.data.repository.query.Param;
  * 서비스가 Java에서 만들고, null 판정은 {@code cast(... as string)}으로 타입을 준다.
  */
 public interface MaintenanceContractRepository extends JpaRepository<MaintenanceContract, Long> {
+
+
+    /**
+     * 이관으로 생긴 계약 (AC D1-1) — 프로젝트:계약 1:1이다(2026-08-06 결정).
+     *
+     * <p>직접 등록 계약은 {@code sourceProjectId}가 null이라 이 질의에 걸리지 않는다.
+     * 프로젝트 화면이 "이 프로젝트의 유지보수 계약"으로 가는 경로이자, 이관이 정말
+     * 일어났는지를 확인하는 지점이다.
+     */
+    Optional<MaintenanceContract> findBySourceProjectId(Long sourceProjectId);
 
     /**
      * 계약 목록 (AC D4-1). 정렬은 종료일 내림차순 고정 —

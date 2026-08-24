@@ -8,6 +8,8 @@ import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.UnprocessableException;
 import kr.proten.pms.common.exception.ValidationException;
 import kr.proten.pms.person.PersonDirectoryService;
+import kr.proten.pms.project.HandoverPort;
+import kr.proten.pms.project.HandoverSpec;
 import kr.proten.pms.project.repository.ProjectAssignmentRepository;
 import kr.proten.pms.project.repository.ProjectRepository;
 import kr.proten.pms.project.service.ProjectLifecycleService;
@@ -47,6 +49,7 @@ public class ProjectLifecycleServiceImpl implements ProjectLifecycleService {
     private final AssignmentFactory assignmentFactory;
     private final ProjectAuditRecorder projectAuditRecorder;
     private final ProjectViewFactory projectViewFactory;
+    private final HandoverPort handoverPort;
 
     public ProjectLifecycleServiceImpl(
             ProjectRepository projectRepository,
@@ -56,7 +59,8 @@ public class ProjectLifecycleServiceImpl implements ProjectLifecycleService {
             PersonDirectoryService personDirectoryService,
             AssignmentFactory assignmentFactory,
             ProjectAuditRecorder projectAuditRecorder,
-            ProjectViewFactory projectViewFactory) {
+            ProjectViewFactory projectViewFactory,
+            HandoverPort handoverPort) {
         this.projectRepository = projectRepository;
         this.assignmentRepository = assignmentRepository;
         this.projectVisibilityService = projectVisibilityService;
@@ -65,6 +69,7 @@ public class ProjectLifecycleServiceImpl implements ProjectLifecycleService {
         this.assignmentFactory = assignmentFactory;
         this.projectAuditRecorder = projectAuditRecorder;
         this.projectViewFactory = projectViewFactory;
+        this.handoverPort = handoverPort;
     }
 
     /**
@@ -186,6 +191,59 @@ public class ProjectLifecycleServiceImpl implements ProjectLifecycleService {
         }
 
         return projectViewFactory.toDetail(project);
+    }
+
+    /**
+     * 이관 (AC D1-1·D1-2·D1-3) — 이 클래스에서 <b>순서가 다른 유일한 행위</b>다.
+     *
+     * <p>나머지 셋은 도메인 규칙이 마지막이지만 이관은 그 사이에 <b>모듈 하나를
+     * 건너간다</b>. 순서가 AC 두 줄로 정해져 있다:
+     *
+     * <ul>
+     *   <li>D1-2 "아무것도 안 바뀜" → <b>상태 확인이 계약 생성보다 앞</b>이다.
+     *       완료가 아닌 프로젝트로 이관을 시도하면 계약도 만들어지지 않아야 한다.
+     *   <li>D1-3 "상태 전이도 미발생" → <b>입력 검증이 상태 전이보다 앞</b>이다.
+     *       필수값이 모자라면 400이고 프로젝트는 완료로 남는다.
+     * </ul>
+     *
+     * <p>그래서 {@code handover()}를 두 번 나눠 부르지 않고 <b>상태 확인을 먼저
+     * 읽는다</b>: 엔티티의 전이 메서드는 확인과 변경을 함께 하므로, 그것만으로는
+     * "확인은 했고 아직 안 바꿨다"는 중간 상태를 만들 수 없다.
+     *
+     * <p>감사는 두 행이다 — 계약 CREATE(maintenance가 남긴다, {@code projectId=null})와
+     * 프로젝트 STATE_CHANGE(여기서 남긴다, {@code projectId} 있음). 이관 사실을
+     * 프로젝트별 이력(G2-2)에서 찾는 경로는 후자다.
+     */
+    @Override
+    public ProjectDetail handover(
+            long callerPersonId, long projectId, HandoverSpec spec, long version) {
+        Project project = projectVisibilityService.requireVisible(callerPersonId, projectId);
+        projectActionPermission.require(callerPersonId, projectId, ProjectAction.HANDOVER);
+        project.requireVersion(version);
+        // D1-2 — 완료가 아니면 여기서 끝난다. 계약을 만들기 전이다
+        requireCompleted(project);
+        // D1-3 — 필수값 검증도 전이 전이다. 포트 구현이 400을 던지면 전이는 없다
+        handoverPort.createHandoverContract(callerPersonId, projectId, spec);
+
+        Map<String, Object> before = projectAuditRecorder.snapshot(project);
+        project.handover();
+        Project saved = projectRepository.saveAndFlush(project);
+        projectAuditRecorder.changed(callerPersonId, saved, before);
+
+        return projectViewFactory.toDetail(saved);
+    }
+
+    /**
+     * D1-2의 앞당긴 확인 — {@code Project.handover()}가 같은 검사를 다시 하지만,
+     * 그때는 이미 계약이 만들어진 뒤다. 같은 규칙이 두 곳에 있는 것이 아니라
+     * <b>같은 규칙을 두 시점에 묻는 것</b>이고, 정본은 엔티티다(문구도 거기서 온다).
+     */
+    private void requireCompleted(Project project) {
+        if (project.getStatus() != ProjectStatus.COMPLETED) {
+            throw new ConflictException(ErrorCode.INVALID_TRANSITION,
+                    "완료된 프로젝트만 유지보수로 이관할 수 있습니다 (현재 "
+                            + project.getStatus().label() + ")");
+        }
     }
 
     private ProjectDetail transition(

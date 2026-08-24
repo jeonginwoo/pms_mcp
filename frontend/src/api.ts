@@ -28,6 +28,7 @@ import type {
   EditProjectBody,
   GradeBody,
   GradeDetail,
+  HandoverBody,
   IssueBody,
   IssueEditBody,
   IssueQuery,
@@ -445,6 +446,14 @@ export const api = {
   reopen: (projectId: number, version: number) =>
     request<ProjectDetail>(`/api/projects/${projectId}/reopen`,
       { method: 'POST', body: JSON.stringify({ version }) }),
+  /**
+   * 유지보수 이관 (D1-1) — 완료 상태에서만, PM만.
+   * 계약·사이트 생성과 상태 전이가 서버에서 한 트랜잭션이다: 400·409면
+   * 프로젝트는 완료로 남고 계약도 만들어지지 않는다(D1-2·D1-3).
+   */
+  handover: (projectId: number, body: HandoverBody) =>
+    request<ProjectDetail>(`/api/projects/${projectId}/handover`,
+      { method: 'POST', body: JSON.stringify(body) }),
 
   changeManager: (projectId: number, personId: number, version: number) =>
     request<ProjectDetail>(`/api/projects/${projectId}/pm`,
