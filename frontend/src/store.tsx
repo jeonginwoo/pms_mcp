@@ -17,24 +17,34 @@ import {
 } from './api'
 import type {
   AssignmentView,
+  AuditRecord,
+  ContractDetail,
+  ContractQuery,
+  ContractSummary,
   CreateAssignmentBody,
   CreateOrgUnitBody,
   CreatePersonBody,
   CreateProjectBody,
   EditProjectBody,
+  IssueQuery,
+  IssueView,
   MeView,
   OrgUnitView,
+  PageResponse,
   PersonRef,
   ProgressUpdateResult,
   ProjectDetail,
   ProjectSummary,
   ReferenceItem,
   UpdateAssignmentBody,
+  UtilizationQuery,
+  UtilizationView,
 } from './types/api'
 
 export type Result<T> = { ok: true; value: T } | { ok: false; error: ApiError }
 
-export type Route = 'home' | 'projects' | 'people'
+export type Route =
+  | 'home' | 'projects' | 'people' | 'utilization' | 'maintenance' | 'issues' | 'audit'
 
 export type BootPhase = 'anon' | 'loading' | 'ready' | 'error'
 
@@ -58,6 +68,8 @@ interface Store {
   totalProjects: number
   route: Route
   detail: ProjectDetail | null
+  /** 열려 있는 유지보수 계약 — 프로젝트 상세와 같은 자리다(라우트 안의 상세 갈래) */
+  contract: ContractDetail | null
   toast: string | null
   loginError: string | null
   go: (route: Route) => void
@@ -68,6 +80,8 @@ interface Store {
   reload: () => Promise<void>
   openProject: (projectId: number) => Promise<void>
   closeProject: () => void
+  openContract: (contractId: number) => Promise<void>
+  closeContract: () => void
   showToast: (message: string) => void
   createProject: (body: CreateProjectBody) => Promise<Result<ProjectDetail>>
   editProject: (body: EditProjectBody) => Promise<Result<ProjectDetail>>
@@ -84,6 +98,23 @@ interface Store {
   deactivatePerson: (personId: number) => Promise<Result<null>>
   createOrgUnit: (body: CreateOrgUnitBody) => Promise<Result<OrgUnitView>>
   deleteOrgUnit: (orgUnitId: number) => Promise<Result<null>>
+  /**
+   * 가동률 조회 — **라우트에 들어올 때 부른다**(부팅 때 미리 받지 않는다).
+   * 이유: 질의에 기준 월이 있어 부팅 시점에 고를 값이 없고, 월·필터를 바꾸면
+   * 매번 서버에 다시 물어야 한다(조회 시점 계산이라 캐시가 없다 — 2026-08-06).
+   */
+  loadUtilization: (query: UtilizationQuery) => Promise<Result<UtilizationView[]>>
+  /**
+   * 유지보수 조회 — 가동률과 같은 이유로 라우트 진입 시 부른다.
+   * 전사 공개라 가시성 판정이 없고(D4-3) 화자가 바뀌어도 같은 답이 온다.
+   */
+  loadContracts: (query: ContractQuery) => Promise<Result<PageResponse<ContractSummary>>>
+  loadIssues: (query: IssueQuery) => Promise<Result<PageResponse<IssueView>>>
+  /** 통합 감사 로그 (G1-3) — 플래그가 없으면 서버가 403이고 화면이 그대로 보여 준다 */
+  loadAudit: (page: number) => Promise<Result<PageResponse<AuditRecord>>>
+  /** 프로젝트별 이력 (G2-2) — 가시성 밖은 404 은닉이다 */
+  loadProjectAudit: (projectId: number, page: number) =>
+    Promise<Result<PageResponse<AuditRecord>>>
 }
 
 const StoreContext = createContext<Store | null>(null)
@@ -113,6 +144,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [totalProjects, setTotalProjects] = useState(0)
   const [route, setRoute] = useState<Route>('home')
   const [detail, setDetail] = useState<ProjectDetail | null>(null)
+  const [contract, setContract] = useState<ContractDetail | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [loginError, setLoginError] = useState<string | null>(null)
 
@@ -225,6 +257,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setOrgUnits([])
     setProjects([])
     setDetail(null)
+    setContract(null)
     setRoute('home')
     setLoginError(null)
     setPhase('anon')
@@ -257,6 +290,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [showToast])
 
   const closeProject = useCallback(() => setDetail(null), [])
+
+  /** 계약 상세 — 전사 공개라 404는 "그런 계약이 없다"는 뜻뿐이다(은닉이 아니다). */
+  const openContract = useCallback(async (contractId: number) => {
+    try {
+      setContract(await api.maintenanceContract(contractId))
+      setRoute('maintenance')
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : '계약을 열 수 없습니다')
+    }
+  }, [showToast])
+
+  const closeContract = useCallback(() => setContract(null), [])
 
   /**
    * 쓰기 동작 공통 처리 — 성공하면 상세·목록을 서버 값으로 다시 채운다.
@@ -318,11 +363,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     totalProjects,
     route,
     detail,
+    contract,
     toast,
     loginError,
     go: (next) => {
       setRoute(next)
       setDetail(null)
+      setContract(null)
     },
     submitLogin,
     enterAsCaller,
@@ -330,6 +377,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     reload,
     openProject,
     closeProject,
+    openContract,
+    closeContract,
     showToast,
     createProject: (body) => run(() => api.createProject(body)),
     editProject: (body) => run(() => api.editProject(requireDetail(detail).id, body),
@@ -369,9 +418,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     deactivatePerson: (personId) => runOrganization(() => api.deactivatePerson(personId)),
     createOrgUnit: (body) => runOrganization(() => api.createOrgUnit(body)),
     deleteOrgUnit: (orgUnitId) => runOrganization(() => api.deleteOrgUnit(orgUnitId)),
+    // 조회라서 프로젝트 목록을 다시 읽지 않는다 — run은 에러 봉투 정규화만 쓴다
+    loadUtilization: (query) => run(() => api.utilization(query), { refresh: false }),
+    loadContracts: (query) => run(() => api.maintenanceContracts(query), { refresh: false }),
+    loadIssues: (query) => run(() => api.maintenanceIssues(query), { refresh: false }),
+    loadAudit: (page) => run(() => api.audit(page), { refresh: false }),
+    loadProjectAudit: (projectId, page) =>
+      run(() => api.projectAudit(projectId, page), { refresh: false }),
   }), [phase, bootError, sessionMode, me, people, roster, orgUnits, grades, permissionGroups,
-    projects, totalProjects, route, detail, toast, loginError, submitLogin, enterAsCaller, logout,
-    reload, openProject, closeProject, showToast, run, runOrganization])
+    projects, totalProjects, route, detail, contract, toast, loginError, submitLogin,
+    enterAsCaller, logout, reload, openProject, closeProject, openContract, closeContract,
+    showToast, run, runOrganization])
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>
 }
