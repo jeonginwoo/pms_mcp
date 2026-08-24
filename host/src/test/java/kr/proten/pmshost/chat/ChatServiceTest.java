@@ -7,6 +7,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 
 import io.modelcontextprotocol.client.McpSyncClient;
 import io.modelcontextprotocol.spec.McpSchema;
@@ -36,13 +37,38 @@ class ChatServiceTest {
 
     private final List<Prompt> capturedPrompts = new ArrayList<>();
 
+    /**
+     * 실 Anthropic 응답의 generation 구성을 흉내낸다 —
+     * `AnthropicChatModel.buildGenerations` 실측: **사고 블록(`thinking`·
+     * `redacted_thinking`)이 앞에 각자 generation으로 오고, TEXT 블록은 전부 합쳐져
+     * 맨 뒤 generation 하나**가 된다. 사고 블록의 표식은 `signature`·`data` 속성이다.
+     * null이면 본문 generation 하나("스텁 응답")뿐인 단순 응답.
+     */
+    private List<Generation> stubGenerations;
+
     private final ChatModel stubModel = new ChatModel() {
         @Override
         public ChatResponse call(Prompt prompt) {
             capturedPrompts.add(prompt);
-            return new ChatResponse(List.of(new Generation(new AssistantMessage("스텁 응답"))));
+
+            return new ChatResponse(stubGenerations == null
+                    ? List.of(bodyGeneration("스텁 응답"))
+                    : stubGenerations);
         }
     };
+
+    /** 본문 generation — 속성 없음 */
+    private static Generation bodyGeneration(String text) {
+        return new Generation(new AssistantMessage(text));
+    }
+
+    /** thinking generation — 내용은 사고 과정이고 `signature` 속성을 달고 온다 */
+    private static Generation thinkingGeneration(String thinking) {
+        return new Generation(AssistantMessage.builder()
+                .content(thinking)
+                .properties(Map.of("signature", "sig-abc"))
+                .build());
+    }
 
     private PmsMcpConnector connector;
     private McpSyncClient mcpClient;
@@ -134,6 +160,50 @@ class ChatServiceTest {
         chatService.chat("c1", "질문", tokenOf("18", "신현랑"));
 
         verify(mcpClient).close();
+    }
+
+    /**
+     * 2026-08-24 실서버 관통에서 재현한 모양 그대로다 — generation 2개 중 선두가
+     * 빈 사고 블록이고 답은 뒤에 실려 있었다(`[0]` 0자 · `[1]` 295자).
+     * `.content()`는 첫 generation만 읽으므로 사용자에게 빈 문자열이 갔다.
+     * 목업 응답은 작아 generation이 하나였기 때문에 실 서버 전환에서만 드러났다.
+     */
+    @Test
+    @DisplayName("선두 사고 블록이 비어 있어도 뒤에 온 본문을 답으로 준다 (실측 재현)")
+    void leadingEmptyThinkingBlockDoesNotSwallowAnswer() {
+        stubGenerations = List.of(thinkingGeneration(""), bodyGeneration("부문별 평균 가동률입니다."));
+
+        String reply = chatService.chat("c1", "회사 전체 가동률 정리해줘", tokenOf("1", "박재완"));
+
+        assertThat(reply).isEqualTo("부문별 평균 가동률입니다.");
+    }
+
+    /**
+     * 반대 방향의 위험 — 사고 블록이 **비어 있지 않을 때** generation을 다 이어붙이면
+     * 모델의 사고 과정이 사용자 답변 앞에 붙어 나간다. 실측 당시 `[0]`이 우연히 빈
+     * 블록이라 그 실수가 겉으로 드러나지 않는다.
+     */
+    @Test
+    @DisplayName("사고 블록 내용은 사용자 답변에 섞이지 않는다")
+    void thinkingContentNeverReachesTheUser() {
+        stubGenerations = List.of(
+                thinkingGeneration("사용자가 전사를 물었으니 COMPANY로 부르자. 혹시 권한이 없으면..."),
+                bodyGeneration("부문별 평균 가동률입니다."));
+
+        String reply = chatService.chat("c1", "회사 전체 가동률 정리해줘", tokenOf("1", "박재완"));
+
+        assertThat(reply).isEqualTo("부문별 평균 가동률입니다.");
+        assertThat(reply).doesNotContain("COMPANY로 부르자");
+    }
+
+    @Test
+    @DisplayName("본문이 전부 비면 빈 문자열이 아니라 안내 문구를 준다 (fail-visible)")
+    void blankReplyBecomesNotice() {
+        stubGenerations = List.of(thinkingGeneration("생각만 했다"), bodyGeneration("   "));
+
+        String reply = chatService.chat("c1", "질문", tokenOf("1", "박재완"));
+
+        assertThat(reply).isEqualTo(ChatService.EMPTY_REPLY_NOTICE);
     }
 
 }

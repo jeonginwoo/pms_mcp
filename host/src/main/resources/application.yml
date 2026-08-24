@@ -1,5 +1,5 @@
 server:
-  port: 8081   # 목업 MCP(8090)·PMS(8080 예정)와 분리
+  port: 8081   # PMS(8080)·목업 MCP(8090)와 분리
 
 spring:
   config:
@@ -15,7 +15,11 @@ spring:
     # 그 사용자의 토큰으로 연결해야 하므로 앱 전역 고정 연결 모델이 성립하지
     # 않는다 (구현_노트 §3-1, 원칙 4). 연결은 PmsMcpConnector가 대화 단위 생성.
 
-# PMS MCP 서버 주소 — M-1(B2-3)은 목업(8090), M0에서 실전 /mcp로 전환
+# PMS MCP 서버 주소 — 실 서버(`pms` 앱)의 embedded /mcp. 2026-08-24 전환:
+# 목업(8090)은 카탈로그 실험장으로 존치하고, 붙일 때만 오버라이드한다
+#   (cd host && ./gradlew bootRun --args='--pms.mcp.base-url=http://localhost:8090')
+# 실 서버는 로그인 access 토큰을 요구한다 — 발급은 host/scripts/pms-token.sh.
+# pms는 기동마다 서명 키를 새로 만들므로(AuthKeyConfig) 재기동 뒤에는 다시 받아야 한다
 pms:
   mcp:
-    base-url: http://localhost:8090
+    base-url: http://localhost:8080
