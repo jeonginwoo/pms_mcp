@@ -8,9 +8,12 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * /mcp Streamable HTTP 테스트 클라이언트 — initialize 핸드셰이크 공통분.
@@ -133,11 +136,42 @@ final class McpHttp {
         return Integer.parseInt(matcher.group(1));
     }
 
+    /**
+     * 카탈로그의 도구별 힌트 — 도구명 → {@code {readOnlyHint, destructiveHint, …}}.
+     *
+     * <p>여기서만 파서를 쓴다. 위 추출기들이 파서를 피하는 이유는 도구 <b>응답</b>이
+     * 텍스트 콘텐트 안에 이스케이프된 채 실려 오기 때문인데, 카탈로그의 annotations는
+     * 봉투 JSON의 중첩 객체이고 <b>도구마다 갈라</b> 봐야 한다 — 평문 대조로는
+     * "어느 도구가 그렇게 광고하는가"를 가릴 수 없다.
+     *
+     * <p>SSE 프레임(`event: message` / `data: {…}`)으로 올 수 있어 첫 중괄호부터 읽는다.
+     */
+    static Map<String, Map<String, Boolean>> toolHintsOf(String body) {
+        JsonNode root = JSON.readTree(body.substring(body.indexOf('{')));
+        Map<String, Map<String, Boolean>> hints = new LinkedHashMap<>();
+
+        for (JsonNode tool : root.path("result").path("tools")) {
+            Map<String, Boolean> perTool = new LinkedHashMap<>();
+            for (Map.Entry<String, JsonNode> hint : tool.path("annotations").properties()) {
+                if (hint.getValue().isBoolean()) {
+                    perTool.put(hint.getKey(), hint.getValue().asBoolean());
+                }
+            }
+            hints.put(tool.path("name").asString(), perTool);
+        }
+
+        assertThat(hints).as("카탈로그가 비었다: " + body).isNotEmpty();
+
+        return hints;
+    }
+
     static String findPersonByTeam(String team) {
         return """
                 {"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"find_person",\
                 "arguments":{"team":"%s"}}}""".formatted(team);
     }
+
+    private static final JsonMapper JSON = JsonMapper.builder().build();
 
     private final int port;
     private final HttpClient http = HttpClient.newHttpClient();

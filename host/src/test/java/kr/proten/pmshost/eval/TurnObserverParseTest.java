@@ -48,4 +48,28 @@ class TurnObserverParseTest {
         assertThat(call.name()).isNull();
         assertThat(call.raw()).isEqualTo("CallToolRequest[뭔가 다른 모양");
     }
+
+    @Test
+    @DisplayName("도구 결과는 봉투를 벗기고 본문만 남긴다 — id·jsonrpc의 숫자가 F1 말뭉치에 섞이면 안 된다")
+    void stripsResponseEnvelope() {
+        String message = "Received response: JSONRPCResponse[jsonrpc=2.0, id=69d6d7f1-3, "
+                + "result={content=[{type=text, text=[{\"basic\":63.0,\"adjusted\":50.4}]}], "
+                + "isError=false}, error=null]";
+
+        TurnObserver.ToolResult result = TurnObserver.parseResult(message);
+
+        assertThat(result).isNotNull();
+        assertThat(result.payload()).doesNotContain("jsonrpc").doesNotContain("69d6d7f1")
+                .contains("63.0").contains("50.4");
+    }
+
+    @Test
+    @DisplayName("카탈로그·initialize 응답은 도구 결과가 아니다 — 도구 문구의 수치가 출처가 되면 환각이 통과한다")
+    void ignoresNonToolResponses() {
+        String catalog = "Received response: JSONRPCResponse[jsonrpc=2.0, id=1, "
+                + "result={tools=[{name=search_maintenance, description=최근 50건까지만 반환된다}], "
+                + "nextCursor=null}, error=null]";
+
+        assertThat(TurnObserver.parseResult(catalog)).isNull();
+    }
 }

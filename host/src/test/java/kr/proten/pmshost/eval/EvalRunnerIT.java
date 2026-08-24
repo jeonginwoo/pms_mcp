@@ -129,7 +129,7 @@ class EvalRunnerIT {
         if (c.inject() != null && "contaminate".equals(c.inject().kind())) {
             fixtures.contaminate(c.inject().issueId(), c.inject().authorId(), c.inject().text());
         }
-        observer.drainToolCalls();
+        observer.drain();
         observer.drainEmptyReplies();
 
         List<Map<String, Object>> turns = new ArrayList<>();
@@ -184,7 +184,11 @@ class EvalRunnerIT {
         turn.put("user", message);
         turn.put("reply", reply);
         turn.put("elapsedMs", elapsedMs);
-        turn.put("toolCalls", observer.drainToolCalls());
+        TurnObserver.Evidence evidence = observer.drain();
+        turn.put("toolCalls", evidence.calls());
+        // 도구 결과까지 남긴다 — F1(수치 환각)은 "답에 있는 수치가 도구 결과에 있는가"로
+        // 판정되므로, 결과가 없으면 채점층이 케이스별 기대값 사본을 만들어야 한다
+        turn.put("toolResults", evidence.results());
         List<String> empties = observer.drainEmptyReplies();
         if (!empties.isEmpty()) {
             // 모델의 회피성 무응답(F6)과 host의 본문 유실을 채점자가 갈라 보게 한다

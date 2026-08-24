@@ -50,7 +50,9 @@ public class UtilizationTools {
             scope=ME는 본인(personId 불필요), MY_TEAM은 자기 팀, DIVISION은 자기 부문,
             COMPANY는 전사, PERSON은 personId로 지정한 개인.
             팀·부문·전사 집계는 billable 인원만 포함하며, 각 항목에 팀·부문이 함께 반환된다.
-            조회 가능한 범위는 서버가 판정한다.""")
+            조회 가능한 범위는 서버가 판정한다.""",
+            annotations = @McpTool.McpAnnotations(
+                    readOnlyHint = true, destructiveHint = false, openWorldHint = false))
     public List<UtilizationEntry> getUtilization(
             @McpToolParam(description = "조회 월, \"yyyy-MM\" 형식 (예: 2026-08)", required = true) String month,
             @McpToolParam(description = "조회 범위: ME/MY_TEAM/DIVISION/COMPANY/PERSON", required = true) String scope,
@@ -67,7 +69,9 @@ public class UtilizationTools {
 
     @McpTool(name = "list_overbooked", description = """
             지정한 월에 과부하(기본 가동률 100% 초과)인 인원과 원인 배정 목록을 반환한다.
-            범위는 조회자의 가시성으로 서버가 판정하며, billable 인원만 포함한다.""")
+            범위는 조회자의 가시성으로 서버가 판정하며, billable 인원만 포함한다.""",
+            annotations = @McpTool.McpAnnotations(
+                    readOnlyHint = true, destructiveHint = false, openWorldHint = false))
     public List<OverbookedEntry> listOverbooked(
             @McpToolParam(description = "조회 월, \"yyyy-MM\" 형식 (예: 2026-08)", required = true) String month) {
         long callerId = caller.callerId();

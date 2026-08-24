@@ -113,6 +113,13 @@ bash host/scripts/eval-run.sh [--only A-05,H-01] [--no-reset]
                          # of the run (8 write cases). Needs an Anthropic API key.
                          # Grading is not done here — the round record is its input.
 
+bash host/scripts/eval-grade.sh [<run>] [--rules-only]
+                         # grade a round: rule layer + LLM-Judge (claude-opus-5) →
+                         # grades.jsonl + grade.md next to the round record. Needs no
+                         # pms and no DB — the round record is the only input, so
+                         # grading rules can be fixed and the same round re-graded.
+                         # --rules-only skips the Judge (no LLM cost).
+
 (cd host && ./gradlew test -Dpms.mcp.e2e=true)
                          # host↔mock MCP through-line IT (mock must be running)
 

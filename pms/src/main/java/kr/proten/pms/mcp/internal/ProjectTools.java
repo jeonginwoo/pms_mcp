@@ -48,7 +48,9 @@ public class ProjectTools {
             진척률 수정(update_progress)에 필요한 version은 이 상세 조회로 확보한다.
             projectId가 없으면 status·keyword로 필터한 목록을 반환한다.
             목록은 착수일 내림차순으로 최근 50건까지만 반환된다 — 결과가 잘렸을 수 있으므로
-            전체 개수를 단정하지 말고, 많으면 status·keyword로 좁혀 다시 검색한다.""")
+            전체 개수를 단정하지 말고, 많으면 status·keyword로 좁혀 다시 검색한다.""",
+            annotations = @McpTool.McpAnnotations(
+                    readOnlyHint = true, destructiveHint = false, openWorldHint = false))
     public Object searchProjects(
             @McpToolParam(description = "프로젝트 상태 필터: 계약대기/수주확정/진행중/완료/유지보수중", required = false) String status,
             @McpToolParam(description = "이름·고객사·솔루션에 대한 검색어 — 입력한 문구가 그대로 들어 있는 것을 찾는다(부분 일치)", required = false) String keyword,
