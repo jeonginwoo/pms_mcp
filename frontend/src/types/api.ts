@@ -101,6 +101,7 @@ export type NotificationType =
   | 'PROJECT_COMPLETED'
   | 'DEADLINE_NEAR'
   | 'COMPLETION_OVERDUE'
+  | 'ISSUE_ASSIGNED'
 
 /**
  * GET /api/notifications 항목 (F1-3).
@@ -336,6 +337,8 @@ export interface IssueView {
   type: string
   /** 한국어 라벨 ("접수" | "처리중" | "고객확인대기" | "완료") */
   status: string
+  /** 열거 이름 — 처리 화면이 다음 상태를 계산하는 값이다(ContractDetail.statusCode 선례) */
+  statusCode: IssueStatus
   title: string
   receivedAt: string | null
   completedAt: string | null
@@ -582,4 +585,31 @@ export interface SiteBody {
   contacts: ContactBody[]
   /** 수정에서만 보낸다 */
   version?: number | null
+}
+
+/**
+ * POST /api/maintenance/issues (D3-1) — 서버가 정하는 칸은 보내지 않는다.
+ * 담당자는 사이트의 담당 엔지니어, 상태는 `접수`, 접수일은 오늘이다.
+ */
+export interface IssueBody {
+  siteId: number
+  type: IssueType
+  title: string
+}
+
+/**
+ * PATCH /api/maintenance/issues/{id} (D3-2) — 상태 전이·담당 재배정.
+ *
+ * **비운 칸은 "그대로 둔다"다**(PATCH 의미론). 그래서 담당 해제는 표현할 수 없다 —
+ * `null`이 이미 다른 뜻을 쓰고 있고 AC에 해제 요구가 없다(서버 DTO 주석과 같은 근거).
+ */
+export interface IssueEditBody {
+  status?: IssueStatus | null
+  assigneeId?: number | null
+  version: number
+}
+
+/** POST /api/maintenance/issues/{id}/comments (D3-3) — append-only라 version이 없다 */
+export interface CommentBody {
+  content: string
 }

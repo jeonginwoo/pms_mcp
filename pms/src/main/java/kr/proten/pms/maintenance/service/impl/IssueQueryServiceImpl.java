@@ -128,7 +128,7 @@ class IssueQueryServiceImpl implements IssueQueryService {
         Map<Long, String> contractNames = contractNamesOf(sites.values());
         Map<Long, List<IssueComment>> comments =
                 commentRepository
-                        .findByIssueIdInOrderByCreatedAtAsc(
+                        .findByIssueIdInOrderByCreatedAtAscIdAsc(
                                 issues.stream().map(MaintenanceIssue::getId).toList())
                         .stream()
                         .collect(Collectors.groupingBy(

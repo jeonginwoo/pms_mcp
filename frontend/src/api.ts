@@ -15,6 +15,8 @@
 import type {
   AssignmentView,
   AuditRecord,
+  CommentBody,
+  CommentView,
   ContractBody,
   ContractDetail,
   ContractQuery,
@@ -26,6 +28,8 @@ import type {
   EditProjectBody,
   GradeBody,
   GradeDetail,
+  IssueBody,
+  IssueEditBody,
   IssueQuery,
   IssueView,
   ApiEnvelope,
@@ -511,6 +515,23 @@ export const api = {
   updateSite: (siteId: number, body: SiteBody) =>
     request<SiteView>(`/api/maintenance/sites/${siteId}`,
       { method: 'PUT', body: JSON.stringify(body) }),
+
+  /**
+   * 이슈 쓰기 (US-D3) — **계약 쓰기와 달리 플래그 판정이 없다**: 로그인 사용자
+   * 전체가 등록·처리·코멘트를 할 수 있다(US-D3 대괄호). 그래서 화면도 버튼을
+   * 권한으로 감추지 않는다.
+   */
+  registerIssue: (body: IssueBody) =>
+    request<IssueView>('/api/maintenance/issues',
+      { method: 'POST', body: JSON.stringify(body) }),
+  /** 상태 전이·담당 재배정 (D3-2) — 흐름 밖 전이는 서버가 409로 막는다 */
+  processIssue: (issueId: number, body: IssueEditBody) =>
+    request<IssueView>(`/api/maintenance/issues/${issueId}`,
+      { method: 'PATCH', body: JSON.stringify(body) }),
+  /** 코멘트 (D3-3) — append-only라 수정·삭제 경로가 없다 */
+  addIssueComment: (issueId: number, body: CommentBody) =>
+    request<CommentView>(`/api/maintenance/issues/${issueId}/comments`,
+      { method: 'POST', body: JSON.stringify(body) }),
 
   assign: (projectId: number, body: CreateAssignmentBody) =>
     request<AssignmentView>(`/api/projects/${projectId}/assignments`,

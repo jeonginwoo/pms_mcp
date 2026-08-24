@@ -1,6 +1,7 @@
 package kr.proten.pms.notification.service.impl;
 
 import java.util.List;
+import kr.proten.pms.maintenance.MaintenanceIssueRegistered;
 import kr.proten.pms.notification.NotificationService;
 import kr.proten.pms.notification.NotificationType;
 import kr.proten.pms.notification.NotifyCommand;
@@ -88,6 +89,33 @@ class NotificationSubscriber {
                 event.projectId(),
                 "%s 프로젝트에 배정되었습니다".formatted(event.projectName()),
                 "assigned:%d:%d".formatted(event.projectId(), event.personId())));
+    }
+
+    /**
+     * 이슈 등록 → 그 이슈의 담당자에게 (AC D3-1 · §8 {@code MaintenanceIssueRegistered}).
+     *
+     * <p><b>담당자가 없으면 조용히 끝난다</b> — 사이트에 담당 엔지니어가 없는 경우이고,
+     * 그 이슈는 D3-4의 미배정 필터가 찾도록 남는다. 발행 측은 알릴 사람이 있는지
+     * 모르는 채로 발행한다({@code MaintenanceIssueRegistered} 주석) — 그 판단이 이 줄이다.
+     *
+     * <p><b>재배정(D3-2)은 알리지 않는다</b>: §8에 그 이벤트가 없고 AC도 등록만 적었다.
+     * {@code AssignmentChanged}에서 수정·종료를 알리지 않는 것과 같은 자리이며,
+     * 파급이 있는 공백으로 등재했다(담당이 바뀐 사람은 화면을 봐야 알게 된다).
+     */
+    @ApplicationModuleListener
+    void onIssueRegistered(MaintenanceIssueRegistered event) {
+        if (event.assigneeId() == null) {
+            return;
+        }
+
+        String where = event.siteName() == null ? "유지보수" : event.siteName();
+        notificationService.notify(new NotifyCommand(
+                event.assigneeId(),
+                NotificationType.ISSUE_ASSIGNED,
+                "MaintenanceIssue",
+                event.issueId(),
+                "%s 이슈 담당자로 지정되었습니다 — %s".formatted(where, event.title()),
+                "issue-assigned:%d:%d".formatted(event.issueId(), event.assigneeId())));
     }
 
     /** 이름을 못 찾으면 알림을 포기하지 않는다 — 문구만 덜 친절해진다. */

@@ -74,7 +74,7 @@ log). `verify.sh`/CI only look at `pms/gradlew`, so `pms-old/` is not verified.
   | person (cross-module) | `PersonDirectoryService` · `OrgVisibilityService` · `OrgPermissionService` · `PersonLookupService` · `WorkforceDirectoryService` | **different consumers** — these earn the split |
   | project (cross-module) | `AssignmentDirectoryService` · `ProjectLookupService` · `ProgressCommandService` | one more consumer set (resource · `/mcp`) — 2026-08-23 |
   | resource (cross-module) | `UtilizationLookupService` | `/mcp` only — the web takes `?orgUnitId=`, chat takes a `UtilizationScope` (2026-08-24) |
-  | maintenance | `MaintenanceQueryService` · `IssueQueryService` · `ContractCommandService` | **read vs write is a real axis here** — reads are company-wide and take no caller (D4-3), writes are gated on the "계약 관리" flag and take one (D2-3). Same split, same reason, as audit's `AuditTrail` / `AuditQueryService` (2026-08-24) |
+  | maintenance | `MaintenanceQueryService` · `IssueQueryService` · `ContractCommandService` · `IssueCommandService` | **three axes, not two** — reads are company-wide and take no caller (D4-3); contract writes are gated on the "계약 관리" flag (D2-3); **issue writes take a caller but have no gate** (US-D3 = every logged-in user, 2026-08-24). Same read/write split, same reason, as audit's `AuditTrail` / `AuditQueryService` |
 
   Implementations stay decomposed where the work is: `ProjectActionPermission`,
   `ProjectVisibilityService`, `ProjectAuditRecorder`, `ProjectViewFactory`,
@@ -88,8 +88,10 @@ log). `verify.sh`/CI only look at `pms/gradlew`, so `pms-old/` is not verified.
   adopted 2026-08-22). Every sub-package (`controller/`, `service/`, `repository/`)
   is internal, so the files sitting *directly* in a module directory **are** the
   contract it offers, and that list is the boundary — measured 2026-08-24:
-  `person` 11 · `project` 8 · `audit` 6 · `maintenance` 5 · `resource` 4 ·
-  `notification` 4. `auth` and `mcp` have empty roots: nothing of theirs crosses
+  `person` 12 · `project` 9 · `audit` 6 · `maintenance` 6 · `resource` 5 ·
+  `notification` 5 (re-measured 2026-08-24 — four of the six numbers had gone stale
+  while the file still said "measured"; `ls <module>/*.java` is the measurement).
+  `auth` and `mcp` have empty roots: nothing of theirs crosses
   (`mcp` is the extreme case — it only *consumes*, so deleting it leaves the app
   running). Entities and repositories therefore cannot leave a module, and links
   are by id.
@@ -149,16 +151,17 @@ disappears, and it now has.
   auth and access-log masking are one unit. Registered gap: **a status transition also
   creates overbooking** (계약대기 → 진행중 pulls that person's assignment into the
   numerator) and §8 has no event for it — look at it with F2/F3.
-- **EPIC D writes — D2 landed 2026-08-24; D1 and D3 remain.** D2 (contract + site
-  registration/edit) is live, so maintenance is no longer read-only. **D3** (issue
-  register/handle/comment) was deliberately split off: D3-1's assignee notification
-  pulls two decisions with it — a new `NotificationType` value (which shows up in the
-  H1-4 preferences screen) and the registered question of where notification's four
-  root contracts belong (PRD-pms §12). **D1 handover** still needs the
-  module-direction decision (the route is project's, the contract is maintenance's,
-  and D1-2 wants one transaction).
-- project ACs **A6-3** (role assignment) · **A8** (per-project permission matrix),
-  and the `?phase=` list filter.
+- **EPIC D writes — D2 and D3 landed 2026-08-24; only D1 remains.** Contract/site
+  registration and edit (D2) and issue register/handle/comment (D3) are both live, so
+  maintenance is a fully writable domain. D3 closed the two decisions it was split off for:
+  `NotificationType` gained `ISSUE_ASSIGNED` (named for the *recipient* — the assignee —
+  not the act of registering; user decision), and the registered question of where
+  notification's five root contracts belong got its answer (they move to `service/`;
+  measured 0 external importers even after a new subscriber landed — the move itself is
+  left as a separate unit, PRD-pms §12). **D1 handover** still needs the module-direction
+  decision (the route is project's, the contract is maintenance's, and D1-2 wants one
+  transaction).
+- project AC **A8** (per-project permission matrix),
   and the `?phase=` list filter.
 
 ## Ownership inside this app
@@ -348,14 +351,28 @@ PUT  /api/maintenance/contracts/{id}       {version} in the body (D2-2). **No DE
 POST /api/maintenance/contracts/{id}/sites 201 + site view, contacts embedded (D2-4)
 PUT  /api/maintenance/sites/{id}           {version}; the contacts list is a full
                                            replacement, not a merge (§7 PUT) (D2-4)
+--- issue writes live since 2026-08-24 (D3) ---
+POST  /api/maintenance/issues              201 — {siteId, type, title} only; the server sets
+                                           status=접수, receivedAt=today and the assignee
+                                           from the site's engineerId (D3-1), then publishes
+                                           `MaintenanceIssueRegistered`
+PATCH /api/maintenance/issues/{id}         {version} + status and/or assigneeId (D3-2).
+                                           PATCH, not PUT: an omitted field means "leave it",
+                                           so **unassigning cannot be expressed** (no AC asks)
+POST  /api/maintenance/issues/{id}/comments  201 — **append-only** (D3-3). No version: adding
+                                           a comment does not modify the issue
 ```
 
-Maintenance **reads** take no caller (company-wide, D4-3) but **writes** take one: the
-"계약 관리" flag decides, so `ContractWriteGuard` runs before anything else
-(`MaintenanceWriteAuthorizationTest` locks all four routes).
+Maintenance **reads** take no caller (company-wide, D4-3). **Contract writes** take one and are
+gated on the "계약 관리" flag, so `ContractWriteGuard` runs before anything else
+(`MaintenanceWriteAuthorizationTest` locks all four routes). **Issue writes take a caller but
+have no gate at all** (2026-08-24, D3): US-D3 is `[로그인 사용자 전체]`, so `IssueCommandService`
+is the first write contract in this app with no permission guard — the caller id is there for
+the *record* (audit actor, comment author), not for a judgement. Reusing `ContractWriteGuard`
+here would be wrong, not merely redundant: a 팀원 must be able to file the issue they will work.
 
 No assignment list route: the project detail already carries them (A3-3).
-Not routed yet, on purpose: A6-3 (`/roles`), A8 (`/permissions`), `?phase=`, and
+Not routed yet, on purpose: A8 (`/permissions`), `?phase=`, and
 the SSE stream `GET /api/notifications/stream` (its `?access_token=` auth and the
 access-log masking are one unit — opening the route first leaks tokens into logs).
 
@@ -367,7 +384,7 @@ Two failures showed up together on 2026-08-24 and both are easy to reintroduce.
   and `PUT /api/permission-groups/{id}` all *accepted* a `version` and never compared it,
   so the last write won silently — while their command DTOs' javadoc had promised
   `409 STALE_VERSION` from the start. Entities now carry `requireVersion(expected)`
-  (`Project`, `ProjectAssignment`, `MaintenanceContract`, `MaintenanceSite`, `Person`,
+  (`Project`, `ProjectAssignment`, `MaintenanceContract`, `MaintenanceSite`, `MaintenanceIssue`, `Person`,
   `Grade`, `PermissionGroup`) and the use case calls it right after loading.
 - **Return the flushed version.** A response built inside the same transaction carries the
   *pre-increment* `@Version`, so the client saves, gets `version` back, edits again — and is
@@ -405,6 +422,13 @@ why `projectId` is a filter column filled even when `entityId` is an assignment.
   throwing 501) — that ordering is the point: a permission hole is not something to
   add later.
 
+- **Snapshots round-trip through JSON, so numbers do not come back as `Long`** (measured
+  2026-08-24). An id stored in a snapshot reads back as `Integer`, and an assertion written
+  as `containsEntry("assigneeId", 902L)` fails against `902`. Compare numerically.
+- **An append-only record does not get an audit row.** Issue comments (D3-3) are already
+  immutable facts carrying author and timestamp; recording them again would put the same
+  fact in two tables, and audit answers "what changed" — the issue did not change.
+
 - **Seeding leaves no audit rows** (measured 2026-08-24): `audit_logs` is empty on a
   freshly seeded database, so the audit screens show nothing until someone writes.
   An older record claimed seeded rows exist as `source=WEB`; that is registered as
@@ -414,6 +438,17 @@ why `projectId` is a filter column filled even when `entityId` is an assignment.
 
 The first events in this project. `project` publishes `AssignmentChanged`, `resource`
 subscribes and republishes `OverbookingDetected`, `notification` subscribes and stores.
+Since 2026-08-24 (D3) `maintenance` publishes `MaintenanceIssueRegistered` too — a second,
+independent publisher confirming the arrangement generalises.
+
+- **Publish even when nobody will be notified.** `MaintenanceIssueRegistered` fires with a
+  null `assigneeId` when the site has no engineer; the *subscriber* decides there is nobody
+  to tell. If the publisher skipped the event, the publisher would know who subscribes —
+  the exact coupling the edge direction exists to prevent. Same shape as notification
+  filtering `AssignmentChanged` down to `Kind.ASSIGNED`.
+- **Carry what the message needs.** The event ships `title` and `siteName` so the subscriber
+  never queries back; a lookup there would create the `notification → maintenance` edge this
+  design avoids.
 
 - **Edges point from subscriber to publisher, always.** The subscriber imports the event
   type from the publisher's module root. The reverse (publisher calls the subscriber) is

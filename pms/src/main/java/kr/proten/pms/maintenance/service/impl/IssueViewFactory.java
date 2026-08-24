@@ -53,6 +53,7 @@ class IssueViewFactory {
                 issue.getId(),
                 issue.getType().label(),
                 issue.getStatus().label(),
+                issue.getStatus(),
                 issue.getTitle(),
                 issue.getReceivedAt(),
                 issue.getCompletedAt(),

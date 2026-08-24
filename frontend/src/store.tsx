@@ -18,6 +18,8 @@ import {
 import type {
   AssignmentView,
   AuditRecord,
+  CommentBody,
+  CommentView,
   ContractBody,
   ContractDetail,
   ContractQuery,
@@ -29,6 +31,8 @@ import type {
   EditProjectBody,
   GradeBody,
   GradeDetail,
+  IssueBody,
+  IssueEditBody,
   IssueQuery,
   IssueView,
   MeView,
@@ -143,7 +147,20 @@ interface Store {
    * 전사 공개라 가시성 판정이 없고(D4-3) 화자가 바뀌어도 같은 답이 온다.
    */
   loadContracts: (query: ContractQuery) => Promise<Result<PageResponse<ContractSummary>>>
+  /**
+   * 계약 상세를 **화면 이동 없이** 읽는다 — 이슈 등록(D3-1)의 사이트 선택이 필요해서다.
+   * `openContract`는 라우트를 계약 상세로 옮기므로 이슈 목록에서 쓸 수 없다.
+   */
+  loadContractDetail: (contractId: number) => Promise<Result<ContractDetail>>
   loadIssues: (query: IssueQuery) => Promise<Result<PageResponse<IssueView>>>
+  /**
+   * 이슈 쓰기 (US-D3) — 계약 쓰기와 달리 **플래그 판정이 없다**(로그인 사용자 전체).
+   * 목록을 다시 읽는 것은 화면이 한다: 이슈 목록은 화면의 필터 상태가 질의라
+   * store가 그 조건을 모른다(계약은 열린 상세 하나라 store가 다시 읽는다).
+   */
+  registerIssue: (body: IssueBody) => Promise<Result<IssueView>>
+  processIssue: (issueId: number, body: IssueEditBody) => Promise<Result<IssueView>>
+  addIssueComment: (issueId: number, body: CommentBody) => Promise<Result<CommentView>>
   /** 통합 감사 로그 (G1-3) — 플래그가 없으면 서버가 403이고 화면이 그대로 보여 준다 */
   loadAudit: (page: number) => Promise<Result<PageResponse<AuditRecord>>>
   /** 프로젝트별 이력 (G2-2) — 가시성 밖은 404 은닉이다 */
@@ -450,6 +467,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [run])
   const loadIssues = useCallback(
     (query: IssueQuery) => run(() => api.maintenanceIssues(query), { refresh: false }), [run])
+  // 계약 상세를 화면 이동 없이 읽는다 — 이슈 등록의 사이트 선택이 원천이다
+  const loadContractDetail = useCallback(
+    (contractId: number) =>
+      run(() => api.maintenanceContract(contractId), { refresh: false }), [run])
   const loadAudit = useCallback(
     (page: number) => run(() => api.audit(page), { refresh: false }), [run])
   const loadProjectAudit = useCallback(
@@ -569,6 +590,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       runOrganization(() => api.updatePermissionGroup(groupId, body)),
     deletePermissionGroup: (groupId) =>
       runOrganization(() => api.deletePermissionGroup(groupId)),
+    // 이슈 쓰기는 목록을 다시 읽지 않는다 — 화면의 필터가 질의라 여기서는 조건을
+    // 모른다. 호출한 화면이 자기 조건으로 재조회한다(계약과 다른 점이다)
+    registerIssue: (body) => run(() => api.registerIssue(body), { refresh: false }),
+    processIssue: (issueId, body) =>
+      run(() => api.processIssue(issueId, body), { refresh: false }),
+    addIssueComment: (issueId, body) =>
+      run(() => api.addIssueComment(issueId, body), { refresh: false }),
     createContract: (body) => runContract(() => api.createContract(body)),
     updateContract: (contractId, body) =>
       runContract(() => api.updateContract(contractId, body), contractId),
@@ -579,6 +607,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // store 값이 다시 만들어질 때마다 화면의 조회 effect가 함께 깨어난다
     loadUtilization,
     loadContracts,
+    loadContractDetail,
     loadIssues,
     loadAudit,
     loadProjectAudit,
@@ -592,7 +621,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     projects, totalProjects, route, detail, contract, toast, loginError, submitLogin,
     enterAsCaller, logout, reload, openProject, closeProject, openContract, closeContract,
     showToast, run, runOrganization, runContract, notifications,
-    loadUtilization, loadContracts, loadIssues, loadAudit, loadProjectAudit,
+    loadUtilization, loadContracts, loadContractDetail, loadIssues, loadAudit, loadProjectAudit,
     loadNotifications, markNotificationRead, loadNotifPrefs, updateNotifPrefs])
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>
