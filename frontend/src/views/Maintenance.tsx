@@ -9,12 +9,14 @@
  * 하는데(45사이트 계약에 고객사명으로 도달하는 유일한 경로), 사이트는 목록 응답에
  * 실려 오지 않으므로 화면에서 거를 수 없다. 맞은 사이트는 `matchedSites`로 온다.
  *
- * 등록·수정 버튼은 없다 — D2 쓰기는 서버에 라우트 자체가 없다(conventions §3
- * "있는 엔드포인트만 부른다").
+ * 계약 등록(D2-1)은 **"계약 관리" 플래그 보유자에게만** 보인다(관리자·부문장·팀장 —
+ * 상위 PRD §4-3). 조회는 전사인데 쓰기는 아닌 화면이라 두 규칙이 한 화면에 있다.
+ * 삭제 버튼은 없다: 계약 종료는 상태 `종료`로 표현한다(D2-2 — 연 단위 갱신 이력 보존).
  */
 import { useCallback, useEffect, useState } from 'react'
 import { useStore } from '../store'
 import { Empty, ErrorText } from '../components/ui'
+import ContractEditModal from '../components/ContractEditModal'
 import { period } from '../labels'
 import type { ContractStatus, ContractSummary } from '../types/api'
 
@@ -34,12 +36,14 @@ type Load =
   | { phase: 'error'; code: string; message: string }
 
 export default function Maintenance() {
-  const { loadContracts, openContract } = useStore()
+  const { me, loadContracts, openContract } = useStore()
   const [status, setStatus] = useState<ContractStatus | 'ALL'>('ALL')
   const [keyword, setKeyword] = useState('')
   // 입력마다 질의하지 않는다 — 확정된 검색어만 서버로 간다
   const [submitted, setSubmitted] = useState('')
   const [load, setLoad] = useState<Load>({ phase: 'loading' })
+  const [creating, setCreating] = useState(false)
+  const writable = me?.manageContracts === true
 
   const fetchRows = useCallback(async () => {
     setLoad({ phase: 'loading' })
@@ -71,6 +75,11 @@ export default function Maintenance() {
           <input placeholder="계약명 · 계약사 · 사이트명 검색" value={keyword}
             onChange={(e) => setKeyword(e.target.value)} style={{ width: 240 }} />
           <button className="btn btn-ghost" type="submit">검색</button>
+          {writable && (
+            <button className="btn btn-primary" type="button" onClick={() => setCreating(true)}>
+              + 계약 등록
+            </button>
+          )}
         </form>
       </div>
 
@@ -137,8 +146,13 @@ export default function Maintenance() {
 
       <div className="muted2" style={{ fontSize: 11.5, marginTop: 12 }}>
         유지보수는 <b>전사 공개</b>입니다(D4-3) — 조직 가시성이 걸리지 않고 화자에 따라 달라지지
-        않습니다. 계약 등록·수정은 아직 서버에 없습니다.
+        않습니다. 등록·수정은 <b>계약 관리</b> 권한이 있어야 하고, 계약 종료는 삭제가 아니라
+        상태 <b>종료</b>로 표현합니다(연 단위 갱신 이력 보존).
       </div>
+
+      {creating && (
+        <ContractEditModal contract={null} onClose={() => { setCreating(false); void fetchRows() }} />
+      )}
     </section>
   )
 }

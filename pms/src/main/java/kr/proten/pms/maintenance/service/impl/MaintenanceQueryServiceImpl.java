@@ -99,6 +99,7 @@ class MaintenanceQueryServiceImpl implements MaintenanceQueryService {
                 contract.getContractor(),
                 contract.getName(),
                 contract.getStatus().label(),
+                contract.getStatus(),
                 contract.getSheetSection(),
                 contract.getContractDate(),
                 contract.getContractDateNote(),

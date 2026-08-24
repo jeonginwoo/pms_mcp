@@ -3,7 +3,6 @@ package kr.proten.pms.person.service;
 import java.util.List;
 import kr.proten.pms.person.service.dto.GradeCommand;
 import kr.proten.pms.person.service.dto.GradeDetail;
-import kr.proten.pms.person.service.dto.ReferenceItem;
 
 /**
  * 직급 관리 유스케이스 — US-E4 (2026-08-09 ⑤ 채택).
@@ -15,7 +14,7 @@ import kr.proten.pms.person.service.dto.ReferenceItem;
 public interface GradeService {
 
     /** 선택 목록 — 인력 등록 폼이 고를 직급들. 관리 화면과 같은 판정을 거친다. */
-    List<ReferenceItem> list(long callerPersonId);
+    List<GradeDetail> list(long callerPersonId);
 
     /** 직급을 만든다 (AC E4-1). */
     GradeDetail create(long callerPersonId, GradeCommand command);

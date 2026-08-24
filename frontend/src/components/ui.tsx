@@ -81,6 +81,19 @@ export function Modal({ title, width = 520, children, onClose }: {
   )
 }
 
+/**
+ * 모달 아래의 버튼 줄 — 취소는 왼쪽, 확정은 오른쪽.
+ * 조각으로 올린 이유는 배치가 아니라 **순서**다: 모달마다 손으로 쓰면 어딘가에서
+ * 확정이 왼쪽으로 가고, 그러면 사용자가 취소를 누르려다 저장한다.
+ */
+export function ModalActions({ children }: { children: ReactNode }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
+      {children}
+    </div>
+  )
+}
+
 export function Field({ label, hint, children }: {
   label: string
   hint?: string

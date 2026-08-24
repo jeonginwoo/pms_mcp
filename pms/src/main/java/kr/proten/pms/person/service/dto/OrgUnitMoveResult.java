@@ -1,6 +1,5 @@
 package kr.proten.pms.person.service.dto;
 
-import kr.proten.pms.person.PersonRef;
 
 /**
  * 소속 이동 결과 (AC E1-1·E1-2) — 옮긴 사람 + <b>경고</b>.
@@ -17,9 +16,9 @@ import kr.proten.pms.person.PersonRef;
  * 판단을 화면마다 반복하지 않게 서버가 한 번 정한다. 숫자를 함께 싣는 것은 화면이
  * 문구를 다시 쓰고 싶을 때를 위해서다.
  */
-public record OrgUnitMoveResult(PersonRef person, long activeAssignments, String warning) {
+public record OrgUnitMoveResult(PersonSummary person, long activeAssignments, String warning) {
 
-    public static OrgUnitMoveResult of(PersonRef person, long activeAssignments) {
+    public static OrgUnitMoveResult of(PersonSummary person, long activeAssignments) {
         return new OrgUnitMoveResult(person, activeAssignments, warningOf(activeAssignments));
     }
 

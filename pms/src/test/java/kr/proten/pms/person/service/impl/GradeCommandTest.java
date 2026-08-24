@@ -2,12 +2,14 @@ package kr.proten.pms.person.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 import kr.proten.pms.common.exception.ConflictException;
 import kr.proten.pms.common.exception.ErrorCode;
@@ -53,8 +55,29 @@ class GradeCommandTest {
     void setUp() {
         lenient().when(orgPermissionService.has(ADMIN_ID, OrgPermission.MANAGE_ORG))
                 .thenReturn(true);
+        // 수정 경로는 saveAndFlush로 저장한다 — 응답의 version이 커밋 뒤 값이어야 하기 때문이다
+        lenient().when(gradeRepository.saveAndFlush(any()))
+                .thenAnswer(call -> call.getArgument(0));
         service = new GradeServiceImpl(gradeRepository, personRepository,
                 new OrgManagePermission(orgPermissionService), auditRecorder);
+    }
+
+    @Test
+    @DisplayName("E4 — 목록은 관리 화면이 쓸 계수·version·인원 수를 함께 싣는다")
+    void listCarriesWhatTheAdminScreenNeeds() {
+        // Given: §7에 직급 상세 라우트가 없으므로 이 목록이 곧 관리 화면의 원천이다
+        when(gradeRepository.findAll()).thenReturn(List.of(
+                Grade.of(GRADE_ID, "수석", 1.5), Grade.of(6L, "책임", 1.2)));
+        when(personRepository.countByGrade())
+                .thenReturn(List.<Object[]>of(new Object[] {GRADE_ID, 3L}));
+
+        // When
+        List<GradeDetail> grades = service.list(ADMIN_ID);
+
+        // Then
+        assertThat(grades).extracting(GradeDetail::name, GradeDetail::coeff,
+                        GradeDetail::memberCount)
+                .containsExactly(tuple("수석", 1.5, 3L), tuple("책임", 1.2, 0L));
     }
 
     @Test

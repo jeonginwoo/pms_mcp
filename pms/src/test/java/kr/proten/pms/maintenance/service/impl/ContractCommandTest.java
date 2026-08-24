@@ -355,7 +355,7 @@ class ContractCommandTest {
 
     private static ContractDetail detail() {
         return new ContractDetail(CONTRACT_ID, null, "㈜가온아이", "그룹웨어 유지보수", "유지",
-                "2026 계약", null, null, null, null, null, null, null, null, null, null, null,
-                List.of(), Map.of(), 1L);
+                ContractStatus.ACTIVE, "2026 계약", null, null, null, null, null, null, null,
+                null, null, null, null, List.of(), Map.of(), 1L);
     }
 }

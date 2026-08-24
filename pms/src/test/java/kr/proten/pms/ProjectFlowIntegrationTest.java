@@ -8,7 +8,7 @@ import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.ForbiddenException;
 import kr.proten.pms.common.exception.NotFoundException;
 import kr.proten.pms.person.OrgPermission;
-import kr.proten.pms.person.PersonRef;
+import kr.proten.pms.person.service.dto.PersonSummary;
 import kr.proten.pms.person.repository.GradeRepository;
 import kr.proten.pms.person.repository.OrgUnitRepository;
 import kr.proten.pms.person.repository.PermissionGroupRepository;
@@ -286,12 +286,12 @@ class ProjectFlowIntegrationTest extends PostgresTestBase {
     @Test
     @DisplayName("인력 조회 — 팀장은 팀 subtree만, 관리자는 전사가 보인다")
     void listVisiblePeople_perCallerScope() {
-        List<PersonRef> leadView = personService.listVisible(SI_LEAD_ID);
-        List<PersonRef> adminView = personService.listVisible(ADMIN_ID);
+        List<PersonSummary> leadView = personService.listVisible(SI_LEAD_ID);
+        List<PersonSummary> adminView = personService.listVisible(ADMIN_ID);
 
-        assertThat(leadView).map(PersonRef::name)
+        assertThat(leadView).map(PersonSummary::name)
                 .containsExactlyInAnyOrder("에스아이팀장", "에스아이팀원");
-        assertThat(adminView).map(PersonRef::name).contains("타부문원");
+        assertThat(adminView).map(PersonSummary::name).contains("타부문원");
         assertThat(leadView.getFirst().orgUnit()).isEqualTo("SI팀");
     }
 }

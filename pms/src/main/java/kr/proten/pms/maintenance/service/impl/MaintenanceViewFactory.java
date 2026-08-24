@@ -90,6 +90,7 @@ class MaintenanceViewFactory {
                 .map(contact -> new ContactView(
                         contact.getId(),
                         contact.getParty().label(),
+                        contact.getParty(),
                         contact.getName(),
                         contact.getTitle(),
                         contact.getPhone(),

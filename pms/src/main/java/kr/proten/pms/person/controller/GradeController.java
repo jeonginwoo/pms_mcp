@@ -7,7 +7,6 @@ import kr.proten.pms.common.web.ApiResponse;
 import kr.proten.pms.person.controller.dto.GradeRequest;
 import kr.proten.pms.person.service.GradeService;
 import kr.proten.pms.person.service.dto.GradeDetail;
-import kr.proten.pms.person.service.dto.ReferenceItem;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,7 +34,7 @@ class GradeController {
     }
 
     @GetMapping
-    ApiResponse<List<ReferenceItem>> list(@CallerPersonId long callerPersonId) {
+    ApiResponse<List<GradeDetail>> list(@CallerPersonId long callerPersonId) {
         return ApiResponse.ok(gradeService.list(callerPersonId));
     }
 

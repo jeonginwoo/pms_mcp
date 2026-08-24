@@ -3,6 +3,7 @@ package kr.proten.pms.person.service.impl;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import kr.proten.pms.common.exception.ConflictException;
 import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.NotFoundException;
@@ -12,16 +13,19 @@ import kr.proten.pms.person.repository.PersonRepository;
 import kr.proten.pms.person.service.GradeService;
 import kr.proten.pms.person.service.dto.GradeCommand;
 import kr.proten.pms.person.service.dto.GradeDetail;
-import kr.proten.pms.person.service.dto.ReferenceItem;
 import kr.proten.pms.person.service.entity.Grade;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 직급 관리 — 목록은 동작하고 등록·수정·삭제는 아직 골격이다 (2026-08-22).
+ * 직급 관리 — 조회·등록·수정·삭제 전량 실구현 (US-E4. 골격은 2026-08-24에 걷혔다).
  *
  * 조회도 관리 플래그를 요구하는 이유: 직급 목록의 쓰임이 인력 등록 폼과 직급 관리
  * 화면 둘뿐이고 둘 다 관리 화면이다 — 일반 사용자가 고를 일이 없다.
+ *
+ * 목록이 `ReferenceItem`이 아니라 `GradeDetail`인 것은 2026-08-24 변경이다: §7에
+ * 직급 상세 라우트가 없어 이 목록이 곧 관리 화면의 원천인데, 수정이 계수와 version을
+ * 요구해 id·이름만으로는 폼을 채울 수 없었다.
  *
  * 쓰기에서 이미 정해져 있는 것:
  * - 검사 순서는 EPIC E 공통 — 권한(403) → 입력·참조(400·422) → 사용 중(409)
@@ -56,12 +60,14 @@ public class GradeServiceImpl implements GradeService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ReferenceItem> list(long callerPersonId) {
+    public List<GradeDetail> list(long callerPersonId) {
         orgManagePermission.require(callerPersonId);
+
+        Map<Long, Long> members = memberCounts();
 
         return gradeRepository.findAll().stream()
                 .sorted(Comparator.comparing(Grade::getId))
-                .map(grade -> new ReferenceItem(grade.getId(), grade.getName()))
+                .map(grade -> detailOf(grade, members.getOrDefault(grade.getId(), 0L)))
                 .toList();
     }
 
@@ -81,13 +87,16 @@ public class GradeServiceImpl implements GradeService {
         orgManagePermission.require(callerPersonId);
 
         Grade grade = require(command.gradeId());
+        // 2026-08-24 결함 수정 — 받아만 두고 검사하지 않던 version이다(PersonServiceImpl 참조)
+        grade.requireVersion(command.version());
         // 바꾸기 직전에 떠 둔다 — 바뀐 필드만 이력에 남는다
         Map<String, Object> before = auditRecorder.snapshot(grade);
         grade.update(name(command.name()), coeff(command.coeff()));
-        auditRecorder.gradeChanged(callerPersonId, grade, before);
+        Grade saved = gradeRepository.saveAndFlush(grade);
+        auditRecorder.gradeChanged(callerPersonId, saved, before);
 
         // 보정 가동률은 매 조회 계산이라 다음 조회부터 새 계수를 쓴다 — 재계산 호출이 없다(E4-2)
-        return detailOf(grade);
+        return detailOf(saved);
     }
 
     @Override
@@ -134,9 +143,18 @@ public class GradeServiceImpl implements GradeService {
         return value;
     }
 
-    private static GradeDetail detailOf(Grade grade) {
-        return new GradeDetail(grade.getId(), grade.getName(), grade.getCoeff(),
-                grade.getVersion());
+    /** 직급별 인원 수 — 목록에서 행마다 세지 않으려고 한 번에 묶어 받는다. */
+    private Map<Long, Long> memberCounts() {
+        return personRepository.countByGrade().stream()
+                .collect(Collectors.toMap(row -> (Long) row[0], row -> (Long) row[1]));
     }
 
+    private GradeDetail detailOf(Grade grade) {
+        return detailOf(grade, personRepository.countByGradeId(grade.getId()));
+    }
+
+    private static GradeDetail detailOf(Grade grade, long memberCount) {
+        return new GradeDetail(grade.getId(), grade.getName(), grade.getCoeff(),
+                memberCount, grade.getVersion());
+    }
 }

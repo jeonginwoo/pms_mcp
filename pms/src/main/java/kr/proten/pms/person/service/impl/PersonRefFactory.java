@@ -4,9 +4,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import kr.proten.pms.person.PersonRef;
 import kr.proten.pms.person.repository.GradeRepository;
 import kr.proten.pms.person.repository.OrgUnitRepository;
+import kr.proten.pms.person.service.dto.PersonSummary;
 import kr.proten.pms.person.service.entity.Grade;
 import kr.proten.pms.person.service.entity.OrgTree;
 import kr.proten.pms.person.service.entity.OrgUnit;
@@ -52,6 +54,36 @@ class PersonRefFactory {
 
     PersonRef toRef(Person person) {
         return toRefs(List.of(person)).getFirst();
+    }
+
+    /**
+     * 화면용 인원 행 — 표시 이름은 {@link #toRefs}가 이미 푼 것을 그대로 쓰고
+     * 편집용 id·version만 얹는다. 이름 해석이 두 벌이 되지 않게 하는 것이 이
+     * 클래스의 목적이므로, 요약도 참조를 거쳐 만든다.
+     */
+    List<PersonSummary> toSummaries(List<Person> people) {
+        List<PersonRef> refs = toRefs(people);
+
+        return IntStream.range(0, people.size())
+                .mapToObj(index -> summaryOf(people.get(index), refs.get(index)))
+                .toList();
+    }
+
+    PersonSummary toSummary(Person person) {
+        return toSummaries(List.of(person)).getFirst();
+    }
+
+    private static PersonSummary summaryOf(Person person, PersonRef ref) {
+        return new PersonSummary(
+                ref.id(),
+                ref.name(),
+                ref.orgUnit(),
+                ref.division(),
+                ref.grade(),
+                person.getOrgUnitId(),
+                person.getGradeId(),
+                person.getGroupId(),
+                person.getVersion());
     }
 
     private Map<Long, String> gradeNamesOf(List<Person> people) {

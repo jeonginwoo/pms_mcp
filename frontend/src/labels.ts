@@ -5,10 +5,13 @@
  */
 import type {
   AuditAction,
+  ContractStatus,
   Engagement,
+  NotificationType,
   ProjectPhase,
   ProjectRole,
   ProjectStatus,
+  VisibilityScope,
 } from './types/api'
 
 export const STATUS_LABEL: Record<ProjectStatus, string> = {
@@ -137,4 +140,43 @@ export function dday(endDate: string | null): { text: string; color: string } | 
   }
 
   return { text: `D-${days}`, color: 'var(--muted2)' }
+}
+
+/**
+ * 알림 유형 (EPIC F · H1-4 설정 단위).
+ * 정본은 서버 `NotificationType`의 label()이고, 유형이 늘면 여기에도 한 줄 추가한다.
+ */
+export const NOTIFICATION_TYPE_LABEL: Record<NotificationType, string> = {
+  ASSIGNED: '프로젝트 배정',
+  OVERBOOKED: '과부하 감지',
+  PROJECT_COMPLETED: '프로젝트 완료',
+  DEADLINE_NEAR: '마감 임박',
+  COMPLETION_OVERDUE: '완료 지연',
+}
+
+/** 가시성 범위 (상위 PRD §4-4) — 권한 그룹 관리 화면의 select 표기 */
+export const VISIBILITY_SCOPE_LABEL: Record<VisibilityScope, string> = {
+  COMPANY: '전사',
+  DIVISION: '부문',
+  TEAM: '팀(하위 포함)',
+  SELF: '본인만',
+}
+
+export const VISIBILITY_SCOPE_ORDER: VisibilityScope[] =
+  ['COMPANY', 'DIVISION', 'TEAM', 'SELF']
+
+/** 계약 상태 (§4) — 질의는 이름, 표시는 서버가 준 라벨이라 여기 표는 **선택지 전용**이다 */
+export const CONTRACT_STATUS_LABEL: Record<ContractStatus, string> = {
+  PLANNED: '예정',
+  NEW: '신규',
+  ACTIVE: '유지',
+  ENDED: '종료',
+}
+
+export const CONTRACT_STATUS_ORDER: ContractStatus[] = ['PLANNED', 'NEW', 'ACTIVE', 'ENDED']
+
+/** 연락처 구분 (§4) */
+export const CONTACT_PARTY_LABEL: Record<'CONTRACTOR' | 'CLIENT', string> = {
+  CONTRACTOR: '계약사',
+  CLIENT: '고객사',
 }

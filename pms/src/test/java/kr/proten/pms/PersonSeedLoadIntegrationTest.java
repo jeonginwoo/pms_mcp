@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 import kr.proten.pms.auth.repository.UserRepository;
 import kr.proten.pms.auth.service.AuthService;
-import kr.proten.pms.person.PersonRef;
+import kr.proten.pms.person.service.dto.PersonSummary;
 import kr.proten.pms.person.repository.GradeRepository;
 import kr.proten.pms.person.repository.OrgUnitRepository;
 import kr.proten.pms.person.repository.PermissionGroupRepository;
@@ -147,7 +147,7 @@ class PersonSeedLoadIntegrationTest {
         assertThat(personRepository.findAll()).filteredOn(Person::isSystem).singleElement()
                 .satisfies(account -> assertThat(account.getName()).isEqualTo("시스템관리자"));
         // 관리자(전사 scope)로 조회해도 시스템 계정은 보이지 않는다
-        assertThat(personService.listVisible(1L)).map(PersonRef::name)
+        assertThat(personService.listVisible(1L)).map(PersonSummary::name)
                 .doesNotContain("시스템관리자")
                 .hasSize(43);
     }
@@ -156,12 +156,12 @@ class PersonSeedLoadIntegrationTest {
     @DisplayName("가시성 관통 — 팀장은 자기 팀만, 부문장은 부문 subtree, 대표는 전사")
     void visibility_worksOnRealSeed() {
         // 배성수(26) = CS사업팀 팀장 → CS사업팀 4명
-        assertThat(personService.listVisible(26L)).map(PersonRef::name)
+        assertThat(personService.listVisible(26L)).map(PersonSummary::name)
                 .containsExactlyInAnyOrder("배성수", "김민환", "남진식", "이은지");
         // 김문수(16) = AX솔루션사업부 부문장 → 부문 + 산하 3팀 = 본인 1 + 4 + 4 + 4
         assertThat(personService.listVisible(16L)).hasSize(14);
         // 남진식(28) = CS사업팀 팀원 → 팀 전체 (2026-08-22 결정: 팀원 scope SELF→TEAM)
-        assertThat(personService.listVisible(28L)).map(PersonRef::name)
+        assertThat(personService.listVisible(28L)).map(PersonSummary::name)
                 .containsExactlyInAnyOrder("배성수", "김민환", "남진식", "이은지");
         // 박재완(1) = 관리자(전사)
         assertThat(personService.listVisible(1L)).hasSize(43);
@@ -186,7 +186,7 @@ class PersonSeedLoadIntegrationTest {
     @Test
     @DisplayName("E2-1 — 등록한 인원은 시드 계정과 같은 규칙으로 로그인할 수 있다")
     void createPerson_canLogInWithInitialPassword() {
-        PersonRef created = personService.create(1L, new CreatePersonCommand(
+        PersonSummary created = personService.create(1L, new CreatePersonCommand(
                 "시드신규", PersonFixtures.SI_TEAM_ID, 1L, 4L, "seed-new@proten.co.kr"));
 
         assertThat(created.id()).isGreaterThan(44L);

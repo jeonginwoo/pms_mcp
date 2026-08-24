@@ -289,7 +289,11 @@ POST /api/auth/refresh        rotate the pair
 GET  /api/auth/jwks           public keys (the /mcp decoder consumes this)
 
 GET  /api/me                  caller identity + group flags — the front-end gates UI on this
-GET  /api/people              visible people (43 seeded, system account hidden)
+GET  /api/people              visible people (43 seeded, system account hidden) — returns
+                              `PersonSummary`: display names **plus** orgUnitId/gradeId/
+                              groupId/version, because §7 has no person-detail route and this
+                              list is what the E2-2 edit form is filled from. The module-root
+                              `PersonRef` stays narrow — `/mcp` shares it (구현_노트 §5)
 GET  /api/people/{id}          404 conceals both absence and out-of-visibility
 DELETE /api/people/{id}       200 {success:true}, soft deactivate — "사용자/조직/권한 관리" flag (E2-3)
 GET  /api/org-units           tree + counts + deletable, same flag
@@ -297,11 +301,15 @@ DELETE /api/org-units/{id}    200 {success:true}, empty nodes only — 409 IN_US
 
 POST /api/people              201 + person — creates the login account too (E2-1)
 POST /api/org-units           201 + node — arbitrary depth, one company root (E3-1)
-GET  /api/grades              form choices for the admin screen (same flag)
-GET  /api/permission-groups   form choices for the admin screen (same flag)
+GET  /api/grades              `GradeDetail[]` — name, coeff, memberCount, version (same flag)
+GET  /api/permission-groups   `PermissionGroupDetail[]` — scope, 4 flags, systemFixed,
+                              memberCount, version (same flag). Both used to return
+                              `{id,name}`; the admin screens (E4/E5) could not be driven
+                              from that, and §7 gives them no detail route (2026-08-24)
 
 --- all live since 2026-08-24 (these were the last 501 scaffolds) ---
-PUT  /api/people/{id}              edit name·org·grade·group (E2-2)
+PUT  /api/people/{id}              edit name·org·grade·group (E2-2) — {version} required,
+                                   409 STALE_VERSION (the check was missing until 2026-08-24)
 PUT  /api/people/{id}/org-unit     move only (E1-1) — 200 carries a **warning** when the
                                    person has live assignments (E1-2, not an error)
 PUT  /api/org-units/{id}           rename (E3-2) — duplicate names under one parent are
@@ -350,6 +358,24 @@ No assignment list route: the project detail already carries them (A3-3).
 Not routed yet, on purpose: A6-3 (`/roles`), A8 (`/permissions`), `?phase=`, and
 the SSE stream `GET /api/notifications/stream` (its `?access_token=` auth and the
 access-log masking are one unit — opening the route first leaks tokens into logs).
+
+## Optimistic locking on writes (read this before adding a write path)
+
+Two failures showed up together on 2026-08-24 and both are easy to reintroduce.
+
+- **Take the version, then actually check it.** `PUT /api/people/{id}`, `PUT /api/grades/{id}`
+  and `PUT /api/permission-groups/{id}` all *accepted* a `version` and never compared it,
+  so the last write won silently — while their command DTOs' javadoc had promised
+  `409 STALE_VERSION` from the start. Entities now carry `requireVersion(expected)`
+  (`Project`, `ProjectAssignment`, `MaintenanceContract`, `MaintenanceSite`, `Person`,
+  `Grade`, `PermissionGroup`) and the use case calls it right after loading.
+- **Return the flushed version.** A response built inside the same transaction carries the
+  *pre-increment* `@Version`, so the client saves, gets `version` back, edits again — and is
+  rejected by the lock it never violated. `saveAndFlush` before building the response; project
+  already did this and the comment there says why.
+- Corollary (conventions §4): **query before you mutate.** A query on a dirty session flushes
+  first, so one use case increments `@Version` twice — `moveOrgUnit` was asking for the
+  assignment count *after* moving the person.
 
 ## Audit (recording and reading both live)
 

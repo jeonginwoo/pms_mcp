@@ -9,13 +9,20 @@
  * 보정 원문)·연락처 `raw`는 구조화에 실패했거나 모순이 있던 원문이고, 화면에서
  * 빼면 그 정보는 아무 데서도 볼 수 없다.
  */
+import { useState } from 'react'
 import { useStore } from '../store'
 import { Empty, Metric } from '../components/ui'
+import ContractEditModal from '../components/ContractEditModal'
+import SiteEditModal from '../components/SiteEditModal'
 import { period, shortDate } from '../labels'
 import type { SiteView } from '../types/api'
 
 export default function MaintenanceContract() {
-  const { contract, closeContract, openProject } = useStore()
+  const { me, contract, closeContract, openProject } = useStore()
+  const [editing, setEditing] = useState(false)
+  // undefined = 닫힘 · null = 신규 등록 · SiteView = 그 사이트 수정
+  const [siteDraft, setSiteDraft] = useState<SiteView | null | undefined>(undefined)
+  const writable = me?.manageContracts === true
 
   if (!contract) {
     return <Empty>계약을 선택하세요.</Empty>
@@ -39,13 +46,20 @@ export default function MaintenanceContract() {
               )}
             </div>
           </div>
-          {/* 이관으로 생긴 계약만 원천 프로젝트를 갖는다 (D1) */}
-          {contract.sourceProjectId !== null && (
-            <button className="btn btn-ghost"
-              onClick={() => void openProject(contract.sourceProjectId as number)}>
-              원 프로젝트 열기
-            </button>
-          )}
+          <div style={{ display: 'flex', gap: 8 }}>
+            {/* 이관으로 생긴 계약만 원천 프로젝트를 갖는다 (D1) */}
+            {contract.sourceProjectId !== null && (
+              <button className="btn btn-ghost"
+                onClick={() => void openProject(contract.sourceProjectId as number)}>
+                원 프로젝트 열기
+              </button>
+            )}
+            {writable && (
+              <button className="btn btn-ghost" onClick={() => setEditing(true)}>
+                계약 수정
+              </button>
+            )}
+          </div>
         </div>
 
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
@@ -77,18 +91,35 @@ export default function MaintenanceContract() {
         )}
       </section>
 
-      <Sites sites={contract.sites} />
+      <Sites sites={contract.sites} writable={writable}
+        onAdd={() => setSiteDraft(null)} onEdit={setSiteDraft} />
+
+      {editing && (
+        <ContractEditModal contract={contract} onClose={() => setEditing(false)} />
+      )}
+      {siteDraft !== undefined && (
+        <SiteEditModal contractId={contract.id} site={siteDraft}
+          onClose={() => setSiteDraft(undefined)} />
+      )}
     </div>
   )
 }
 
-function Sites({ sites }: { sites: SiteView[] }) {
+function Sites({ sites, writable, onAdd, onEdit }: {
+  sites: SiteView[]
+  writable: boolean
+  onAdd: () => void
+  onEdit: (site: SiteView) => void
+}) {
   return (
     <section className="card">
       <div className="card-head">
         <h3>사이트 <span className="muted2" style={{ fontWeight: 500, fontSize: 12.5 }}>
           {sites.length}곳
         </span></h3>
+        {writable && (
+          <button className="btn btn-primary btn-sm" onClick={onAdd}>+ 사이트 등록</button>
+        )}
       </div>
 
       {sites.map((site) => (
@@ -99,6 +130,12 @@ function Sites({ sites }: { sites: SiteView[] }) {
             <span className="muted2" style={{ fontSize: 12 }}>
               담당 {site.engineer?.name ?? '미배정'}
             </span>
+            {writable && (
+              <button className="btn btn-ghost btn-sm" style={{ marginLeft: 'auto' }}
+                onClick={() => onEdit(site)}>
+                수정
+              </button>
+            )}
           </div>
 
           {site.serverSpec && (
