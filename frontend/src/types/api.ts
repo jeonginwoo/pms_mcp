@@ -125,6 +125,190 @@ export interface ProgressUpdateResult {
   version: number
 }
 
+/**
+ * GET /api/utilization 항목 (AC C1-1·C1-6).
+ *
+ * `basic`·`adjusted`는 이미 백분율이다(서버가 ×100 해서 준다). 과부하 판정은
+ * **언제나 `basic`**이고 `adjusted`는 단가 가중 보조 지표라 판정에 쓰지 않는다
+ * (2026-08-10 재정의). 화면이 그 규칙을 뒤집지 않게 임계값을 한 곳에 둔다 —
+ * `OVERBOOKED_THRESHOLD`.
+ *
+ * `team`·`division`을 서버가 함께 주는 것은 소속별로 묶으라는 뜻이다(C1-6) —
+ * 없으면 화면이 인원 수만큼 개인 조회를 반복하게 된다.
+ */
+export interface UtilizationView {
+  personId: number
+  name: string
+  team: string
+  division: string
+  /** "yyyy-MM" */
+  month: string
+  assignedMm: number
+  availableMm: number
+  basic: number
+  adjusted: number
+}
+
+/** GET /api/utilization 질의 — personId가 있으면 개인 지정, 없으면 집계다(C1-5) */
+export interface UtilizationQuery {
+  month: string
+  personId?: number | null
+  orgUnitId?: number | null
+  overbooked?: boolean
+}
+
+// ── 유지보수 (EPIC D 조회분 — 전사 공개, 가시성 미적용·404 은닉 없음 · AC D4-3) ──
+
+/**
+ * 유지보수 열거값은 **질의와 응답의 형태가 다르다**(2026-08-24 실측).
+ * 질의 파라미터는 이름으로 바인딩되고(`?status=ACTIVE`), 응답 필드는 한국어 라벨로
+ * 온다(`"status": "유지"`). 라벨을 내보내는 것은 의도다 — 같은 값을 MCP 도구가
+ * 그대로 쓰고 eval 기대값이 그 문자열에 걸려 있다.
+ *
+ * 그래서 화면은 **필터에 이름을 보내고 표시는 서버가 준 라벨을 그대로 쓴다.**
+ * 라벨 표를 클라이언트에 또 만들지 않는다(정본이 둘이 된다).
+ */
+export type ContractStatus = 'PLANNED' | 'NEW' | 'ACTIVE' | 'ENDED'
+
+export type IssueStatus = 'RECEIVED' | 'IN_PROGRESS' | 'AWAITING_CLIENT' | 'DONE'
+
+export type IssueType = 'INCIDENT' | 'INQUIRY' | 'REQUEST'
+
+/** GET /api/maintenance/contracts 항목 (D4-1) — matchedSites는 keyword가 맞은 사이트 */
+export interface ContractSummary {
+  id: number
+  contractor: string
+  name: string
+  /** 한국어 라벨 (예: "유지") */
+  status: string
+  startDate: string | null
+  endDate: string | null
+  siteCount: number
+  matchedSites: string[]
+}
+
+/** 사이트의 연락처 — `raw`는 시트 원문이다(구조화에 실패한 값도 잃지 않는다) */
+export interface ContactView {
+  id: number
+  /** 한국어 라벨 ("계약사" | "고객사") */
+  party: string
+  name: string | null
+  title: string | null
+  phone: string | null
+  email: string | null
+  raw: string | null
+}
+
+export interface SiteView {
+  id: number
+  name: string
+  channel: string | null
+  serverSpec: string | null
+  engineer: PersonRef | null
+  contacts: ContactView[]
+}
+
+/** GET /api/maintenance/contracts/{id} (D4-2) — sourceProjectId는 이관으로 생긴 계약에만 있다 */
+export interface ContractDetail {
+  id: number
+  sourceProjectId: number | null
+  contractor: string
+  name: string
+  status: string
+  sheetSection: string | null
+  contractDate: string | null
+  contractDateNote: string | null
+  startDate: string | null
+  endDate: string | null
+  amount: number | null
+  monthlyAmount: number | null
+  salesRep: PersonRef | null
+  category: string | null
+  targetInfra: string | null
+  regularCheck: string | null
+  note: string | null
+  sites: SiteView[]
+  /** 키가 한국어 상태 라벨이다 (예: {"완료": 7}) */
+  issueCountByStatus: Record<string, number>
+  version: number
+}
+
+/** 이슈 코멘트 — append-only다(수정·삭제 API가 없다 · D3-3) */
+export interface CommentView {
+  id: number
+  author: PersonRef | null
+  content: string
+  createdAt: string
+}
+
+/** GET /api/maintenance/issues 항목 (D3-4) — 계약에 연결되지 않은 이슈가 있어 전부 nullable */
+export interface IssueView {
+  id: number
+  /** 한국어 라벨 ("장애" | "문의" | "요청") */
+  type: string
+  /** 한국어 라벨 ("접수" | "처리중" | "고객확인대기" | "완료") */
+  status: string
+  title: string
+  receivedAt: string | null
+  completedAt: string | null
+  assignee: PersonRef | null
+  siteId: number | null
+  siteName: string | null
+  contractId: number | null
+  contractName: string | null
+  comments: CommentView[]
+  version: number
+}
+
+/** GET /api/maintenance/contracts 질의 (D4-1) */
+export interface ContractQuery {
+  status?: ContractStatus | null
+  contractor?: string | null
+  endedBefore?: string | null
+  keyword?: string | null
+}
+
+/** GET /api/maintenance/issues 질의 (D3-4) — unassigned는 "미배정만" 필터다 */
+export interface IssueQuery {
+  status?: IssueStatus | null
+  type?: IssueType | null
+  siteId?: number | null
+  assigneeId?: number | null
+  contractId?: number | null
+  unassigned?: boolean
+}
+
+// ── 감사 (EPIC G — 같은 테이블의 두 읽기 뷰다) ──
+
+/** §5 상태 전이는 STATE_CHANGE, 그 밖의 변경은 UPDATE다 (v2.1 정리) */
+export type AuditAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'STATE_CHANGE'
+
+/** 어느 입구로 들어온 변경인가 — 서버가 요청 경로로 판정한다(`/mcp` → MCP) */
+export type AuditSource = 'WEB' | 'MCP'
+
+/**
+ * 감사 행 — `GET /api/audit`(G1-3 통합)와 `GET /api/projects/{id}/audit`(G2-2)가
+ * **같은 행**을 다른 필터로 돌려준다. 별도 저장이 없다는 게 설계다(G1-1·G1-2).
+ *
+ * `before`·`after`는 **바뀐 필드만** 담는다(변경 없으면 행 자체가 없다). 값의 타입이
+ * 필드마다 달라 `unknown`이고, 화면은 문자열로 만들어 보여 준다 — `any`는 금지다.
+ *
+ * `projectId`는 프로젝트 스코프 변경에만 채워진다(G2-1) — 조직·계정 변경은 null이라
+ * 통합 로그에만 나온다.
+ */
+export interface AuditRecord {
+  id: number
+  entityType: string
+  entityId: number | null
+  projectId: number | null
+  action: AuditAction
+  actorId: number
+  source: AuditSource
+  before: Record<string, unknown> | null
+  after: Record<string, unknown> | null
+  createdAt: string
+}
+
 /** §7 page 봉투 */
 export interface PageResponse<T> {
   content: T[]

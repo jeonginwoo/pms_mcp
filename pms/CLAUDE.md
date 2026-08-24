@@ -72,7 +72,8 @@ log). `verify.sh`/CI only look at `pms/gradlew`, so `pms-old/` is not verified.
   | project | `ProjectQueryService` · `ProjectCommandService` · `ProjectLifecycleService` · `AssignmentService` | visibility read · CRUD · §5 state machine · assignment |
   | person | `PersonService` · `OrgUnitService` · `GradeService` · `PermissionGroupService` · `AuditViewService` | one per managed resource |
   | person (cross-module) | `PersonDirectoryService` · `OrgVisibilityService` · `OrgPermissionService` · `PersonLookupService` · `WorkforceDirectoryService` | **different consumers** — these earn the split |
-  | project (cross-module) | `AssignmentDirectoryService` | one more consumer set (resource · `/mcp`) — 2026-08-23 |
+  | project (cross-module) | `AssignmentDirectoryService` · `ProjectLookupService` · `ProgressCommandService` | one more consumer set (resource · `/mcp`) — 2026-08-23 |
+  | resource (cross-module) | `UtilizationLookupService` | `/mcp` only — the web takes `?orgUnitId=`, chat takes a `UtilizationScope` (2026-08-24) |
 
   Implementations stay decomposed where the work is: `ProjectActionPermission`,
   `ProjectVisibilityService`, `ProjectAuditRecorder`, `ProjectViewFactory`,
@@ -84,11 +85,13 @@ log). `verify.sh`/CI only look at `pms/gradlew`, so `pms-old/` is not verified.
   factories) and the entity must not depend on `dto/`.
 - **A module's public API is its root package** (Modulith's default arrangement —
   adopted 2026-08-22). Every sub-package (`controller/`, `service/`, `repository/`)
-  is internal, so the files sitting *directly* in `person/`, `audit/` and `project/`
-  **are** the contract those modules offer — 11, 6 and 3 files, and that list is the
-  boundary. `auth` · `resource` · `mcp` have empty roots: nothing of theirs crosses
-  (`mcp` is the extreme case — it only *consumes*). Entities and repositories
-  therefore cannot leave a module, and links are by id.
+  is internal, so the files sitting *directly* in a module directory **are** the
+  contract it offers, and that list is the boundary — measured 2026-08-24:
+  `person` 11 · `project` 8 · `audit` 6 · `maintenance` 5 · `resource` 4 ·
+  `notification` 4. `auth` and `mcp` have empty roots: nothing of theirs crosses
+  (`mcp` is the extreme case — it only *consumes*, so deleting it leaves the app
+  running). Entities and repositories therefore cannot leave a module, and links
+  are by id.
   - There are **no `package-info.java` files**. They only ever carried
     `@NamedInterface`, which was needed because the contracts sat in a sub-package
     instead of the root — the framework default removes the need entirely. Before
@@ -128,16 +131,6 @@ a `TODO(<AC>)` naming exactly what is missing. 501 rather than 500 so a caller
 can tell "not built yet" from "broken", and the code is deliberately absent from
 the §7 error table: when the logic lands, the throw site disappears.
 
-- **resource** — `GET /api/utilization` (EPIC C). `Capacity` is the per-month
-  override; the default stays `Person.capacity`. **The seam is now open**
-  (2026-08-23, shared decision log): `project.AssignmentDirectoryService` gives the
-  numerator as rows (with `projectStatus`, so resource owns the "진행중 only"
-  population rule) and `person.WorkforceDirectoryService` gives capacity, billable,
-  grade coefficient and team/division. **One gap remains for the chat path**: the
-  contracts return org names, not ids, so `get_utilization(scope=MY_TEAM|DIVISION)`
-  — where the server must derive the target set from the caller rather than take an
-  `?orgUnitId=` — has no way to resolve it. See the unresolved issue in
-  `docs/PROGRESS.md`.
 - **notification** — `GET /api/notifications`, `PATCH /{id}/read` (EPIC F).
   Idempotency is already structural: `(recipient_id, dedupe_key)` is unique in
   V7. The SSE route is deliberately not opened yet — it authenticates via
@@ -154,11 +147,11 @@ the §7 error table: when the logic lands, the throw site disappears.
 - **Auth is switched off** — see the Auth section below. With
   `pms.auth.enabled=false` (the default) the caller arrives as the
   `X-Caller-Person-Id` header and is trusted, so **this app must not be exposed**.
-- **6 of the 8 MCP tools** — `search_projects` · `get_utilization` ·
-  `list_overbooked` · `search_maintenance` · `list_maintenance_logs` ·
-  `update_progress` return the FR-AI-26 `503` until their domain publishes a
-  contract at its module root (see the `/mcp` section below). Because the only
-  wired tools are reads, **every audit row is still `source=WEB`**.
+- **2 of the 8 MCP tools** — `get_utilization` · `list_overbooked` still return the
+  FR-AI-26 `503` (measured 2026-08-24). Their blockers are gone: EPIC C landed
+  2026-08-23 and `resource.UtilizationLookupService` landed 2026-08-24, so what
+  remains is adapter wiring (MCP dev). The other six are live, and `update_progress`
+  being among them means audit rows now carry `source=MCP` as well as `WEB`.
 - **Domain events** — A7-1 `ProjectCompleted`, B2-1 `AssignmentClosed` and the
   rest are still not published: the notification module exists now, but nothing
   consumes them until its logic lands.
@@ -168,9 +161,15 @@ the §7 error table: when the logic lands, the throw site disappears.
 ## Ownership inside this app
 
 - **PMS dev**: domain modules, services, web/API, persistence, seed loading.
-- **MCP dev**: the `mcp` adapter module (promoted 2026-08-23), plus the read
-  contract each domain publishes for it — those root files are agreed in the
-  shared decision log before they land.
+- **MCP dev**: the `mcp` adapter module (promoted 2026-08-23) and the wiring of
+  each tool onto a domain contract.
+- **The read contract a domain publishes at its module root is written by the PMS
+  dev**, and *which* dev writes it is settled in the shared decision log **before
+  the file lands** (git-workflow §3 "One promotion, one owner"). This line used to
+  read as if the MCP dev owned those root files; that ambiguity is what let
+  `MaintenanceLookupService` be written twice on 2026-08-23 in two shapes, and one
+  full contract + impl + tests was thrown away. Corrected 2026-08-24 to match what
+  actually happened for `person`, `project`, `maintenance` and `resource`.
 - The seam between the two is the service-layer API — changing it is a
   cross-boundary contract change: record it in the shared decision log in
   `docs/PROGRESS.md`, agreed by both devs.

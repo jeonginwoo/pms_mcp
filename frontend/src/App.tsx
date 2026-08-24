@@ -8,9 +8,14 @@ import Home from './views/Home'
 import People from './views/People'
 import Projects from './views/Projects'
 import ProjectDetail from './views/ProjectDetail'
+import Utilization from './views/Utilization'
+import Maintenance from './views/Maintenance'
+import MaintenanceContract from './views/MaintenanceContract'
+import MaintenanceIssues from './views/MaintenanceIssues'
+import Audit from './views/Audit'
 
 function Shell() {
-  const { phase, bootError, route, detail, toast, reload } = useStore()
+  const { phase, bootError, route, detail, contract, toast, reload } = useStore()
   const { theme, toggle } = useTheme()
 
   if (phase === 'anon') {
@@ -55,6 +60,10 @@ function Shell() {
           {route === 'home' && <Home />}
           {route === 'projects' && (detail ? <ProjectDetail /> : <Projects />)}
           {route === 'people' && <People />}
+          {route === 'utilization' && <Utilization />}
+          {route === 'maintenance' && (contract ? <MaintenanceContract /> : <Maintenance />)}
+          {route === 'issues' && <MaintenanceIssues />}
+          {route === 'audit' && <Audit />}
         </main>
       </div>
       {toast && <Toast message={toast} />}

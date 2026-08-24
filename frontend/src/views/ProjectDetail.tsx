@@ -17,11 +17,13 @@ import { ErrorText, Metric, StatusBadge } from '../components/ui'
 import ProgressEditor from '../components/ProgressEditor'
 import ProjectActions from '../components/ProjectActions'
 import AssignmentPanel from '../components/AssignmentPanel'
+import ProjectAuditPanel from '../components/ProjectAuditPanel'
 import ProjectEditModal from '../components/ProjectEditModal'
 
 export default function ProjectDetail() {
   const { detail, me, closeProject, deleteProject, showToast } = useStore()
   const [editing, setEditing] = useState(false)
+  const [tab, setTab] = useState<'info' | 'audit'>('info')
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [error, setError] = useState<{ code: string; message: string } | null>(null)
   const [busy, setBusy] = useState(false)
@@ -58,7 +60,22 @@ export default function ProjectDetail() {
         ← 프로젝트 목록
       </button>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.7fr) minmax(320px,1fr)', gap: 16, alignItems: 'start' }}>
+      {/* 이력은 가시성 안이면 역할 무관하게 보인다 (G2-3) — 권한 조건 없이 탭을 둔다 */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+        <button className={`chip-btn ${tab === 'info' ? 'on' : ''}`}
+          onClick={() => setTab('info')}>기본 정보</button>
+        <button className={`chip-btn ${tab === 'audit' ? 'on' : ''}`}
+          onClick={() => setTab('audit')}>이력</button>
+      </div>
+
+      {tab === 'audit' && <ProjectAuditPanel projectId={detail.id} />}
+
+      <div style={{
+        display: tab === 'info' ? 'grid' : 'none',
+        gridTemplateColumns: 'minmax(0,1.7fr) minmax(320px,1fr)',
+        gap: 16,
+        alignItems: 'start',
+      }}>
         <div style={{ display: 'grid', gap: 16 }}>
           <section className="card" style={{ padding: '22px 24px' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, marginBottom: 16 }}>

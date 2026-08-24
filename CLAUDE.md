@@ -124,8 +124,10 @@ docker compose -f pms/docker-compose.yml up -d
                          # list_maintenance_logs, search_projects,
                          # update_progress). update_progress is the only write
                          # tool and keeps its 2-step confirmation (principle 5).
-                         # The remaining 2 (utilization) return the FR-AI-26 503
-                         # and wait on EPIC C — no adapter work is pending there.
+                         # The remaining 2 (utilization) return the FR-AI-26 503,
+                         # and now only adapter wiring is left: EPIC C landed
+                         # 2026-08-23 and resource.UtilizationLookupService
+                         # (+UtilizationScope) landed 2026-08-24.
 ```
 
 ## Way of working

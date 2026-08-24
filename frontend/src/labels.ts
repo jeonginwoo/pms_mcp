@@ -3,7 +3,13 @@
  * 한국어 표기는 화면이 갖는다. 정본은 서버 열거형의 label()이며, 값이 늘면
  * 여기에도 한 줄 추가한다(누락 시 이름이 그대로 보이도록 폴백을 둔다).
  */
-import type { Engagement, ProjectPhase, ProjectRole, ProjectStatus } from './types/api'
+import type {
+  AuditAction,
+  Engagement,
+  ProjectPhase,
+  ProjectRole,
+  ProjectStatus,
+} from './types/api'
 
 export const STATUS_LABEL: Record<ProjectStatus, string> = {
   CONTRACT_PENDING: '계약대기',
@@ -42,6 +48,36 @@ export const ROLE_LABEL: Record<ProjectRole, string> = {
   PM: 'PM',
   PL: 'PL',
   PARTICIPANT: '참여자',
+}
+
+/**
+ * 감사 행위 — 서버 열거를 이름으로 받으므로 여기서 한국어를 붙인다.
+ * STATE_CHANGE는 §5 상태 전이 전용이고 그 밖의 변경은 전부 UPDATE다(v2.1 정리).
+ */
+export const AUDIT_ACTION_LABEL: Record<AuditAction, string> = {
+  CREATE: '생성',
+  UPDATE: '수정',
+  DELETE: '삭제',
+  STATE_CHANGE: '상태 전이',
+}
+
+export const AUDIT_ACTION_COLOR: Record<AuditAction, [string, string]> = {
+  CREATE: ['#1f9d57', 'rgba(31,157,87,.13)'],
+  UPDATE: ['#2f6fed', 'rgba(47,111,237,.12)'],
+  DELETE: ['#d84a4a', 'rgba(216,74,74,.13)'],
+  STATE_CHANGE: ['#6b5bd2', 'rgba(107,91,210,.12)'],
+}
+
+/** 감사 시각 — Instant(ISO)라 초까지만 보여 준다. */
+export function auditTime(createdAt: string): string {
+  const at = new Date(createdAt)
+
+  return `${String(at.getFullYear()).slice(2)}.${pad(at.getMonth() + 1)}.${pad(at.getDate())} `
+    + `${pad(at.getHours())}:${pad(at.getMinutes())}`
+}
+
+function pad(value: number): string {
+  return String(value).padStart(2, '0')
 }
 
 /**

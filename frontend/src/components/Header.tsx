@@ -13,6 +13,10 @@ const TITLES: Record<Route, string> = {
   home: '홈',
   projects: '프로젝트',
   people: '인력 · 조직',
+  utilization: '가동률',
+  maintenance: '유지보수 계약',
+  issues: '유지보수 이슈',
+  audit: '감사 로그',
 }
 
 interface Props {

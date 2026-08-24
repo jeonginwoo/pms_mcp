@@ -14,11 +14,17 @@
  */
 import type {
   AssignmentView,
+  AuditRecord,
+  ContractDetail,
+  ContractQuery,
+  ContractSummary,
   CreateAssignmentBody,
   CreateOrgUnitBody,
   CreatePersonBody,
   CreateProjectBody,
   EditProjectBody,
+  IssueQuery,
+  IssueView,
   ApiEnvelope,
   MeView,
   OrgUnitView,
@@ -31,6 +37,8 @@ import type {
   TokenResponse,
   UpdateAssignmentBody,
   UpdateProgressBody,
+  UtilizationQuery,
+  UtilizationView,
 } from './types/api'
 
 const ACCESS_KEY = 'pms.accessToken'
@@ -269,6 +277,52 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
  */
 const LIST_PAGE_SIZE = 500
 
+/**
+ * 유지보수 목록은 서버 페이징을 그대로 쓴다 — 계약 105·이슈 14건이지만 화면이
+ * 상태·담당자로 거르므로 필터를 질의로 내려보내는 편이 프로젝트 목록보다 자연스럽다
+ * (프로젝트 쪽은 서버에 keyword 필터가 없어 한 번에 받는다 — 위 주석).
+ */
+const MAINTENANCE_PAGE_SIZE = 200
+
+/**
+ * 감사는 **페이지로 끊어 읽는다** — 다른 목록과 다른 점이다.
+ * 이력은 쌓이기만 하고(append-only) 줄어들지 않으므로 "한 번에 받아 화면에서 거른다"가
+ * 성립하지 않는다. 정렬은 서버가 최신순으로 고정한다(호출자가 뒤집을 수 없다).
+ */
+const AUDIT_PAGE_SIZE = 50
+
+/** 값이 있는 것만 싣는다 — 서버는 파라미터의 부재를 "필터 없음"으로 읽는다. */
+function queryOf(entries: Record<string, string | number | boolean | null | undefined>): string {
+  const params = new URLSearchParams()
+
+  Object.entries(entries).forEach(([key, value]) => {
+    if (value !== null && value !== undefined && value !== '' && value !== false) {
+      params.set(key, String(value))
+    }
+  })
+
+  return params.toString()
+}
+
+/** 빈 값을 질의에 싣지 않는다 — 서버는 파라미터의 **부재**로 집계/개인 지정을 가른다. */
+function utilizationParams({ month, personId, orgUnitId, overbooked }: UtilizationQuery): string {
+  const params = new URLSearchParams({ month })
+
+  if (personId != null) {
+    params.set('personId', String(personId))
+  }
+
+  if (orgUnitId != null) {
+    params.set('orgUnitId', String(orgUnitId))
+  }
+
+  if (overbooked) {
+    params.set('overbooked', 'true')
+  }
+
+  return params.toString()
+}
+
 export const api = {
   me: () => request<MeView>('/api/me'),
   people: () => request<PersonRef[]>('/api/people'),
@@ -316,6 +370,44 @@ export const api = {
       { method: 'PUT', body: JSON.stringify({ personId, version }) }),
   deleteProject: (projectId: number) =>
     request<null>(`/api/projects/${projectId}`, { method: 'DELETE' }),
+
+  /**
+   * 가동률 (AC C1-1) — page 봉투가 아니라 목록이다. 한 달 가동률은 범위 인원
+   * 전체를 한 화면에서 비교하는 값이라 서버가 페이지로 자르지 않는다.
+   *
+   * `overbooked`는 **서버 필터**로 내려보낸다: 판정 기준(`기본 > 100`)이 서버의
+   * 것이고 화면이 다시 판정하면 규칙이 두 곳에 생긴다.
+   */
+  utilization: (query: UtilizationQuery) =>
+    request<UtilizationView[]>(`/api/utilization?${utilizationParams(query)}`),
+
+  /**
+   * 유지보수 계약 목록 (D4-1) — keyword는 계약명·계약사·**사이트명** 3종 부분 일치다.
+   * 사이트명이 들어 있는 것이 중요하다: 45사이트 계약(가온아이)에 고객사명으로
+   * 도달하는 유일한 경로이고, 맞은 사이트는 `matchedSites`로 돌아온다.
+   */
+  /**
+   * 통합 감사 로그 (G1-3) — "사용자/조직/권한 관리" 플래그가 없으면 서버가 403이다.
+   * 조직·계정 변경까지 담는 유일한 뷰다(프로젝트 스코프 뷰는 아래).
+   */
+  audit: (page: number) =>
+    request<PageResponse<AuditRecord>>(`/api/audit?${queryOf({ page, size: AUDIT_PAGE_SIZE })}`),
+
+  /** 프로젝트별 이력 (G2-2) — 가시성 밖은 403이 아니라 404다(G2-3 은닉). */
+  projectAudit: (projectId: number, page: number) =>
+    request<PageResponse<AuditRecord>>(
+      `/api/projects/${projectId}/audit?${queryOf({ page, size: AUDIT_PAGE_SIZE })}`),
+
+  maintenanceContracts: (query: ContractQuery = {}) =>
+    request<PageResponse<ContractSummary>>(
+      `/api/maintenance/contracts?${queryOf({ ...query, size: MAINTENANCE_PAGE_SIZE })}`),
+  maintenanceContract: (contractId: number) =>
+    request<ContractDetail>(`/api/maintenance/contracts/${contractId}`),
+
+  /** 유지보수 이슈 목록 (D3-4) — `unassigned`는 담당자 없는 건만 (미배정 필터). */
+  maintenanceIssues: (query: IssueQuery = {}) =>
+    request<PageResponse<IssueView>>(
+      `/api/maintenance/issues?${queryOf({ ...query, size: MAINTENANCE_PAGE_SIZE })}`),
 
   assign: (projectId: number, body: CreateAssignmentBody) =>
     request<AssignmentView>(`/api/projects/${projectId}/assignments`,
