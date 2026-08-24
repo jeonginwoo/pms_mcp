@@ -64,26 +64,34 @@ class PersonSeedLoadIntegrationTest {
     private UserRepository userRepository;
 
     @Test
-    @DisplayName("적재 규모 — 조직 17 · 직급 9 · 권한 그룹 4 · 인원 44(43+시스템 계정)")
+    @DisplayName("적재 규모 — 조직 18 · 직급 9 · 권한 그룹 4 · 인원 44(43+시스템 계정)")
     void loads_expectedCounts() {
-        assertThat(orgUnitRepository.count()).isEqualTo(17);
+        // 18 = 회사 1 + 부문 6 + 팀 11 (2026-08-24 재편으로 관리•마케팅부가 신설됐다)
+        assertThat(orgUnitRepository.count()).isEqualTo(18);
         assertThat(gradeRepository.count()).isEqualTo(9);
         assertThat(permissionGroupRepository.count()).isEqualTo(4);
         assertThat(personRepository.count()).isEqualTo(44);
     }
 
     @Test
-    @DisplayName("조직 트리 — 회사 root 1개 + 부문 6 + 팀 10, 팀은 부문 아래에 있다")
+    @DisplayName("조직 트리 — 회사 root 1개 + 부문 6 + 팀 11, 팀은 부문 아래에 있다")
     void loads_orgTreeUnderSingleRoot() {
         List<OrgUnit> units = orgUnitRepository.findAll();
 
         assertThat(units).filteredOn(OrgUnit::isRoot).singleElement()
-                .satisfies(root -> assertThat(root.getName()).isEqualTo("(주)프로텐"));
+                .satisfies(root -> assertThat(root.getName()).isEqualTo("프로텐"));
+        // 부문 6 — 2026-08-24 재편: 경영관리팀이 팀으로 내려가고 관리•마케팅부가 올라왔다
         assertThat(units).filteredOn(unit -> Long.valueOf(1L).equals(unit.getParentId()))
-                .hasSize(6);
+                .map(OrgUnit::getName)
+                .containsExactlyInAnyOrder("AI기술연구소", "AX기술연구소", "AX사업기획부",
+                        "AX솔루션사업부", "MS사업부", "관리•마케팅부");
         assertThat(units).filteredOn(unit ->
                         unit.getParentId() != null && unit.getParentId() > 1L)
-                .hasSize(10);
+                .hasSize(11);
+        // 관리•마케팅부(18) 산하 1팀 — 재편의 핵심이 이 부모-자식 관계다
+        assertThat(units).filteredOn(unit -> Long.valueOf(18L).equals(unit.getParentId()))
+                .map(OrgUnit::getName)
+                .containsExactly("경영관리팀");
         // MS사업부(7) 산하 3팀 — 원본 주석이 명시한 관계
         assertThat(units).filteredOn(unit -> Long.valueOf(7L).equals(unit.getParentId()))
                 .map(OrgUnit::getName)
@@ -91,20 +99,22 @@ class PersonSeedLoadIntegrationTest {
     }
 
     @Test
-    @DisplayName("직급 계수 — 부록 B 값 그대로, 수습 없음·매니저 1.0 (보정 가동률 입력)")
+    @DisplayName("직급 계수 — 부록 B 값 그대로, 수습 없음·과장 1.0 (보정 가동률 입력)")
     void loads_gradeCoefficients() {
         assertThat(gradeRepository.findAll())
                 .extracting(Grade::getName, Grade::getCoeff)
                 .containsExactlyInAnyOrder(
                         Tuple.tuple("대표이사", 2.0),
-                        Tuple.tuple("부사장", 1.8),
+                        // 이름은 실제 직위명이다 — 구 '부사장'·'매니저'는 원본 직위
+                        // 코드를 그대로 옮긴 값이었다(2026-08-24 정정, Flyway V13)
+                        Tuple.tuple("부대표", 1.8),
                         Tuple.tuple("상무", 1.7),
                         Tuple.tuple("이사", 1.6),
                         Tuple.tuple("수석", 1.5),
                         Tuple.tuple("책임", 1.2),
                         Tuple.tuple("선임", 1.0),
                         Tuple.tuple("주임", 0.8),
-                        Tuple.tuple("매니저", 1.0));
+                        Tuple.tuple("과장", 1.0));
     }
 
     @Test
@@ -133,7 +143,7 @@ class PersonSeedLoadIntegrationTest {
     }
 
     @Test
-    @DisplayName("billable — 경영관리팀·AX사업기획부 subtree 10명 제외 (부록 B 규칙)")
+    @DisplayName("billable — 관리•마케팅부·AX사업기획부 subtree + 대표 10명 제외 (부록 B)")
     void loads_billableExclusions() {
         assertThat(personRepository.findAll())
                 .filteredOn(person -> !person.isBillable())
@@ -170,9 +180,9 @@ class PersonSeedLoadIntegrationTest {
     @Test
     @DisplayName("E3-1 — 조직 신설은 시드 id와 충돌하지 않고, 삭제한 id를 재사용하지 않는다")
     void createOrgUnit_neverReusesIds() {
-        // 시드가 명시 id로 1~17을 채웠다 — 첫 신설은 그 위여야 한다
+        // 시드가 명시 id로 1~18을 채웠다 — 첫 신설은 그 위여야 한다
         OrgUnitView created = orgUnitService.create(1L, PersonFixtures.SI_TEAM_ID, "시퀀스확인1");
-        assertThat(created.id()).isGreaterThan(17L);
+        assertThat(created.id()).isGreaterThan(18L);
 
         // 삭제 후 다시 만들면 같은 id가 다시 나오지 않는다 (2026-08-22 결함 회귀 방지:
         // 재사용되면 그 노드를 가리키던 비활성 인원이 새 조직 소속으로 보인다)

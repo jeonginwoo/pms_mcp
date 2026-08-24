@@ -168,6 +168,8 @@ export interface AssignmentView {
   id: number
   personId: number
   personName: string | null
+  /** 재직 여부 — 퇴사자의 배정도 상세에 남으므로(B2-1) 화면이 그 사실을 표시한다 */
+  personActive: boolean
   role: ProjectRole
   startDate: string | null
   endDate: string | null

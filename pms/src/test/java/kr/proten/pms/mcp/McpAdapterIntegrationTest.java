@@ -129,12 +129,15 @@ class McpAdapterIntegrationTest {
     }
 
     @Test
-    @DisplayName("정상 토큰 — whoami가 토큰 subject의 신원을 반환한다 (부문 직속: team=division)")
+    @DisplayName("정상 토큰 — whoami가 토큰 subject의 신원을 반환한다 (회사 직속: team=division)")
     void accessToken_whoamiReturnsTokenSubject() {
         String body = mcp.call(accessToken(ADMIN_EMAIL), McpHttp.WHOAMI);
 
-        // 박재완(1) = 경영관리팀 소속이고 그 팀은 회사 root 직계라 부문도 자신이다
-        assertThat(body).contains("박재완").contains("경영관리팀").contains("관리자");
+        // 박재완(1)은 **회사(root) 직속**이라 팀·부문이 모두 회사 이름이다
+        // (2026-08-24 조직 재편 — 구 기대값은 `경영관리팀`이었다: 재편 전에는 그 팀이
+        //  root 직계여서 부문도 자신이었다. `OrgTree.topDivisionIdOf`는 root 직속 소속에
+        //  root를 돌려주므로 값만 바뀌고 "team=division"이라는 성질은 그대로다)
+        assertThat(body).contains("박재완").contains("프로텐").contains("관리자");
         assertThat(body).doesNotContain(ERROR_FLAG);
     }
 
@@ -545,7 +548,9 @@ class McpAdapterIntegrationTest {
     @Test
     @DisplayName("eval E-04 — 가시성 밖 개인 지정은 부재와 같은 404다 (은닉)")
     void getUtilization_concealsPersonOutsideVisibility() {
-        // 천용우(경영관리팀 부문장)의 subtree 밖 — 윤종헌은 AX사업기획부다 (앵커 §3)
+        // 천용우(관리•마케팅부 부문장 — 2026-08-24 재편)의 subtree 밖: 윤종헌은
+        // AX사업기획부다(앵커 §3). 재편으로 천용우의 subtree가 {관리•마케팅부,
+        // 경영관리팀}으로 넓어졌지만 윤종헌은 그 밖이라 판정은 그대로다
         String body = mcp.call(
                 accessToken(SUPPORT_LEAD_EMAIL), McpHttp.getUtilization("2026-08", "PERSON", 7));
 

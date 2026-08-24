@@ -7,6 +7,7 @@
  */
 import { useState } from 'react'
 import { useStore } from '../store'
+import { flattenOrgTree, orgOptionLabel } from '../orgTree'
 import { ErrorText, Field, Modal } from './ui'
 
 export default function PersonCreateModal({ onClose }: { onClose: () => void }) {
@@ -67,8 +68,8 @@ export default function PersonCreateModal({ onClose }: { onClose: () => void }) 
         <Field label="소속 조직">
           <select value={form.orgUnitId} onChange={(e) => set({ orgUnitId: e.target.value })}>
             <option value="">조직 선택…</option>
-            {orgUnits.map((unit) => (
-              <option key={unit.id} value={unit.id}>{unit.name}</option>
+            {flattenOrgTree(orgUnits).map((row) => (
+              <option key={row.unit.id} value={row.unit.id}>{orgOptionLabel(row)}</option>
             ))}
           </select>
         </Field>

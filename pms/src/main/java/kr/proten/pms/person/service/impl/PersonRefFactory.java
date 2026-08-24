@@ -48,7 +48,8 @@ class PersonRefFactory {
                         person.getName(),
                         orgUnitNames.get(person.getOrgUnitId()),
                         orgUnitNames.get(tree.topDivisionIdOf(person.getOrgUnitId())),
-                        gradeNames.get(person.getGradeId())))
+                        gradeNames.get(person.getGradeId()),
+                        person.isActive()))
                 .toList();
     }
 

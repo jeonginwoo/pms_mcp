@@ -468,6 +468,35 @@ class ProjectControllerTest {
     }
 
     @Test
+    @DisplayName("역할 지정 — 200 + 대상 인원·역할이 서비스로 전달된다 (A6-3)")
+    void changeRole_passesPersonAndRole() throws Exception {
+        when(projectLifecycleService.changeRole(13L, PROJECT_ID, 105L, ProjectRole.PL))
+                .thenReturn(detail());
+
+        mockMvc.perform(put("/api/projects/" + PROJECT_ID + "/roles")
+                        .header(CALLER_HEADER, "13")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"personId\": 105, \"role\": \"PL\"}"))
+                .andExpect(status().isOk());
+        verify(projectLifecycleService).changeRole(13L, PROJECT_ID, 105L, ProjectRole.PL);
+    }
+
+    @Test
+    @DisplayName("역할 지정 — role=PM은 422 INVALID_ROLE 봉투 (A6-7)")
+    void changeRole_toPm_isUnprocessable() throws Exception {
+        when(projectLifecycleService.changeRole(anyLong(), anyLong(), anyLong(), any()))
+                .thenThrow(new UnprocessableException(ErrorCode.INVALID_ROLE,
+                        "PM은 이 경로로 지정할 수 없습니다 — PM 교체를 쓰세요"));
+
+        mockMvc.perform(put("/api/projects/" + PROJECT_ID + "/roles")
+                        .header(CALLER_HEADER, "13")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"personId\": 105, \"role\": \"PM\"}"))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.error.code").value("INVALID_ROLE"));
+    }
+
+    @Test
     @DisplayName("삭제 — 200 + success:true, 본문 없이 경로 id만으로 처리한다 (A4-1)")
     void delete_returnsNoContent() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/projects/" + PROJECT_ID)
@@ -532,7 +561,7 @@ class ProjectControllerTest {
                 13L,
                 0L,
                 List.of(new AssignmentView(
-                        31L, 13L, "이피엠", ProjectRole.PM,
+                        31L, 13L, "이피엠", true, ProjectRole.PM,
                         LocalDate.of(2026, 8, 1), LocalDate.of(2026, 12, 31), 0.5, 0L)));
     }
 }

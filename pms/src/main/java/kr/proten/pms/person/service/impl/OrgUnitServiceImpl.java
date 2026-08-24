@@ -113,6 +113,40 @@ public class OrgUnitServiceImpl implements OrgUnitService {
         return new OrgUnitView(target.getId(), target.getParentId(), target.getName(), 0, 0, false);
     }
 
+    /**
+     * 노드 이동 (AC E3-5·E3-6) — 조직 개편을 화면에서 할 수 있게 하는 경로다.
+     *
+     * 소속 인원·프로젝트는 옮기지 않는다. 옮길 것이 없기 때문이다: 둘 다 orgUnitId로
+     * 참조하므로 노드가 움직이면 경로가 함께 움직인다(개명 E3-2와 같은 원리 —
+     * 비정규화된 이름·경로 컬럼이 없는 것이 이 AC들이 성립하는 이유다).
+     *
+     * 가시성은 다음 요청부터 새 경로를 따른다 — 캐시가 없고 매 조회 계산이다.
+     * 부문(root 직계 자식)이 바뀌는 이동은 `PersonRef.division` 파생값을 바꾸므로
+     * 프로젝트·가동률 응답의 부문 표시도 함께 움직인다(같은 트리를 한 규칙으로 읽는다).
+     */
+    public OrgUnitView move(long callerPersonId, long orgUnitId, Long parentId) {
+        orgManagePermission.require(callerPersonId);
+
+        OrgUnit target = orgUnitRepository.findById(orgUnitId).orElseThrow(NotFoundException::new);
+
+        if (target.isRoot()) {
+            throw new ValidationException(
+                    "회사(root)는 옮길 수 없습니다 — 부문 가시성이 root 직계 자식 기준입니다",
+                    "orgUnitId");
+        }
+
+        // null 부모 = 두 번째 root 요청이라 생성과 같은 판정을 그대로 쓴다(409 DUPLICATE_ROOT)
+        requireValidParent(parentId);
+        requireNotInOwnSubtree(orgUnitId, parentId);
+
+        Long before = target.getParentId();
+        target.moveTo(parentId);
+        personAuditRecorder.orgUnitMoved(callerPersonId, target, before);
+
+        // 개수는 목록 조회가 채우는 값이라 단건 응답에서는 0이다 — 생성·개명과 같은 형태
+        return new OrgUnitView(target.getId(), target.getParentId(), target.getName(), 0, 0, false);
+    }
+
     public void delete(long callerPersonId, long orgUnitId) {
         orgManagePermission.require(callerPersonId);
 
@@ -158,6 +192,36 @@ public class OrgUnitServiceImpl implements OrgUnitService {
         if (rootExists) {
             throw new ConflictException(ErrorCode.DUPLICATE_ROOT,
                     "회사(root) 노드는 하나뿐입니다 — 상위 조직을 지정하세요");
+        }
+    }
+
+    /**
+     * 자기 자신·자기 subtree 안으로는 옮길 수 없다 (AC E3-6).
+     *
+     * 새 부모에서 **위로** 올라가며 대상을 만나는지 본다 — subtree를 아래로 훑는 것보다
+     * 짧다(경로 길이만큼이고, 노드 하나에 부모는 하나뿐이라 분기가 없다).
+     *
+     * 걸음 수를 노드 수로 묶는 이유: 이미 순환이 들어 있는 데이터에서는 위로 올라가도
+     * 끝나지 않는다. 그 상태를 무한 루프로 알게 되면 늦으므로 거절로 드러낸다.
+     */
+    private void requireNotInOwnSubtree(long orgUnitId, Long newParentId) {
+        Map<Long, Long> parentOf = orgUnitRepository.findAll().stream()
+                .filter(unit -> !unit.isRoot())
+                .collect(Collectors.toMap(OrgUnit::getId, OrgUnit::getParentId));
+
+        Long current = newParentId;
+
+        for (int step = 0; current != null; step++) {
+            if (current == orgUnitId) {
+                throw new ValidationException(
+                        "자기 자신이나 자기 하위 조직 아래로는 옮길 수 없습니다", "parentId");
+            }
+
+            if (step > parentOf.size()) {
+                throw new ValidationException("조직 트리에 순환이 있습니다", "parentId");
+            }
+
+            current = parentOf.get(current);
         }
     }
 

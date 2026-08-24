@@ -33,7 +33,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
- * 조직 트리 관리 단위 테스트 — AC E3-3.
+ * 조직 트리 관리 단위 테스트 — AC E3-3·E3-5·E3-6.
  * "빈 노드만 삭제 가능"이 이 서비스의 규칙이고, 목록은 그 판정 결과(deletable)를
  * 함께 실어 화면이 같은 규칙을 다시 구현하지 않게 한다.
  */
@@ -212,6 +212,105 @@ class OrgUnitServiceImplTest {
         // When · Then
         assertThatExceptionOfType(NotFoundException.class)
                 .isThrownBy(() -> service.delete(ADMIN_ID, EMPTY_UNIT_ID));
+    }
+
+    @Test
+    @DisplayName("E3-5 — 다른 부문 아래로 옮기면 parentId가 바뀌고 감사에 남는다")
+    void move_changesParentAndRecordsAudit() {
+        // Given
+        givenManageOrg(true);
+        OrgUnit team = OrgUnit.of(PersonFixtures.SI_TEAM_ID, PersonFixtures.DIVISION_ID, "SI팀");
+        when(orgUnitRepository.findById(PersonFixtures.SI_TEAM_ID)).thenReturn(Optional.of(team));
+        when(orgUnitRepository.existsById(PersonFixtures.OTHER_DIVISION_ID)).thenReturn(true);
+        when(orgUnitRepository.findAll()).thenReturn(PersonFixtures.orgUnits());
+
+        // When
+        OrgUnitView moved = service.move(
+                ADMIN_ID, PersonFixtures.SI_TEAM_ID, PersonFixtures.OTHER_DIVISION_ID);
+
+        // Then
+        assertThat(moved.parentId()).isEqualTo(PersonFixtures.OTHER_DIVISION_ID);
+        assertThat(team.getParentId()).isEqualTo(PersonFixtures.OTHER_DIVISION_ID);
+        verify(personAuditRecorder).orgUnitMoved(
+                ADMIN_ID, team, PersonFixtures.DIVISION_ID);
+    }
+
+    @Test
+    @DisplayName("E3-6 — 자기 하위 조직 아래로 옮기면 400, 아무것도 안 바뀐다")
+    void move_intoOwnSubtree_isValidationError() {
+        // Given
+        givenManageOrg(true);
+        OrgUnit team = OrgUnit.of(PersonFixtures.SI_TEAM_ID, PersonFixtures.DIVISION_ID, "SI팀");
+        when(orgUnitRepository.findById(PersonFixtures.SI_TEAM_ID)).thenReturn(Optional.of(team));
+        when(orgUnitRepository.existsById(PersonFixtures.SI_PART_ID)).thenReturn(true);
+        when(orgUnitRepository.findAll()).thenReturn(PersonFixtures.orgUnits());
+
+        // When · Then — SI-1파트는 SI팀의 자식이다(순환이 된다)
+        assertThatExceptionOfType(ValidationException.class)
+                .isThrownBy(() -> service.move(
+                        ADMIN_ID, PersonFixtures.SI_TEAM_ID, PersonFixtures.SI_PART_ID));
+        assertThat(team.getParentId()).isEqualTo(PersonFixtures.DIVISION_ID);
+        verifyNoInteractions(personAuditRecorder);
+    }
+
+    @Test
+    @DisplayName("E3-6 — 자기 자신 아래로 옮기는 것도 400")
+    void move_underItself_isValidationError() {
+        // Given
+        givenManageOrg(true);
+        OrgUnit team = OrgUnit.of(PersonFixtures.SI_TEAM_ID, PersonFixtures.DIVISION_ID, "SI팀");
+        when(orgUnitRepository.findById(PersonFixtures.SI_TEAM_ID)).thenReturn(Optional.of(team));
+        when(orgUnitRepository.existsById(PersonFixtures.SI_TEAM_ID)).thenReturn(true);
+        when(orgUnitRepository.findAll()).thenReturn(PersonFixtures.orgUnits());
+
+        // When · Then
+        assertThatExceptionOfType(ValidationException.class)
+                .isThrownBy(() -> service.move(
+                        ADMIN_ID, PersonFixtures.SI_TEAM_ID, PersonFixtures.SI_TEAM_ID));
+    }
+
+    @Test
+    @DisplayName("E3-6 — 회사(root)는 옮길 수 없다 (400)")
+    void move_root_isValidationError() {
+        // Given
+        givenManageOrg(true);
+        when(orgUnitRepository.findById(PersonFixtures.COMPANY_ID)).thenReturn(
+                Optional.of(OrgUnit.of(PersonFixtures.COMPANY_ID, null, "프로텐")));
+
+        // When · Then
+        assertThatExceptionOfType(ValidationException.class)
+                .isThrownBy(() -> service.move(
+                        ADMIN_ID, PersonFixtures.COMPANY_ID, PersonFixtures.DIVISION_ID));
+    }
+
+    @Test
+    @DisplayName("E3-6 — 없는 상위 조직으로 옮기면 422 (생성과 같은 판정)")
+    void move_unknownParent_isUnprocessable() {
+        // Given
+        givenManageOrg(true);
+        when(orgUnitRepository.findById(PersonFixtures.SI_TEAM_ID)).thenReturn(
+                Optional.of(OrgUnit.of(PersonFixtures.SI_TEAM_ID, PersonFixtures.DIVISION_ID,
+                        "SI팀")));
+        when(orgUnitRepository.existsById(EMPTY_UNIT_ID)).thenReturn(false);
+
+        // When · Then
+        assertThatExceptionOfType(UnprocessableException.class)
+                .isThrownBy(() -> service.move(ADMIN_ID, PersonFixtures.SI_TEAM_ID, EMPTY_UNIT_ID))
+                .satisfies(thrown -> assertThat(thrown.code())
+                        .isEqualTo(ErrorCode.REF_NOT_FOUND));
+    }
+
+    @Test
+    @DisplayName("E2-4 — 관리 플래그가 없으면 이동도 403")
+    void move_withoutManageOrg_isForbidden() {
+        // Given
+        givenManageOrg(false);
+
+        // When · Then
+        assertThatExceptionOfType(ForbiddenException.class)
+                .isThrownBy(() -> service.move(
+                        ADMIN_ID, PersonFixtures.SI_TEAM_ID, PersonFixtures.OTHER_DIVISION_ID));
+        verifyNoInteractions(orgUnitRepository);
     }
 
     private void givenManageOrg(boolean granted) {

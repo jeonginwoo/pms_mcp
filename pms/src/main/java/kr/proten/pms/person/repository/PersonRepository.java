@@ -34,6 +34,9 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
 
     List<Person> findByIdInAndActiveTrue(Collection<Long> ids);
 
+    /** 표시 이름 해석용 — 퇴사자도 함께 낸다(`PersonDirectoryService#findRefs` 규약). */
+    List<Person> findByIdInOrderByIdAsc(Collection<Long> ids);
+
     /** 조직별 인원 집계용 — 참조 데이터 44행 규모라 한 번에 올린다(OrgUnitServiceImpl 주석). */
     List<Person> findByActiveTrue();
 

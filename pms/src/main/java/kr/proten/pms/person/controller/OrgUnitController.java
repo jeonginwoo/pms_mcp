@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import kr.proten.pms.common.config.CallerPersonId;
 import kr.proten.pms.common.web.ApiResponse;
+import kr.proten.pms.person.controller.dto.ChangeParentRequest;
 import kr.proten.pms.person.controller.dto.CreateOrgUnitRequest;
 import kr.proten.pms.person.controller.dto.RenameOrgUnitRequest;
 import kr.proten.pms.person.service.OrgUnitService;
@@ -54,6 +55,18 @@ class OrgUnitController {
             @PathVariable long orgUnitId,
             @Valid @RequestBody RenameOrgUnitRequest request) {
         return ApiResponse.ok(orgUnitService.rename(callerPersonId, orgUnitId, request.name()));
+    }
+
+    /**
+     * 노드 이동 (AC E3-5) — 소속 인원·프로젝트는 orgUnitId 참조라 함께 옮겨진다.
+     * 순환·root 이동은 400, 없는 상위 조직은 422다(E3-6).
+     */
+    @PutMapping("/{orgUnitId}/parent")
+    ApiResponse<OrgUnitView> move(
+            @CallerPersonId long callerPersonId,
+            @PathVariable long orgUnitId,
+            @Valid @RequestBody ChangeParentRequest request) {
+        return ApiResponse.ok(orgUnitService.move(callerPersonId, orgUnitId, request.parentId()));
     }
 
     /** 빈 노드 삭제 (AC E3-3) — 소속 인원·하위 노드가 있으면 409 IN_USE. */

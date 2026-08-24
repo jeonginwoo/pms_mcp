@@ -112,6 +112,12 @@ class PersonAuditRecorder {
                 state("name", beforeName), state("name", orgUnit.getName()));
     }
 
+    /** 조직 이동 (AC E3-5) — 개명과 같은 UPDATE다. 바뀐 칸이 parentId 하나뿐이다. */
+    void orgUnitMoved(long actorId, OrgUnit orgUnit, Long beforeParentId) {
+        recordDiff(ORG_UNIT, orgUnit.getId(), actorId,
+                state("parentId", beforeParentId), state("parentId", orgUnit.getParentId()));
+    }
+
     /** 직급 등록·수정·삭제 (AC E4-1·E4-2·E4-3) — 삭제는 행이 사라지므로 after가 없다. */
     void gradeCreated(long actorId, Grade grade) {
         auditTrail.record(new AuditEntry(GRADE, grade.getId(), null, AuditAction.CREATE,

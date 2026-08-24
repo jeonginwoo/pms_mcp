@@ -233,6 +233,7 @@ class AssignmentControllerTest {
                 ASSIGNMENT_ID,
                 105L,
                 "김참여",
+                true,
                 ProjectRole.PARTICIPANT,
                 LocalDate.of(2026, 9, 1),
                 LocalDate.of(2026, 12, 31),

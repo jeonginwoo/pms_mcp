@@ -37,8 +37,9 @@ public class PersonDirectoryServiceImpl implements PersonDirectoryService {
             return List.of();
         }
 
+        // 퇴사자도 낸다 — 이유는 계약 javadoc에 있다(표시 이름 ≠ 참조 검증)
         return personRefFactory.toRefs(
-                personRepository.findByIdInAndActiveTrue(personIds.stream().sorted().toList()));
+                personRepository.findByIdInOrderByIdAsc(personIds.stream().sorted().toList()));
     }
 
     @Override

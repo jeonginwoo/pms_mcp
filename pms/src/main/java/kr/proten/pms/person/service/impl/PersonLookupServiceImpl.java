@@ -64,8 +64,9 @@ public class PersonLookupServiceImpl implements PersonLookupService {
         return personService.listVisible(callerPersonId).stream()
                 .filter(person -> matches(person.name(), name))
                 .filter(person -> matches(person.orgUnit(), team))
+                // listVisible이 이미 재직자만 내므로 active는 항상 true다
                 .map(person -> new PersonRef(person.id(), person.name(), person.orgUnit(),
-                        person.division(), person.grade()))
+                        person.division(), person.grade(), true))
                 .toList();
     }
 

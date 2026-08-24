@@ -36,6 +36,17 @@ public class OrgUnit {
         this.name = name;
     }
 
+    /**
+     * 상위 노드를 바꾼다 (AC E3-5).
+     *
+     * <p>순환 검사는 <b>여기서 하지 않는다</b>: 자기 subtree 안인지 판정하려면 트리 전체를
+     * 알아야 하는데 엔티티는 자기 행만 안다. 그 판정은 노드를 모두 들고 있는 서비스가 한다
+     * (같은 이유로 "부모가 실재하는가"도 서비스 몫이다 — E3-1 생성과 같은 판정).
+     */
+    public void moveTo(Long parentId) {
+        this.parentId = parentId;
+    }
+
     private OrgUnit(Long id, Long parentId, String name) {
         this.id = id;
         this.parentId = parentId;

@@ -42,6 +42,7 @@ import type {
   PersonSummary,
   ProgressUpdateResult,
   ProjectDetail,
+  ProjectRole,
   ProjectSummary,
   RenameOrgUnitBody,
   SiteBody,
@@ -373,6 +374,10 @@ export const api = {
   renameOrgUnit: (orgUnitId: number, body: RenameOrgUnitBody) =>
     request<OrgUnitView>(`/api/org-units/${orgUnitId}`,
       { method: 'PUT', body: JSON.stringify(body) }),
+  /** 조직 이동 (E3-5) — 순환·root 이동은 400, 없는 상위 조직은 422다(E3-6) */
+  moveOrgUnitParent: (orgUnitId: number, parentId: number) =>
+    request<OrgUnitView>(`/api/org-units/${orgUnitId}/parent`,
+      { method: 'PUT', body: JSON.stringify({ parentId }) }),
   deleteOrgUnit: (orgUnitId: number) =>
     request<null>(`/api/org-units/${orgUnitId}`, { method: 'DELETE' }),
 
@@ -440,6 +445,14 @@ export const api = {
   changeManager: (projectId: number, personId: number, version: number) =>
     request<ProjectDetail>(`/api/projects/${projectId}/pm`,
       { method: 'PUT', body: JSON.stringify({ personId, version }) }),
+  /**
+   * 역할 지정·교체 (A6-3) — PL·참여자만. `version`을 보내지 않는다: 바뀌는 행은
+   * 프로젝트가 아니라 배정이다(서버 계약도 `{personId, role}` 둘뿐이다).
+   * PM 지정은 위 `changeManager`가 전담한다 — 서버가 role=PM을 422로 거절한다(A6-7).
+   */
+  changeRole: (projectId: number, personId: number, role: ProjectRole) =>
+    request<ProjectDetail>(`/api/projects/${projectId}/roles`,
+      { method: 'PUT', body: JSON.stringify({ personId, role }) }),
   deleteProject: (projectId: number) =>
     request<null>(`/api/projects/${projectId}`, { method: 'DELETE' }),
 
