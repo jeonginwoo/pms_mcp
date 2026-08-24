@@ -10,6 +10,10 @@
  * 단가 가중 보조 지표다(2026-08-10 재정의) — 이 구분이 흐려지면 화면이 다른
  * 오버부킹 명단을 만든다.
  *
+ * 맨 위의 **내 가동률**은 집계와 별개로 `?personId=`로 한 번 더 묻는다(2026-08-24 신설):
+ * 집계는 `billable=false`를 모집단에서 빼므로(C1-5) 지원 조직 인원은 빈 목록을 보는데
+ * 본인은 값을 갖는다 — 개인 지정은 그 규칙과 무관하다.
+ *
  * 팀 필터는 **받아 둔 목록에서 화면이 거른다**: 서버의 `?orgUnitId=`는 조직 id를
  * 요구하는데 `/api/org-units`는 관리 권한자만 부를 수 있어, 일반 화자에게는 id를
  * 얻을 경로가 없다. 응답이 `team`·`division`을 싣는 이유가 바로 이것이다(C1-6).
@@ -17,6 +21,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useStore } from '../store'
 import { Empty, ErrorText, Metric } from '../components/ui'
+import MyUtilizationCard from '../components/MyUtilizationCard'
 import type { UtilizationView } from '../types/api'
 
 /** 과부하 임계값 — 서버 판정(`기본 > 100`)과 같은 값이어야 한다 (AC C1-3). */
@@ -30,7 +35,7 @@ type Load =
   | { phase: 'error'; code: string; message: string }
 
 export default function Utilization() {
-  const { loadUtilization } = useStore()
+  const { me, loadUtilization } = useStore()
   const [month, setMonth] = useState(currentMonth)
   const [overbookedOnly, setOverbookedOnly] = useState(false)
   const [team, setTeam] = useState<string | 'ALL'>('ALL')
@@ -56,6 +61,8 @@ export default function Utilization() {
     () => (team === 'ALL' ? rows : rows.filter((row) => row.team === team)),
     [rows, team])
   const overbooked = visible.filter(isOverbooked).length
+  // 집계에 내가 있는지 — 없으면 내 카드가 그 이유(C1-5)를 덧붙인다
+  const inAggregate = rows.some((row) => row.personId === me?.id)
 
   return (
     <section className="card">
@@ -76,6 +83,9 @@ export default function Utilization() {
           </button>
         </div>
       </div>
+
+      {/* 집계가 비어 있어도 보인다 — 그 경우가 이 카드가 있어야 하는 이유다 */}
+      {load.phase === 'ready' && <MyUtilizationCard month={month} inAggregate={inAggregate} />}
 
       {load.phase === 'ready' && rows.length > 0 && (
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
@@ -135,7 +145,7 @@ export default function Utilization() {
             <Empty>
               {overbookedOnly
                 ? '과부하인 인원이 없습니다.'
-                : '가동률을 낼 인원이 없습니다 — 가시성 범위 안에 집계 대상이 없습니다.'}
+                : '집계 대상이 없습니다 — 가시성 범위 안에 집계 모집단(billable) 인원이 없습니다.'}
             </Empty>
           )}
         </>
