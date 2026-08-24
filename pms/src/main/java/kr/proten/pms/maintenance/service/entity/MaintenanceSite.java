@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import kr.proten.pms.common.exception.StaleVersionException;
 
 /**
  * 유지보수 사이트 — 계약이 커버하는 고객사 한 곳 (계약:사이트 1:N).
@@ -57,6 +58,25 @@ public class MaintenanceSite {
     public static MaintenanceSite of(
             Long contractId, String name, SiteChannel channel, String serverSpec, Long engineerId) {
         return new MaintenanceSite(contractId, name, channel, serverSpec, engineerId);
+    }
+
+    /**
+     * 사이트 정보를 고친다 (AC D2-4) — 소속 계약은 바뀌지 않는다.
+     * 사이트를 다른 계약으로 옮기는 것은 이름을 고치는 것과 다른 행위이고
+     * AC에 없다. 필요해지면 그때 전용 메서드가 생긴다.
+     */
+    public void update(String name, SiteChannel channel, String serverSpec, Long engineerId) {
+        this.name = name;
+        this.channel = channel;
+        this.serverSpec = serverSpec;
+        this.engineerId = engineerId;
+    }
+
+    /** 낙관적 락 검사 (AC D2-4) — 최신 version을 알려 재조회 후 재시도하게 한다. */
+    public void requireVersion(long expected) {
+        if (version != expected) {
+            throw new StaleVersionException("최신 사이트 version " + version);
+        }
     }
 
     public Long getId() {

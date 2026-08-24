@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.time.LocalDate;
+import kr.proten.pms.common.exception.StaleVersionException;
 
 /**
  * 유지보수 계약 (PRD-pms §4 — 계약/사이트/이슈 3층의 최상위).
@@ -92,6 +93,36 @@ public class MaintenanceContract {
      */
     public static MaintenanceContract of(ContractProfile profile) {
         return new MaintenanceContract(profile);
+    }
+
+    /**
+     * 계약 정보를 고친다 (AC D2-2) — 시트 유래 필드와 원천 프로젝트 연결은 남는다
+     * ({@link ContractEdit} 주석).
+     */
+    public void update(ContractEdit edit) {
+        this.contractor = edit.contractor();
+        this.name = edit.name();
+        this.status = edit.status();
+        this.contractDate = edit.contractDate();
+        this.startDate = edit.startDate();
+        this.endDate = edit.endDate();
+        this.amount = edit.amount();
+        this.monthlyAmount = edit.monthlyAmount();
+        this.salesRepId = edit.salesRepId();
+        this.category = edit.category();
+        this.targetInfra = edit.targetInfra();
+        this.regularCheck = edit.regularCheck();
+        this.note = edit.note();
+    }
+
+    /**
+     * 낙관적 락 검사 (AC D2-2) — 최신 version을 알려 재조회 후 재시도하게 한다.
+     * 계약은 갱신 이력이 자산이라 마지막 쓰기가 조용히 이기면 안 된다.
+     */
+    public void requireVersion(long expected) {
+        if (version != expected) {
+            throw new StaleVersionException("최신 계약 version " + version);
+        }
     }
 
     public Long getId() {
