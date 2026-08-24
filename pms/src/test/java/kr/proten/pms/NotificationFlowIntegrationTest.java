@@ -7,6 +7,7 @@ import static org.awaitility.Awaitility.await;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import kr.proten.pms.common.exception.NotFoundException;
 import kr.proten.pms.notification.NotificationService;
 import kr.proten.pms.notification.NotificationType;
@@ -138,8 +139,11 @@ class NotificationFlowIntegrationTest extends PostgresTestBase {
         notificationService.notify(command);
         notificationService.notify(command);
 
-        assertThat(typesOf(PLAIN_ID))
-                .filteredOn(NotificationType.DEADLINE_NEAR::equals)
+        // 유형이 아니라 **이 사건**으로 센다 — 같은 유형을 쓰는 다른 테스트가 있으면
+        // 유형 개수는 실행 순서에 따라 달라진다(실측으로 깨졌다)
+        assertThat(notificationService.listMine(PLAIN_ID, null, PageRequest.of(0, 50))
+                        .getContent())
+                .filteredOn(view -> view.refId() != null && view.refId() == 1L)
                 .hasSize(1);
     }
 
@@ -189,6 +193,40 @@ class NotificationFlowIntegrationTest extends PostgresTestBase {
         assertThat(withdrawn).isEqualTo(1);
         assertThat(typesOf(LEAD_ID)).contains(NotificationType.COMPLETION_OVERDUE);
         assertThat(typesOf(PLAIN_ID)).doesNotContain(NotificationType.COMPLETION_OVERDUE);
+    }
+
+    @Test
+    @DisplayName("F1-5·H1-4 — 껐으면 적재도 하지 않는다 (숨기는 것이 아니다)")
+    void mutedTypeIsNotStoredAtAll() {
+        // Given: 기본은 전부 켜짐이다 — 끈 것만 저장하는 opt-out이라 행이 없으면 켜진 것
+        assertThat(notificationService.myPreferences(PLAIN_ID).enabled())
+                .containsEntry(NotificationType.DEADLINE_NEAR, true);
+        notificationService.updatePreferences(PLAIN_ID,
+                Map.of(NotificationType.DEADLINE_NEAR, false));
+
+        // When
+        notificationService.notify(new NotifyCommand(PLAIN_ID, NotificationType.DEADLINE_NEAR,
+                "Project", 42L, "마감", "deadline:42:703"));
+
+        // Then: 목록에서 숨기는 것이 아니라 만들지 않는다 — 나중에 켜도 그 사이 것은 없다
+        assertThat(typesOf(PLAIN_ID))
+                .filteredOn(type -> type == NotificationType.DEADLINE_NEAR)
+                .isEmpty();
+
+        // 다시 켜면 들어온다. 전체 교체이므로 빠진 유형은 켜짐으로 돌아간다(PUT 의미론)
+        notificationService.updatePreferences(PLAIN_ID, Map.of());
+        assertThat(notificationService.myPreferences(PLAIN_ID).enabled())
+                .containsEntry(NotificationType.DEADLINE_NEAR, true);
+        notificationService.notify(new NotifyCommand(PLAIN_ID, NotificationType.DEADLINE_NEAR,
+                "Project", 43L, "마감", "deadline:43:703"));
+        assertThat(typesOf(PLAIN_ID)).contains(NotificationType.DEADLINE_NEAR);
+    }
+
+    @Test
+    @DisplayName("H1-4 — 설정 응답은 언제나 유형 전체를 담는다 (화면이 토글을 그린다)")
+    void preferencesAlwaysCoverEveryType() {
+        assertThat(notificationService.myPreferences(LEAD_ID).enabled())
+                .containsOnlyKeys(NotificationType.values());
     }
 
     /** §5는 한 칸씩만 전이한다 — 계약대기 → 수주확정 → 진행중. */

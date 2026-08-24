@@ -2,13 +2,21 @@ package kr.proten.pms.notification.service.impl;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import kr.proten.pms.common.exception.NotFoundException;
+import kr.proten.pms.notification.NotificationPreferences;
 import kr.proten.pms.notification.NotificationService;
 import kr.proten.pms.notification.NotificationType;
 import kr.proten.pms.notification.NotificationView;
 import kr.proten.pms.notification.NotifyCommand;
+import kr.proten.pms.notification.repository.NotificationMuteRepository;
 import kr.proten.pms.notification.repository.NotificationRepository;
 import kr.proten.pms.notification.service.entity.Notification;
+import kr.proten.pms.notification.service.entity.NotificationMute;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,19 +32,25 @@ import org.springframework.transaction.annotation.Transactional;
  * <p>적재는 {@code dedupeKey} 선검사 + 유니크 제약 <b>두 겹</b>으로 멱등이다(F1-2).
  * 선검사만 두면 동시 발행에서 뚫리고, 제약만 두면 정상 흐름이 예외로 시끄러워진다.
  *
- * <p><b>F1-5(수신자 설정 필터)는 아직 없다</b>: 설정을 저장할 자리가 없다 —
- * {@code V2__users.sql}이 "notifPrefs는 알림 모듈이 생길 때 추가한다"고 미뤄 뒀고
- * H1-4 라우트도 미착수다. 지금은 <b>필터를 항상 통과</b>시키고, 설정이 생기면 이
- * 메서드의 이른 반환 한 줄로 들어온다(미해결 등재 — PRD-pms §12).
+ * <p><b>F1-5(수신자 설정 필터)</b>는 적재 직전 한 줄이다 — 꺼 둔 유형이면 저장하지
+ * 않는다. 설정은 notification이 소유한다({@code notification_mutes}, V12):
+ * {@code V2__users.sql}이 "notifPrefs는 알림 모듈이 생길 때 추가한다"고 미뤄 둔 것을
+ * 여기서 이행했고, auth의 {@code User}에 붙이지 않은 이유는 필터를 거는 쪽이
+ * notification이라 거기서 auth를 읽으면 모듈 경계가 하나 더 넓어지기 때문이다.
  */
 @Service
 @Transactional
 class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
+    private final NotificationMuteRepository muteRepository;
     private final Clock clock;
 
-    NotificationServiceImpl(NotificationRepository notificationRepository, Clock clock) {
+    NotificationServiceImpl(
+            NotificationRepository notificationRepository,
+            NotificationMuteRepository muteRepository,
+            Clock clock) {
         this.notificationRepository = notificationRepository;
+        this.muteRepository = muteRepository;
         this.clock = clock;
     }
 
@@ -67,6 +81,12 @@ class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void notify(NotifyCommand command) {
+        // 껐으면 적재도 하지 않는다 (F1-5) — 목록에서 숨기는 것이 아니라 만들지 않는다.
+        // 나중에 켜도 그 사이 알림은 없다: "끈 동안은 오지 않는다"가 설정의 뜻이다
+        if (muteRepository.existsByPersonIdAndType(command.recipientId(), command.type())) {
+            return;
+        }
+
         // 선검사 — 정상 흐름에서 유니크 제약 위반을 예외로 받지 않게 한다.
         // 동시 발행으로 이 검사를 지나쳐도 제약이 막는다(두 겹 · F1-2)
         if (notificationRepository.existsByRecipientIdAndDedupeKey(
@@ -87,6 +107,36 @@ class NotificationServiceImpl implements NotificationService {
     @Override
     public int withdrawUnread(String refType, long refId, NotificationType type) {
         return notificationRepository.deleteUnreadFor(refType, refId, type);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public NotificationPreferences myPreferences(long callerPersonId) {
+        return NotificationPreferences.of(mutedTypesOf(callerPersonId));
+    }
+
+    @Override
+    public NotificationPreferences updatePreferences(
+            long callerPersonId, Map<NotificationType, Boolean> enabled) {
+        // 전체 교체 — 지우고 다시 넣는다. 44명 × 5유형 규모라 diff를 계산할 이유가 없고,
+        // 부분 갱신으로 두면 "보내지 않은 유형"의 뜻이 애매해진다(§7 PUT 의미론)
+        muteRepository.deleteByPersonId(callerPersonId);
+
+        List<NotificationMute> muted = Arrays.stream(NotificationType.values())
+                .filter(type -> Boolean.FALSE.equals(enabled.get(type)))
+                .map(type -> NotificationMute.of(callerPersonId, type))
+                .toList();
+        muteRepository.saveAll(muted);
+
+        return NotificationPreferences.of(muted.stream()
+                .map(NotificationMute::getType)
+                .collect(Collectors.toUnmodifiableSet()));
+    }
+
+    private Set<NotificationType> mutedTypesOf(long personId) {
+        return muteRepository.findByPersonId(personId).stream()
+                .map(NotificationMute::getType)
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     private static NotificationView toView(Notification notification) {

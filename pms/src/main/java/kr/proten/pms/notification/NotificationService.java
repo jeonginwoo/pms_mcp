@@ -53,4 +53,19 @@ public interface NotificationService {
      *  실제로 회수된 건수
      */
     int withdrawUnread(String refType, long refId, NotificationType type);
+
+    /** 내 알림 설정 (AC H1-4) — 유형 전체를 담는다(끈 것만 false). */
+    NotificationPreferences myPreferences(long callerPersonId);
+
+    /**
+     * 내 알림 설정을 바꾼다 (AC H1-4).
+     *
+     * <p>부분 갱신이 아니라 <b>전체 교체</b>다: 화면이 토글 묶음을 통째로 보내고,
+     * 보내지 않은 유형을 "그대로 둔다"로 해석하면 유형이 늘었을 때 새 유형의 상태가
+     * 화면과 서버에서 갈린다(PUT 의미론 — §7).
+     *
+     * @param enabled 유형별 on/off. 빠진 유형은 <b>켜짐</b>으로 본다(opt-out 기본값)
+     */
+    NotificationPreferences updatePreferences(
+            long callerPersonId, java.util.Map<NotificationType, Boolean> enabled);
 }
