@@ -116,9 +116,9 @@ class UtilizationCalculator {
         return new PersonUtilization(
                 profile,
                 month,
-                // 합은 반올림하지 않는다 — 반올림의 이유(노이즈가 과부하 판정을 뒤집는 것)는
-                // 백분율에만 걸린다. 웹 응답의 기존 값을 그대로 유지한다.
-                assignedMm,
+                round(assignedMm),
+                // 분모는 자르지 않는다 — 저장된 단일 값(그 달 Capacity 또는 Person 기본값)이라
+                // 합산이 없고 따라서 노이즈도 없다. 자를 것이 없는 곳에 규칙을 붙이지 않는다.
                 availableMm,
                 percentage(assignedMm, availableMm),
                 // 보정은 계수를 곱한다 — 나누던 구 산식은 배정 M/M이 단가 기준일 때만
@@ -162,6 +162,20 @@ class UtilizationCalculator {
      *
      * <p>6자리로 자르는 것은 <b>표시 정밀도가 아니다</b>: M/M은 소수 2자리까지라 의미 있는
      * 차이는 전부 남고 노이즈만 사라진다. 화면에 몇 자리를 쓸지는 프론트가 정한다.
+     *
+     * <p><b>같은 규칙이 배정 M/M 합에도 걸린다</b>(2026-08-24 — MCP 담당 관찰): 합계만
+     * 원값으로 두면 {@code 1.9100000000000001}이 나가고, 그것은 <b>모델이 읽는 값</b>이라
+     * 답변에 노이즈가 그대로 실린다. 어댑터에서 자르면 웹과 챗의 값이 갈리므로 도메인에서
+     * 함께 처리한다.
+     *
+     * <p><b>노이즈의 출처는 순진한 덧셈이 아니다</b>(실측): {@code 0.88 + 0.75 + 0.28}을
+     * 그냥 더하면 정확히 {@code 1.91}인데, {@link java.util.stream.DoubleStream#sum()}은
+     * 보정 합산(Kahan)이라 {@code 1.9100000000000001}을 낸다. 그래서 자르는 자리가
+     * <b>합을 낸 직후</b>여야 한다 — 원인 목록을 자르는 것만으로는 총합이 깨끗해지지 않는다.
+     *
+     * <p>다만 <b>"원인의 합 == 총합"을 비트 단위로 보장하지는 않는다</b>: 잘린 원인들을
+     * 소비자가 다시 더하면 같은 보정 합산이 1 ULP를 되살린다. M/M은 소수 2자리 값이라
+     * 그 차이는 의미를 갖지 않는다.
      */
     private static double percentage(double assignedMm, double availableMm) {
         return round(assignedMm / availableMm * 100.0);

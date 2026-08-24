@@ -48,6 +48,17 @@ class UtilizationCalculatorTest {
     private static final YearMonth MONTH = YearMonth.of(2026, 8);
     private static final long CALLER_ID = 102L;
     private static final long PERSON_ID = 103L;
+    /**
+     * 원인의 합과 총합을 견주는 허용오차.
+     *
+     * <p><b>정확히 같기를 요구할 수 없다</b>(2026-08-24 실측): 두 값은 이미 각각 6자리로
+     * 잘려 있지만, 잘린 원인들을 <b>다시 더하면</b> {@code DoubleStream.sum()}의 보정
+     * 합산이 1 ULP를 되살린다 — 0.88+0.75+0.28이 순진한 덧셈으로는 1.91인데 스트림 합은
+     * 1.9100000000000001이다(이 노이즈의 진짜 출처가 그것이다). 소비자가 합을 다시 낼
+     * 자유가 있는 한 비트 일치는 성립하지 않고, M/M은 소수 2자리 값이라 이 오차는
+     * 의미를 갖지 않는다.
+     */
+    private static final Offset<Double> MM_TOLERANCE = Offset.offset(1e-6);
 
     @Mock
     private UtilizationPopulation population;
@@ -157,6 +168,26 @@ class UtilizationCalculatorTest {
     }
 
     @Test
+    @DisplayName("배정 M/M 합도 잘린다 — 모델이 읽는 값이고 원인의 합과 맞아야 한다")
+    void stripsNoiseFromAssignedSum() {
+        // Given: 시드 이현창의 2026-08 실측 조합이다 — 합이 1.9100000000000001이 된다
+        givenPopulation(profile(PERSON_ID, 1.0, 1.0));
+        givenAssignments(
+                assignment(PERSON_ID, 1L, "A", ProjectStatus.IN_PROGRESS, 0.88),
+                assignment(PERSON_ID, 2L, "B", ProjectStatus.IN_PROGRESS, 0.75),
+                assignment(PERSON_ID, 3L, "C", ProjectStatus.IN_PROGRESS, 0.28));
+
+        // When
+        List<PersonUtilization> found = calculator.calculate(CALLER_ID, query(null, null, false));
+
+        // Then: 응답에 실리는 값이 1.91이다 — 자르지 않으면 1.9100000000000001이 나간다
+        assertThat(found).singleElement().satisfies(row -> {
+            assertThat(row.assignedMm()).isEqualTo(1.91);
+            assertThat(sumOf(row)).isCloseTo(row.assignedMm(), MM_TOLERANCE);
+        });
+    }
+
+    @Test
     @DisplayName("가용 M/M이 0이면 행을 만들지 않는다 — 분모가 없는 가동률은 값이 아니다")
     void dropsRowsWithoutDenominator() {
         // Given: 시드에서 capacity 0인 사람은 시스템 계정 하나이고, 시드가
@@ -204,7 +235,7 @@ class UtilizationCalculatorTest {
             assertThat(row.shares())
                     .extracting(PersonUtilization.ProjectShare::projectName)
                     .containsExactly("큰 것", "작은 것");
-            assertThat(sumOf(row)).isCloseTo(row.assignedMm(), Offset.offset(1e-6));
+            assertThat(sumOf(row)).isCloseTo(row.assignedMm(), MM_TOLERANCE);
         });
     }
 
