@@ -10,7 +10,25 @@
 3. 구 구현은 `pms-old/`에 참고용 보존 — 게이트 M0 산출물(`/mcp` 어댑터·인증 체인·시드 적재기)이 거기 있다
 
 
-## 현재 상태 (2026-08-22 기준 골격 서술 + 2026-08-24 진도 반영)
+## 현재 상태 (2026-08-24 — 골격이 0이 됐다)
+
+- **`501 NOT_IMPLEMENTED`를 던지는 자리 0건.** 하루에 EPIC E 쓰기 5종(13 → 4)과 EPIC F F1 전량(4 → 0)이 마지막 골격을 걷어냈다. PRD-pms §11 DoD의 *"골격이 남아 있으면 그 EPIC은 미완이다"* 한 줄이 충족된다 — **이제 화면이나 도구가 비어 있다면 그것은 만들지 않은 것이지 반쯤 만든 것이 아니다**
+- **도메인 이벤트가 처음 돈다**(2026-08-24): project가 배정 변경을 발행 → resource가 과부하를 판정해 다시 발행 → notification이 적재한다. §8이 8종을 명세해 뒀는데 그동안 하나도 발행되지 않았다. **발행 레지스트리는 미도입**(사용자 결정 — 커밋 직후 앱이 죽으면 그 알림은 사라진다. 추가 트리거는 `pms/build.gradle` 주석에)
+- **G1에서 pms 몫은 없다**: 남은 것은 MCP 담당의 `UtilizationTools` 배선 하나다. `resource` 루트 계약이 2026-08-24에 섰고 소유자 합의도 성립했다(양측이 독립적으로 같은 결론)
+- **프론트엔드가 백엔드를 거의 따라잡았다**: 실구현인데 화면이 없던 5지점을 연결했다(가동률·유지보수 계약/이슈·통합 감사·프로젝트 이력 탭). **지금 비어 있는 것은 알림 벨 하나뿐**이고, 그 백엔드가 방금 섰다
+- **Flyway V1~V12** · 모듈 8종 · 모듈 루트 계약 실측 person 12·project 9·audit 6·resource 5·maintenance 5·notification 5(auth·mcp는 0)
+- **검증**: `verify.sh pms` PASS — 테스트 **435개**
+- **다음 작업 후보** (막는 것 없음, 아무거나 집으면 된다):
+  1. **프론트 알림 벨** — 백엔드가 방금 섰고 화면이 비어 있다. 작고 눈에 보인다
+  2. **EPIC D 쓰기(D-b)** — 막고 있던 D3-1 담당자 알림이 **F 완료로 풀렸다**. D-c(이관)는 모듈 방향 결정이 아직 선행
+  3. **F2·F3 스케줄러** — `@EnableScheduling` 미착수. 등재한 공백(**상태 전이로도 과부하가 생기는데 §8에 그 이벤트가 없다**)도 여기서 함께
+  4. **F1-4 SSE** — `?access_token=` 인증과 로그 마스킹이 한 묶음
+  5. **project 잔여 AC** — A6-3 → A8. A8-5·A8-6이 이미 초록인 진척률·배정 판정에 침투하므로 **회귀 위험이 가장 크다** — 뒤로 미루는 편이 낫다
+- **차단 요소:** 없음
+- **로컬 개발 환경 (2026-08-24 세션에서 띄워 둔 것 — 다음 세션이 이어 쓴다)**: PostgreSQL(compose) · pms 앱 :8080 · frontend :5173. **DB에 테스트 흔적이 있다** — 프로젝트 313(근로복지공단)에 감사 행 4개 · 종료(CLOSED) 배정 1건 · version v2. 전부 append-only·soft 삭제라 설계상 지워지지 않는 것들이고, 감사 화면·이력 탭을 확인하려고 일부러 만든 것이다. **초기화는 `docker compose -f pms/docker-compose.yml down -v` 후 재기동**(시드부터 다시 깔린다). **떠 있는 앱은 V10 시점 코드다** — DB도 V10까지만 받았다(실측: `flyway_schema_history`에 1~10). 새 세션에서 EPIC E·F 결과를 화면으로 보려면 **앱을 재기동해야** 하고, 그때 Flyway가 V11(직급·권한 그룹 시퀀스)·V12(알림 설정)를 적용한다. 프론트는 vite dev라 코드가 이미 반영돼 있지만 **백엔드가 옛 코드라 새 라우트는 404다**
+
+
+## 이전 상태 (2026-08-22 — auth 분리 + 모듈 골격 확장)
 
 - **auth 모듈 분리 완료**(사용자 선택 — 공용 결정 기록 2026-08-22 1행): `person/service/impl` 26개 중 **인증 인프라 7개**(AuthKeyConfig·AuthProperties·TokenProvider·NimbusTokenProvider·TokenClaimValidators·PasswordHasher·BCryptPasswordHasher)와 `User`·`UserRepository`·`AuthService`·`AuthController`·`ApiSecurityConfig`를 **`auth/`** 로 옮겼다. PRD §3의 개명 근거("identity는 계정·인증이 범위에서 빠진다")가 코드에서도 성립한다. **순환 회피가 이 분리의 핵심 설계 지점**: 로그인은 인원 활성 여부를 person에 물어야 하고(`PersonDirectoryService.existsActive`) 인력 등록(E2-1)은 계정을 함께 만들어야 해서 서로 부르면 `ModularityTest`가 막는다 → **person이 모듈 루트에 `AccountPort`를 정의하고 auth가 구현**(의존 auth → person 한 방향, 초기 비밀번호·해시는 auth 안에 잔류). `PersonSeedLoader`의 계정 섹션 검사도 이 포트를 탄다
 - **골격 신설**(로직 없음 — 미구현 유스케이스는 `NotImplementedException` → **501 `NOT_IMPLEMENTED`**, 각 자리에 `TODO(<AC>)`): **resource**(`GET /api/utilization` · `Capacity` 엔티티 = 월별 예외, 기본값은 `Person.capacity`) · **notification**(`GET /api/notifications`·`PATCH /{id}/read` · 멱등은 `(recipient_id, dedupe_key)` 유니크 제약으로 스키마에 박음) · **EPIC E 쓰기 5종**(E1-1·E2-2·E3-2·E4·E5 — `ReferenceController`를 자원별 `GradeController`·`PermissionGroupController`로 분리) · **감사 조회 2뷰**(G1-3·G2-2). Flyway **V7**(capacities·notifications). `PageResponse`는 원 주석의 예고대로 `common/web`으로 승격

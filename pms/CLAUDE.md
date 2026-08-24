@@ -124,23 +124,14 @@ log). `verify.sh`/CI only look at `pms/gradlew`, so `pms-old/` is not verified.
 
 ## What is not here yet
 
-**Scaffolded but empty (2026-08-22)** — the route, contract, entity, migration
-and the *reasoning* are in place; the use-case body throws
-`NotImplementedException` → **501 `NOT_IMPLEMENTED`**. Every one of them carries
-a `TODO(<AC>)` naming exactly what is missing. 501 rather than 500 so a caller
-can tell "not built yet" from "broken", and the code is deliberately absent from
-the §7 error table: when the logic lands, the throw site disappears.
-
-- **notification** — `GET /api/notifications`, `PATCH /{id}/read` (EPIC F).
-  Idempotency is already structural: `(recipient_id, dedupe_key)` is unique in
-  V7. The SSE route is deliberately not opened yet — it authenticates via
-  `?access_token=` (§7) and the access-log masking is part of the same unit.
-- **EPIC E writes** — `PUT /api/people/{id}` (E2-2), `PUT /api/people/{id}/org-unit`
-  (E1-1), `PUT /api/org-units/{id}` (E3-2), grade CRUD (E4), permission-group
-  CRUD (E5).
-- **Audit read views** — `GET /api/audit` (G1-3) and `GET /api/projects/{id}/audit`
-  (G2-2). **Their permission and visibility checks are real** — only the data
-  fetch is missing (see Audit below).
+**No scaffolds remain (2026-08-24).** `NotImplementedException` is thrown in
+**zero** places — EPIC E writes and EPIC F's F1 removed the last thirteen on the same
+day, which satisfies the DoD line "0 sites throwing 501" (PRD-pms §11). The pattern is
+worth remembering because it will be used again: a scaffold carried the route, the
+contract, the entity, the migration **and the reasoning**, with a `TODO(<AC>)` naming
+exactly what was missing, so filling it in was impl body + audit + AC tests. The 501 code
+stays absent from the §7 error table on purpose — when the logic lands, the throw site
+disappears, and it now has.
 
 **Not started**
 
@@ -152,10 +143,17 @@ the §7 error table: when the logic lands, the throw site disappears.
   2026-08-23 and `resource.UtilizationLookupService` landed 2026-08-24, so what
   remains is adapter wiring (MCP dev). The other six are live, and `update_progress`
   being among them means audit rows now carry `source=MCP` as well as `WEB`.
-- **Domain events** — A7-1 `ProjectCompleted`, B2-1 `AssignmentClosed` and the
-  rest are still not published: the notification module exists now, but nothing
-  consumes them until its logic lands.
+- **EPIC F's remainder** — the **schedulers** (F2 deadline D-7 · F3 completion-overdue;
+  `@EnableScheduling` is not on yet) and the **SSE route** (F1-4), whose `?access_token=`
+  auth and access-log masking are one unit. Registered gap: **a status transition also
+  creates overbooking** (계약대기 → 진행중 pulls that person's assignment into the
+  numerator) and §8 has no event for it — look at it with F2/F3.
+- **EPIC D writes** — D1 handover · D2 contract/site · D3 issues. D3-1's assignee
+  notification was blocked on EPIC F and **is now unblocked**; D-c still needs the
+  module-direction decision (the route is project's, the contract is maintenance's,
+  and D1-2 wants one transaction).
 - project ACs **A6-3** (role assignment) · **A8** (per-project permission matrix),
+  and the `?phase=` list filter.
   and the `?phase=` list filter.
 
 ## Ownership inside this app
@@ -297,16 +295,20 @@ POST /api/org-units           201 + node — arbitrary depth, one company root (
 GET  /api/grades              form choices for the admin screen (same flag)
 GET  /api/permission-groups   form choices for the admin screen (same flag)
 
---- scaffolded, 501 until the logic lands (2026-08-22) ---
+--- all live since 2026-08-24 (these were the last 501 scaffolds) ---
 PUT  /api/people/{id}              edit name·org·grade·group (E2-2)
-PUT  /api/people/{id}/org-unit     move only (E1-1 — allowed with live assignments)
-PUT  /api/org-units/{id}           rename (E3-2)
-POST/PUT/DELETE /api/grades[/{id}]              grade CRUD (E4)
-POST/PUT/DELETE /api/permission-groups[/{id}]   group CRUD (E5)
+PUT  /api/people/{id}/org-unit     move only (E1-1) — 200 carries a **warning** when the
+                                   person has live assignments (E1-2, not an error)
+PUT  /api/org-units/{id}           rename (E3-2) — duplicate names under one parent are
+                                   deliberately allowed (no AC forbids it)
+POST/PUT/DELETE /api/grades[/{id}]              grade CRUD (E4) — 409 IN_USE while used
+POST/PUT/DELETE /api/permission-groups[/{id}]   group CRUD (E5) — 422 on the fixed group
 GET  /api/utilization?month=&personId=&orgUnitId=&overbooked=   (EPIC C)
 GET  /api/notifications  ·  PATCH /api/notifications/{id}/read  (F1-3)
+GET/PUT /api/me/notif-prefs        per-type on/off (H1-4) — the controller lives in
+                                   notification, not person: the data is notification's
 GET  /api/audit                    integrated log, manage flag — 403 is real (G1-3)
-GET  /api/projects/{id}/audit      per-project, visibility — 404 is already real (G2-2)
+GET  /api/projects/{id}/audit      per-project, visibility — 404 is real (G2-2)
 
 POST /api/projects            201 + detail                       (A1)
 GET  /api/projects            §7 page envelope, ?page&size&sort   (A3-1)
@@ -329,7 +331,7 @@ Not routed yet, on purpose: A6-3 (`/roles`), A8 (`/permissions`), `?phase=`, and
 the SSE stream `GET /api/notifications/stream` (its `?access_token=` auth and the
 access-log masking are one unit — opening the route first leaks tokens into logs).
 
-## Audit (recording real · reading scaffolded)
+## Audit (recording and reading both live)
 
 `audit` records every project-scoped change as one append-only row in
 `audit_logs` (Flyway V3). One table is the whole store: the integrated log (G1-3)
@@ -344,18 +346,50 @@ why `projectId` is a filter column filled even when `entityId` is an assignment.
   (§5 transitions only), otherwise `UPDATE`, soft close → `DELETE`. No change,
   no row. Call sites never pick the action themselves.
 - **`source`** comes from the request path (`/mcp` → MCP, else WEB), so the MCP
-  adapter needs no audit wiring. The adapter landed on 2026-08-23 but only *read*
-  tools are wired, so no row is `source=MCP` yet — that gets measured when
-  `update_progress` is wired.
+  adapter needs no audit wiring. Confirmed end-to-end on 2026-08-23 once
+  `update_progress` was wired: the row written through the tool carries `source=MCP`.
 - Rows join the caller's transaction: a rolled-back change leaves no history.
 - **Two views, two modules, one table** (2026-08-22): `AuditQueryService` in the audit module
   is a plain read with **no permission logic** — it cannot have any, because the
   two views judge differently (manage-org flag vs project visibility) and audit
   may not depend on person or project (that is a cycle). person's
   `AuditViewService` (G1-3) and project's `ProjectQueryService.listAudit` (G2-2) wrap it.
-  Their **checks are implemented; only the fetch throws 501** — a 403/404 hole is
-  not something to add later, and having the guard means the "no leak to a caller
-  without the flag" property is under test from now on.
+  Both views landed on 2026-08-23 and the screens on 2026-08-24. Their checks were
+  implemented **before** the fetch was (the scaffold enforced 403/404 while still
+  throwing 501) — that ordering is the point: a permission hole is not something to
+  add later.
+
+- **Seeding leaves no audit rows** (measured 2026-08-24): `audit_logs` is empty on a
+  freshly seeded database, so the audit screens show nothing until someone writes.
+  An older record claimed seeded rows exist as `source=WEB`; that is registered as
+  needing confirmation in PRD-pms §12.
+
+## Domain events (new 2026-08-24 — read this before adding one)
+
+The first events in this project. `project` publishes `AssignmentChanged`, `resource`
+subscribes and republishes `OverbookingDetected`, `notification` subscribes and stores.
+
+- **Edges point from subscriber to publisher, always.** The subscriber imports the event
+  type from the publisher's module root. The reverse (publisher calls the subscriber) is
+  what PRD-pms §3 used to imply, and combined with §8 it was a cycle — corrected on
+  2026-08-24, shared decision log. Concretely: **no module outside `notification` calls
+  `NotificationService.notify`**; notification's own listener does.
+- **Publish inside the transaction, after the audit row.** `@ApplicationModuleListener`
+  runs after commit, so a rollback also erases the event — no notification for a change
+  that did not happen.
+- **Every assignment write publishes, including project creation.** `create()` saves
+  assignments directly rather than going through `AssignmentService`, and forgetting it
+  there means "nobody learns that a new project overloaded someone" (found by test).
+  The audit row for creation is still one (A1-1); the events are per assignment.
+- **No publication registry** (`spring-modulith-starter-jpa`) — only
+  `spring-modulith-events-api` for the annotation. If the app dies right after commit
+  the event is lost; that is accepted because overbooking is also visible on the
+  utilization screen. `build.gradle` carries the trigger for revisiting.
+- Async needs `@EnableAsync` (on `PmsApplication`), and tests must **await** — asserting
+  immediately fails on timing, not on behaviour (`NotificationFlowIntegrationTest` uses
+  awaitility).
+- **A status transition also creates overbooking** (계약대기 → 진행중 pulls the
+  assignment into the numerator) and §8 has no event for it. Registered gap.
 
 ## Project permissions
 
