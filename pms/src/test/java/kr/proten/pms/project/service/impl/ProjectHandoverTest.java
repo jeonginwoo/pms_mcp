@@ -18,6 +18,9 @@ import kr.proten.pms.common.exception.ForbiddenException;
 import kr.proten.pms.common.exception.NotFoundException;
 import kr.proten.pms.common.exception.ValidationException;
 import kr.proten.pms.person.PersonDirectoryService;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import kr.proten.pms.project.HandoverPort;
 import kr.proten.pms.project.HandoverSpec;
 import kr.proten.pms.project.ProjectStatus;
@@ -32,6 +35,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 /**
  * 유지보수 이관 유스케이스 단위 테스트 — AC D1-1·D1-2·D1-3.
@@ -43,6 +47,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
  */
 @ExtendWith(MockitoExtension.class)
 class ProjectHandoverTest {
+    /** 시계를 고정한다 — 100% 도달 시각이 단정에 들어온다(F3-1). */
+    private static final Instant NOW = Instant.parse("2026-08-25T00:00:00Z");
     private static final long PROJECT_ID = 7L;
     private static final long MANAGER_ID = 13L;
     private static final long OUTSIDER_ID = 106L;
@@ -61,6 +67,8 @@ class ProjectHandoverTest {
     @Mock
     private HandoverPort handoverPort;
     @Mock
+    private ApplicationEventPublisher events;
+    @Mock
     private ProjectAssignmentRepository assignmentRepository;
     @Mock
     private PersonDirectoryService personDirectoryService;
@@ -78,7 +86,9 @@ class ProjectHandoverTest {
                 new AssignmentFactory(),
                 projectAuditRecorder,
                 projectViewFactory,
-                handoverPort);
+                handoverPort,
+                Clock.fixed(NOW, ZoneId.systemDefault()),
+                events);
     }
 
     @Test

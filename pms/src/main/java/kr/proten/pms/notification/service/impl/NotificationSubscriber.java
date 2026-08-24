@@ -11,6 +11,8 @@ import kr.proten.pms.person.OrgPermissionService;
 import kr.proten.pms.person.PersonDirectoryService;
 import kr.proten.pms.person.PersonRef;
 import kr.proten.pms.project.AssignmentChanged;
+import kr.proten.pms.project.ProjectLifecycleChanged;
+import kr.proten.pms.project.ProjectReminderDue;
 import kr.proten.pms.resource.OverbookingDetected;
 import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
@@ -152,6 +154,69 @@ class NotificationSubscriber {
                         engineerId, NotificationType.PROJECT_COMPLETED, "Project",
                         event.projectId(), message,
                         "handed-over:%d:%d".formatted(event.contractId(), engineerId))));
+    }
+
+
+    /**
+     * 마감 임박·완료 지연 → 프로젝트를 끌고 가는 사람에게 (AC F2-1 · F3-1).
+     *
+     * <p>발행자가 수신자 재료를 실어 보내지만(역할 판정은 project의 것이다) <b>보낼지</b>는
+     * 여기가 정한다 — 설정 꺼짐 필터(F1-5)는 {@code notify} 안에 있다.
+     *
+     * <p><b>멱등 키가 두 종류로 갈린다</b>(F2-2·F3-2): 마감 임박은 <b>점검이 돈 날</b>을
+     * 넣어 하루 한 번씩 다시 알리고(F2-2가 멱등 단위를 "같은 날 재실행"으로 적었다),
+     * 완료 지연은 <b>도달일</b>을 넣어 한 사이클에 한 번만 알린다. 마감은 날마다
+     * 임박해지는 사건이고 완료 지연은 같은 사건이 안 풀린 것이라, 매일 보내면 후자는
+     * 소음이 된다. 재개하면 도달일이 비고 다시 100%가 될 때 새로 찍히므로 키가
+     * 달라져 새 사이클이 된다(F3-2 문면 그대로다).
+     *
+     * <p>마감 키에 <b>종료일</b>을 쓰면 종료일당 평생 1건이 되어 "일일 점검"이
+     * 성립하지 않는다 — 2026-08-25 리뷰가 잡은 실제 결함이다(주석은 매일이라고
+     * 적혀 있었고 코드는 아니었다).
+     */
+    @ApplicationModuleListener
+    void onReminderDue(ProjectReminderDue event) {
+        boolean deadline = event.kind() == ProjectReminderDue.Kind.DEADLINE_NEAR;
+        NotificationType type = deadline
+                ? NotificationType.DEADLINE_NEAR
+                : NotificationType.COMPLETION_OVERDUE;
+        String message = deadline
+                ? "%s 종료일이 %s입니다".formatted(event.projectName(), event.dueDate())
+                : "%s이(가) 100%%인 채 %s부터 완료 처리되지 않았습니다"
+                        .formatted(event.projectName(), event.dueDate());
+
+        event.recipientIds().forEach(recipient -> notificationService.notify(new NotifyCommand(
+                recipient, type, "Project", event.projectId(), message,
+                "%s:%d:%s".formatted(deadline ? "deadline" : "overdue",
+                        event.projectId(),
+                        deadline ? event.runDate() : event.dueDate()))));
+    }
+
+    /**
+     * 완료 안내 · 재개 시 회수 (§8 {@code ProjectCompleted}·{@code ProjectReopened} ·
+     * AC F3-3).
+     *
+     * <p><b>이 메서드가 2026-08-25에 메운 것은 배선이다</b>: §8이 두 이벤트를 명세했고
+     * {@code withdrawUnread}도 구현·테스트돼 있었지만 <b>실사용 호출자가 없어</b>
+     * 재개해도 완료 지연 알림이 남아 있었다. 능력과 배선은 다른 것이다.
+     *
+     * <p><b>재개는 알림을 만들지 않는다</b> — 걷어내기만 한다. 읽은 알림은 남긴다:
+     * 이미 본 사실을 없던 일로 만들지 않는다({@code withdrawUnread} 주석).
+     */
+    @ApplicationModuleListener
+    void onLifecycleChanged(ProjectLifecycleChanged event) {
+        if (event.kind() == ProjectLifecycleChanged.Kind.REOPENED) {
+            notificationService.withdrawUnread(
+                    "Project", event.projectId(), NotificationType.COMPLETION_OVERDUE);
+
+            return;
+        }
+
+        String message = "%s이(가) 완료되었습니다".formatted(event.projectName());
+
+        event.assigneeIds().forEach(recipient -> notificationService.notify(new NotifyCommand(
+                recipient, NotificationType.PROJECT_COMPLETED, "Project", event.projectId(),
+                message, "completed:%d:%d".formatted(event.projectId(), recipient))));
     }
 
     /** 이름을 못 찾으면 알림을 포기하지 않는다 — 문구만 덜 친절해진다. */

@@ -1,5 +1,8 @@
 package kr.proten.pms.project.service.impl;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -9,6 +12,7 @@ import kr.proten.pms.common.exception.UnprocessableException;
 import kr.proten.pms.common.exception.ValidationException;
 import kr.proten.pms.person.PersonDirectoryService;
 import kr.proten.pms.project.HandoverPort;
+import kr.proten.pms.project.ProjectLifecycleChanged;
 import kr.proten.pms.project.HandoverSpec;
 import kr.proten.pms.project.repository.ProjectAssignmentRepository;
 import kr.proten.pms.project.repository.ProjectRepository;
@@ -23,6 +27,7 @@ import kr.proten.pms.project.service.entity.ProjectAction;
 import kr.proten.pms.project.service.entity.ProjectAssignment;
 import kr.proten.pms.project.service.entity.ProjectRole;
 import kr.proten.pms.project.ProjectStatus;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,6 +55,8 @@ public class ProjectLifecycleServiceImpl implements ProjectLifecycleService {
     private final ProjectAuditRecorder projectAuditRecorder;
     private final ProjectViewFactory projectViewFactory;
     private final HandoverPort handoverPort;
+    private final Clock clock;
+    private final ApplicationEventPublisher events;
 
     public ProjectLifecycleServiceImpl(
             ProjectRepository projectRepository,
@@ -60,7 +67,9 @@ public class ProjectLifecycleServiceImpl implements ProjectLifecycleService {
             AssignmentFactory assignmentFactory,
             ProjectAuditRecorder projectAuditRecorder,
             ProjectViewFactory projectViewFactory,
-            HandoverPort handoverPort) {
+            HandoverPort handoverPort,
+            Clock clock,
+            ApplicationEventPublisher events) {
         this.projectRepository = projectRepository;
         this.assignmentRepository = assignmentRepository;
         this.projectVisibilityService = projectVisibilityService;
@@ -70,6 +79,8 @@ public class ProjectLifecycleServiceImpl implements ProjectLifecycleService {
         this.projectAuditRecorder = projectAuditRecorder;
         this.projectViewFactory = projectViewFactory;
         this.handoverPort = handoverPort;
+        this.clock = clock;
+        this.events = events;
     }
 
     /**
@@ -100,7 +111,7 @@ public class ProjectLifecycleServiceImpl implements ProjectLifecycleService {
         project.requireVersion(command.version());
 
         Map<String, Object> before = projectAuditRecorder.snapshot(project);
-        project.updateProgress(command.progress());
+        project.updateProgress(command.progress(), Instant.now(clock));
         Project saved = projectRepository.saveAndFlush(project);
         // 상태는 바뀌지 않으므로 UPDATE로 남는다 (AC A2-2 · §5 자동 전이 폐지)
         projectAuditRecorder.changed(callerPersonId, saved, before);
@@ -110,12 +121,14 @@ public class ProjectLifecycleServiceImpl implements ProjectLifecycleService {
 
     /** 완료 처리 (AC A7-1) — 진행중·진척률 100%가 전제다. */
     public ProjectDetail complete(long callerPersonId, long projectId, long version) {
-        return transition(callerPersonId, projectId, version, Project::complete);
+        return transition(callerPersonId, projectId, version, Project::complete,
+                ProjectLifecycleChanged.Kind.COMPLETED);
     }
 
     /** 재개 (AC A7-3) — 완료 → 진행중, 진척률은 90으로 돌아간다. */
     public ProjectDetail reopen(long callerPersonId, long projectId, long version) {
-        return transition(callerPersonId, projectId, version, Project::reopen);
+        return transition(callerPersonId, projectId, version, Project::reopen,
+                ProjectLifecycleChanged.Kind.REOPENED);
     }
 
     /**
@@ -246,11 +259,25 @@ public class ProjectLifecycleServiceImpl implements ProjectLifecycleService {
         }
     }
 
+    /**
+     * 그 프로젝트에 살아 있는 배정 인원 — 완료 안내의 수신자 재료다(§8).
+     * 종료된 배정은 빼고 중복도 없앤다: 한 사람이 역할을 옮기며 두 행을 갖는 경우가
+     * 있고(A6-3), 알림은 사람 단위다.
+     */
+    private List<Long> assigneeIdsOf(long projectId) {
+        return assignmentRepository
+                .findByProjectIdAndStatus(projectId, AssignmentStatus.ACTIVE).stream()
+                .map(ProjectAssignment::getPersonId)
+                .distinct()
+                .toList();
+    }
+
     private ProjectDetail transition(
             long callerPersonId,
             long projectId,
             long version,
-            Consumer<Project> transition) {
+            Consumer<Project> transition,
+            ProjectLifecycleChanged.Kind kind) {
         Project project = projectVisibilityService.requireVisible(callerPersonId, projectId);
         projectActionPermission.require(callerPersonId, projectId,
                 ProjectAction.COMPLETE_REOPEN);
@@ -261,6 +288,10 @@ public class ProjectLifecycleServiceImpl implements ProjectLifecycleService {
         Project saved = projectRepository.saveAndFlush(project);
         // 상태가 바뀌었으므로 STATE_CHANGE로 남는다 (§5 "모든 전이 AuditLog STATE_CHANGE")
         projectAuditRecorder.changed(callerPersonId, saved, before);
+        // §8이 명세하고도 2026-08-25까지 발행 지점이 0곳이던 둘이다 —
+        // 완료는 배정 인원에게 안내가 가고, 재개는 완료 지연 알림을 회수한다(F3-3)
+        events.publishEvent(new ProjectLifecycleChanged(kind, saved.getId(),
+                saved.getName(), assigneeIdsOf(saved.getId())));
 
         return projectViewFactory.toDetail(saved);
     }

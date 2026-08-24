@@ -16,6 +16,9 @@ import kr.proten.pms.common.exception.ForbiddenException;
 import kr.proten.pms.common.exception.NotFoundException;
 import kr.proten.pms.common.exception.ValidationException;
 import kr.proten.pms.person.PersonDirectoryService;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import kr.proten.pms.project.HandoverPort;
 import kr.proten.pms.project.repository.ProjectAssignmentRepository;
 import kr.proten.pms.project.repository.ProjectRepository;
@@ -31,6 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 /**
  * 진척률 갱신 유스케이스 단위 테스트 — AC A2-1~A2-8.
@@ -40,6 +44,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
  */
 @ExtendWith(MockitoExtension.class)
 class ProgressUpdateTest {
+    /** 시계를 고정한다 — 100% 도달 시각이 단정에 들어온다(F3-1). */
+    private static final Instant NOW = Instant.parse("2026-08-25T00:00:00Z");
     private static final long PROJECT_ID = 7L;
     private static final long ASSIGNEE_ID = 103L;
     private static final long OUTSIDER_ID = 106L;
@@ -60,6 +66,8 @@ class ProgressUpdateTest {
     private ProjectViewFactory projectViewFactory;
     @Mock
     private HandoverPort handoverPort;
+    @Mock
+    private ApplicationEventPublisher events;
 
     private ProjectLifecycleServiceImpl service;
 
@@ -74,7 +82,9 @@ class ProgressUpdateTest {
                 new AssignmentFactory(),
                 projectAuditRecorder,
                 projectViewFactory,
-                handoverPort);
+                handoverPort,
+                Clock.fixed(NOW, ZoneId.systemDefault()),
+                events);
     }
 
     @Test
