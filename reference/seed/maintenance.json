@@ -2952,7 +2952,7 @@
    ],
    "title": "연관 없는 파일명 검색도 되는 현상 문의",
    "type": "문의",
-   "engineerId": 26,
+   "engineerId": 28,
    "date": "2026-05-21",
    "comments": 1,
    "status": "완료"
@@ -2965,7 +2965,7 @@
    ],
    "title": "프로세스 root로 기동 관련 건",
    "type": "문의",
-   "engineerId": 26,
+   "engineerId": 28,
    "date": "2026-04-02",
    "comments": 1,
    "status": "완료"
@@ -2977,7 +2977,7 @@
    ],
    "title": "운영 3번 노후서버 변경 작업 및 OS 업그레이드 관련 회의",
    "type": "요청",
-   "engineerId": 28,
+   "engineerId": 26,
    "date": "2026-01-09",
    "comments": 4,
    "status": "완료"
@@ -2989,7 +2989,7 @@
    ],
    "title": "한국거래소 개발서버 디스크풀 문의 대응",
    "type": "장애",
-   "engineerId": 28,
+   "engineerId": 26,
    "date": "2026-01-09",
    "comments": 0,
    "status": "완료"
@@ -3001,7 +3001,7 @@
    ],
    "title": "관리도구 보안취약점 조치 사항",
    "type": "요청",
-   "engineerId": 28,
+   "engineerId": 26,
    "date": "2025-07-18",
    "comments": 1,
    "status": "완료"
@@ -3013,7 +3013,7 @@
    ],
    "title": "법규시스템 스마트워크 시스템과 검색결과 일치되도록 요청",
    "type": "요청",
-   "engineerId": 28,
+   "engineerId": 26,
    "date": "2025-04-21",
    "comments": 0,
    "status": "완료"
@@ -3023,7 +3023,7 @@
    "tags": [],
    "title": "톰캣 버전업 & 개인정보추출 & 금칙어추출 적용 현황",
    "type": "요청",
-   "engineerId": 26,
+   "engineerId": 28,
    "date": "2025-02-25",
    "comments": 0,
    "status": "완료"
@@ -3035,7 +3035,7 @@
    ],
    "title": "비공개 전자결재 검색되는 현상 문의",
    "type": "장애",
-   "engineerId": 28,
+   "engineerId": 26,
    "date": "2025-02-13",
    "comments": 0,
    "status": "완료"
@@ -3048,7 +3048,7 @@
    ],
    "title": "개인정보추출 관련 수정",
    "type": "요청",
-   "engineerId": 26,
+   "engineerId": 28,
    "date": "2025-02-11",
    "comments": 0,
    "status": "완료"
@@ -3061,7 +3061,7 @@
    ],
    "title": "인덱스 xfile 증분색인 400 에러",
    "type": "장애",
-   "engineerId": 26,
+   "engineerId": 28,
    "date": "2025-01-23",
    "comments": 3,
    "status": "완료"
@@ -3074,7 +3074,7 @@
    ],
    "title": "리인덱싱 task가 종료되는 현상",
    "type": "장애",
-   "engineerId": 26,
+   "engineerId": 28,
    "date": "2025-01-15",
    "comments": 0,
    "status": "완료"
@@ -3087,7 +3087,7 @@
    ],
    "title": "POC 개인정보추출 모듈 수정",
    "type": "요청",
-   "engineerId": 26,
+   "engineerId": 28,
    "date": "2024-12-19",
    "comments": 0,
    "status": "완료"
@@ -3099,7 +3099,7 @@
    ],
    "title": "법규시스템 하이라이팅이 다른시스템과 다르게 나오는 문의",
    "type": "문의",
-   "engineerId": 28,
+   "engineerId": 26,
    "date": "2024-12-05",
    "comments": 1,
    "status": "완료"
@@ -3111,7 +3111,7 @@
    ],
    "title": "관리도구 재기동 오류",
    "type": "장애",
-   "engineerId": 28,
+   "engineerId": 26,
    "date": "2024-09-06",
    "comments": 0,
    "status": "완료"
