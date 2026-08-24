@@ -29,6 +29,9 @@ public interface ProjectAssignmentRepository extends JpaRepository<ProjectAssign
             AssignmentStatus status);
 
     /** 중복 배정 판정 (AC B1-2) — 종료된 배정은 재배정을 막지 않는다. */
+    /** 이 사람의 살아 있는 배정 건수 (person `AssignmentCountPort` — 이동 경고 E1-2). */
+    long countByPersonIdAndStatus(Long personId, AssignmentStatus status);
+
     boolean existsByProjectIdAndPersonIdAndStatus(
             Long projectId,
             Long personId,

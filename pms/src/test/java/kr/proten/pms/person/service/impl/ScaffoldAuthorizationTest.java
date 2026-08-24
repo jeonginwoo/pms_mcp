@@ -20,7 +20,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 /**
  * 골격 유스케이스의 권한 판정 — EPIC E 쓰기 경로 전부 (E1-1·E2-2·E3-2·E4·E5).
  *
- * 로직은 아직 없지만 **403은 지금 성립해야 한다**: 관리 플래그 없는 호출자가 501을
+ * **2026-08-24 — 501 절반이 사라졌다**: EPIC E 쓰기가 전부 구현돼 "플래그가 있으면 501에
+ * 닿는다"는 케이스는 더 이상 참이 아니다(골격 주석이 "구현이 들어오면 던지는 자리가
+ * 사라진다"고 예고한 그것이다). 남은 절반이 이 클래스의 본체다 — **권한 판정이 다른
+ * 무엇보다 먼저 온다**는 것은 로직이 들어와도 계속 참이어야 하고, 오히려 지금부터
+ * 깨지기 쉽다(저장소 조회가 판정보다 앞서면 404·422가 403을 가린다).
+ *
+ * 구 주석: 로직은 아직 없지만 **403은 지금 성립해야 한다** — 관리 플래그 없는 호출자가 501을
  * 받으면 그 경로가 존재한다는 사실과 곧 열린다는 사실을 함께 알게 되고, 구현이
  * 들어오는 날에야 403이 뒤늦게 생긴다. 없는 것은 로직이지 권한이 아니다.
  *
@@ -51,16 +57,19 @@ class ScaffoldAuthorizationTest {
     @BeforeEach
     void setUp() {
         OrgManagePermission orgManagePermission = new OrgManagePermission(orgPermissionService);
+        // 협력자는 전부 null이다 — 판정에서 막히면 그 뒤로 한 줄도 가지 않는다는 것이
+        // 이 테스트가 증명하는 것이고, null이 그 증명을 대신한다(가면 NPE로 실패한다)
         personService = new PersonServiceImpl(null, null, null, null, null, null,
-                orgManagePermission, null, null, null);
+                orgManagePermission, null, null, null, null);
         orgUnitService = new OrgUnitServiceImpl(null, null, orgManagePermission, null);
-        gradeService = new GradeServiceImpl(null, orgManagePermission);
-        permissionGroupService = new PermissionGroupServiceImpl(null, orgManagePermission);
+        gradeService = new GradeServiceImpl(null, null, orgManagePermission, null);
+        permissionGroupService =
+                new PermissionGroupServiceImpl(null, null, orgManagePermission, null);
     }
 
     @Test
-    @DisplayName("관리 플래그가 없으면 골격 경로도 403이다 — 501로 새지 않는다")
-    void scaffoldWrites_withoutManageOrg_areForbidden() {
+    @DisplayName("관리 플래그가 없으면 EPIC E 쓰기는 전부 403이다 — 판정이 가장 먼저다")
+    void orgWrites_withoutManageOrg_areForbidden() {
         // Given
         givenManageOrg(MEMBER_ID, false);
 
@@ -74,24 +83,6 @@ class ScaffoldAuthorizationTest {
         assertForbidden(() -> permissionGroupService.create(MEMBER_ID, groupCommand()));
         assertForbidden(() -> permissionGroupService.update(MEMBER_ID, groupCommand()));
         assertForbidden(() -> permissionGroupService.delete(MEMBER_ID, 4L));
-    }
-
-    @Test
-    @DisplayName("플래그가 있으면 판정을 통과해 501에 닿는다 — 구현이 들어올 자리다")
-    void scaffoldWrites_withManageOrg_reachNotImplemented() {
-        // Given
-        givenManageOrg(ADMIN_ID, true);
-
-        // When · Then
-        assertNotImplemented(() -> personService.update(ADMIN_ID, updatePersonCommand()));
-        assertNotImplemented(() -> personService.moveOrgUnit(ADMIN_ID, 103L, 5L));
-        assertNotImplemented(() -> orgUnitService.rename(ADMIN_ID, 5L, "새이름"));
-        assertNotImplemented(() -> gradeService.create(ADMIN_ID, gradeCommand()));
-        assertNotImplemented(() -> gradeService.update(ADMIN_ID, gradeCommand()));
-        assertNotImplemented(() -> gradeService.delete(ADMIN_ID, 1L));
-        assertNotImplemented(() -> permissionGroupService.create(ADMIN_ID, groupCommand()));
-        assertNotImplemented(() -> permissionGroupService.update(ADMIN_ID, groupCommand()));
-        assertNotImplemented(() -> permissionGroupService.delete(ADMIN_ID, 4L));
     }
 
     private void givenManageOrg(long callerPersonId, boolean allowed) {

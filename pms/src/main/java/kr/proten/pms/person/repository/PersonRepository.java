@@ -42,4 +42,16 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
 
     /** 조직 노드 삭제 가능 판정 (AC E3-3) — 빈 노드만 지울 수 있다. */
     long countByOrgUnitIdAndActiveTrue(Long orgUnitId);
+
+    /**
+     * 이 직급을 쓰는 인원이 있는가 (AC E4-3 `409 IN_USE`).
+     *
+     * <p><b>비활성 인원도 센다</b>: soft 삭제라 `grade_id`가 그대로 남아 있고, 지우면
+     * 그 사람의 과거 직급이 사라진다. "쓰는 사람이 없다"는 판정이 살아 있는 인원만
+     * 보면 참조가 남은 행을 지우게 된다.
+     */
+    boolean existsByGradeId(Long gradeId);
+
+    /** 이 권한 그룹에 속한 인원이 있는가 (AC E5-4 `409 IN_USE`) — 위와 같은 이유로 비활성 포함. */
+    boolean existsByGroupId(Long groupId);
 }

@@ -4,6 +4,7 @@ import java.util.List;
 import kr.proten.pms.person.PersonRef;
 import kr.proten.pms.person.service.dto.CreatePersonCommand;
 import kr.proten.pms.person.service.dto.MeView;
+import kr.proten.pms.person.service.dto.OrgUnitMoveResult;
 import kr.proten.pms.person.service.dto.UpdatePersonCommand;
 
 /**
@@ -50,7 +51,11 @@ public interface PersonService {
      * 수정(E2-2)과 따로 두는 이유: 조직 이동은 진행 중 배정이 있어도 허용하는 별도
      * 규칙을 갖고(E1-2), 과거 집계는 시점을 보존하지 않는다는 성질이 이 행위에만 붙는다.
      */
-    PersonRef moveOrgUnit(long callerPersonId, long personId, long orgUnitId);
+    /**
+     * 소속 이동 (AC E1-1) — 진행 중 배정이 있어도 허용하고 <b>경고를 함께 돌려준다</b>(E1-2).
+     * 그래서 반환이 {@code PersonRef}가 아니라 {@link OrgUnitMoveResult}다.
+     */
+    OrgUnitMoveResult moveOrgUnit(long callerPersonId, long personId, long orgUnitId);
 
     /** 인원을 비활성한다 — 삭제가 아니라 soft 비활성이다 (AC E2-3). */
     void deactivate(long callerPersonId, long personId);

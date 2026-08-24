@@ -96,7 +96,7 @@ class PersonSeedLoader implements ApplicationRunner {
         }
 
         load(seedFile);
-        alignOrgUnitIdSequence();
+        alignReferenceIdSequences();
         verifyReferences();
         log.info("시드 적재 완료 — 조직 {} · 직급 {} · 권한 그룹 {} · 인원 {} · 계정 {}",
                 orgUnitRepository.count(),
@@ -127,9 +127,29 @@ class PersonSeedLoader implements ApplicationRunner {
     }
 
     /**
-     * 시드가 명시 id로 넣었으므로 조직 id 시퀀스를 그 최대값에 맞춘다 (2026-08-22).
-     * 하지 않으면 빈 DB에 시드를 적재한 뒤 첫 조직 신설(E3-1)이 시드 id와 충돌한다.
+     * 시드가 명시 id로 넣은 참조 데이터 3종의 시퀀스를 그 최대값에 맞춘다
+     * (조직 2026-08-22 · 직급·권한 그룹 2026-08-24).
+     * 하지 않으면 빈 DB에 시드를 적재한 뒤 첫 등록(E3-1·E4-1·E5-1)이 시드 id와 충돌한다.
      */
+    private void alignReferenceIdSequences() {
+        alignOrgUnitIdSequence();
+
+        // 직급·권한 그룹도 명시 id로 들어왔다 — 맞추지 않으면 첫 등록(E4-1·E5-1)이
+        // 시드 id와 충돌한다. 기준은 V11과 같은 역대 최고값이다.
+        jdbcTemplate.execute("""
+                select setval('grade_id_seq', greatest(
+                        (select coalesce(max(id), 1) from grades),
+                        (select coalesce(max(grade_id), 1) from people),
+                        (select coalesce(max(entity_id), 1) from audit_logs
+                          where entity_type = 'Grade')))""");
+        jdbcTemplate.execute("""
+                select setval('permission_group_id_seq', greatest(
+                        (select coalesce(max(id), 1) from permission_groups),
+                        (select coalesce(max(group_id), 1) from people),
+                        (select coalesce(max(entity_id), 1) from audit_logs
+                          where entity_type = 'PermissionGroup')))""");
+    }
+
     private void alignOrgUnitIdSequence() {
         // 마이그레이션 V6와 같은 기준(역대 최고값)을 쓴다 — 살아 있는 노드·인원이
         // 가리키는 노드·감사 로그의 노드 id 중 가장 큰 값

@@ -26,6 +26,16 @@ public class OrgUnit {
     protected OrgUnit() {
     }
 
+    /**
+     * 노드 이름을 바꾼다 (AC E3-2).
+     *
+     * <p>소속 인원·프로젝트는 {@code orgUnitId}로 참조하므로 표시가 즉시 동기화된다 —
+     * 비정규화된 이름 컬럼을 두지 않는 이유가 이것이다(E3-2 본문).
+     */
+    public void rename(String name) {
+        this.name = name;
+    }
+
     private OrgUnit(Long id, Long parentId, String name) {
         this.id = id;
         this.parentId = parentId;

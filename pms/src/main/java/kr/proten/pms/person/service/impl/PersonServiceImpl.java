@@ -6,6 +6,7 @@ import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.NotFoundException;
 import kr.proten.pms.common.exception.NotImplementedException;
 import kr.proten.pms.common.exception.UnprocessableException;
+import java.util.Map;
 import kr.proten.pms.common.exception.ValidationException;
 import kr.proten.pms.person.AccountPort;
 import kr.proten.pms.person.OrgVisibility;
@@ -16,8 +17,10 @@ import kr.proten.pms.person.repository.OrgUnitRepository;
 import kr.proten.pms.person.repository.PermissionGroupRepository;
 import kr.proten.pms.person.repository.PersonRepository;
 import kr.proten.pms.person.service.PersonService;
+import kr.proten.pms.person.AssignmentCountPort;
 import kr.proten.pms.person.service.dto.CreatePersonCommand;
 import kr.proten.pms.person.service.dto.MeView;
+import kr.proten.pms.person.service.dto.OrgUnitMoveResult;
 import kr.proten.pms.person.service.dto.UpdatePersonCommand;
 import kr.proten.pms.person.service.entity.PermissionGroup;
 import kr.proten.pms.person.service.entity.Person;
@@ -54,6 +57,7 @@ public class PersonServiceImpl implements PersonService {
     private final RequesterResolver requesterResolver;
     private final PersonRefFactory personRefFactory;
     private final PersonAuditRecorder personAuditRecorder;
+    private final AssignmentCountPort assignmentCountPort;
 
     public PersonServiceImpl(
             PersonRepository personRepository,
@@ -65,7 +69,8 @@ public class PersonServiceImpl implements PersonService {
             OrgManagePermission orgManagePermission,
             RequesterResolver requesterResolver,
             PersonRefFactory personRefFactory,
-            PersonAuditRecorder personAuditRecorder) {
+            PersonAuditRecorder personAuditRecorder,
+            AssignmentCountPort assignmentCountPort) {
         this.personRepository = personRepository;
         this.orgUnitRepository = orgUnitRepository;
         this.gradeRepository = gradeRepository;
@@ -76,6 +81,7 @@ public class PersonServiceImpl implements PersonService {
         this.requesterResolver = requesterResolver;
         this.personRefFactory = personRefFactory;
         this.personAuditRecorder = personAuditRecorder;
+        this.assignmentCountPort = assignmentCountPort;
     }
 
     /** 가시성 범위 내 인원 목록 — 시스템 계정·비활성 인원은 제외한다. */
@@ -177,13 +183,23 @@ public class PersonServiceImpl implements PersonService {
      * 받으면 "이 경로가 존재한다"와 "곧 열린다"를 알게 되고, 구현이 들어오는 순간
      * 403이 뒤늦게 생긴다. 없는 것은 로직이지 권한이 아니다.
      *
-     * TODO(E2-2): 바뀐 필드만 담는 스냅샷이 필요하다 — project 쪽 `ProjectAuditRecorder`와
-     *   같은 역할을 `PersonAuditRecorder`가 해야 하는데 지금은 생성·비활성만 안다.
      */
     public PersonRef update(long callerPersonId, UpdatePersonCommand command) {
         orgManagePermission.require(callerPersonId);
 
-        throw new NotImplementedException("인력 수정 (E2-2)");
+        Person target = requireEditable(command.personId());
+        requireReferences(command.orgUnitId(), command.gradeId(), command.groupId());
+
+        // 바꾸기 직전에 떠 둔다 — 바뀐 필드만 이력에 남고, 바뀐 것이 없으면 행도 없다
+        Map<String, Object> before = personAuditRecorder.snapshot(target);
+        target.update(
+                requireName(command.name()),
+                command.orgUnitId(),
+                command.gradeId(),
+                command.groupId());
+        personAuditRecorder.personChanged(callerPersonId, target, before);
+
+        return personRefFactory.toRef(target);
     }
 
     /**
@@ -196,13 +212,24 @@ public class PersonServiceImpl implements PersonService {
      *
      * 권한 판정은 여기서도 먼저 한다(위 update와 같은 이유).
      *
-     * TODO(E1-2): "허용하되 경고"의 경고를 어디에 실을지 — 응답 본문에 담을지
-     *   알림(EPIC F)으로 보낼지 미정. AC 문구가 경로를 지정하지 않는다.
+     * 경고는 **응답 본문에 담는다**(2026-08-24 사용자 결정): 이동을 막지 않으므로 오류로
+     * 낼 수 없고, 알림(EPIC F)으로 보내면 지금 화면에서 조직을 개편하는 사람이 그것을
+     * 보지 못한다. 진행 중 배정 건수는 {@link kr.proten.pms.person.AssignmentCountPort}로
+     * 묻는다 — person이 project를 직접 부르면 순환이다.
      */
-    public PersonRef moveOrgUnit(long callerPersonId, long personId, long orgUnitId) {
+    public OrgUnitMoveResult moveOrgUnit(long callerPersonId, long personId, long orgUnitId) {
         orgManagePermission.require(callerPersonId);
 
-        throw new NotImplementedException("소속 조직 이동 (E1-1)");
+        Person target = requireEditable(personId);
+        requireExists(orgUnitRepository.existsById(orgUnitId), "조직", orgUnitId);
+
+        Map<String, Object> before = personAuditRecorder.snapshot(target);
+        target.moveTo(orgUnitId);
+        // 소속 이동도 UPDATE다 — STATE_CHANGE는 §5 프로젝트 상태 전이 전용(v2.1 정리)
+        personAuditRecorder.personChanged(callerPersonId, target, before);
+
+        return OrgUnitMoveResult.of(
+                personRefFactory.toRef(target), assignmentCountPort.countActiveAssignments(personId));
     }
 
     public void deactivate(long callerPersonId, long personId) {
@@ -249,6 +276,35 @@ public class PersonServiceImpl implements PersonService {
      * 그 조직에 관리자가 없는 상태가 만들어질 수 있다(관리자 그룹 systemFixed와 같은
      * 자기 잠금 방지 원리 — 상위 PRD §4-3).
      */
+    /**
+     * 수정·이동의 공통 관문 (AC E2-5) — 시스템 계정은 `422 IMMUTABLE_ACCOUNT`다.
+     *
+     * <p>비활성 인원은 404로 막는다: 목록에서 빠진 사람을 편집할 경로가 열려 있으면
+     * "삭제했는데 여전히 고칠 수 있다"가 되고, 되살리는 입구는 §7에 없다.
+     *
+     * <p>{@code requireDeactivatable}과 나눈 이유는 "본인 계정" 규칙이 비활성에만
+     * 걸리기 때문이다 — 자기 이름·소속을 고치는 것은 막을 이유가 없다.
+     */
+    private Person requireEditable(long personId) {
+        Person target = personRepository.findByIdAndActiveTrue(personId)
+                .orElseThrow(NotFoundException::new);
+
+        if (target.isSystem()) {
+            throw new UnprocessableException(ErrorCode.IMMUTABLE_ACCOUNT,
+                    "시스템 계정은 변경할 수 없습니다");
+        }
+
+        return target;
+    }
+
+    private static String requireName(String name) {
+        if (name == null || name.isBlank()) {
+            throw new ValidationException("이름은 필수입니다", "name");
+        }
+
+        return name.trim();
+    }
+
     private void requireDeactivatable(long callerPersonId, Person target) {
         if (target.isSystem()) {
             throw new UnprocessableException(ErrorCode.IMMUTABLE_ACCOUNT,

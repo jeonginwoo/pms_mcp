@@ -93,13 +93,24 @@ public class OrgUnitServiceImpl implements OrgUnitService {
      *
      * 권한 판정은 골격 단계에서도 실제로 한다 — 없는 것은 로직이지 권한이 아니다.
      *
-     * TODO(E3-2): 같은 부모 아래 이름 중복을 막을지 미정 — AC에 문구가 없고, 시드에는
-     *   중복이 없다. 막는다면 `409 DUPLICATE_*`이고 안 막는다면 그 판단을 여기 남긴다.
+     * **같은 부모 아래 이름 중복은 막지 않는다**(2026-08-24 사용자 결정): AC에 없는 규칙을
+     * 구현이 지어내지 않는다. 조직은 어디서나 id로 참조되고 화면은 트리로 보여 주므로
+     * 동명이 실무적으로 깨뜨리는 것이 없다 — 스키마에도 유니크 제약이 없다(V1).
+     * 필요해지면 AC를 먼저 고치고 생성(E3-1)까지 같은 규칙으로 연다.
      */
     public OrgUnitView rename(long callerPersonId, long orgUnitId, String name) {
         orgManagePermission.require(callerPersonId);
+        requireText(name);
 
-        throw new NotImplementedException("조직 노드 개명 (E3-2)");
+        OrgUnit target = orgUnitRepository.findById(orgUnitId).orElseThrow(NotFoundException::new);
+        String before = target.getName();
+
+        target.rename(name.trim());
+        personAuditRecorder.orgUnitRenamed(callerPersonId, target, before);
+
+        // 소속 인원·프로젝트는 orgUnitId로 참조하므로 표시가 저절로 따라온다(E3-2).
+        // 개수는 목록 조회가 채우는 값이라 단건 응답에서는 0이다 — 생성(E3-1)과 같은 형태.
+        return new OrgUnitView(target.getId(), target.getParentId(), target.getName(), 0, 0, false);
     }
 
     public void delete(long callerPersonId, long orgUnitId) {
