@@ -9,14 +9,17 @@ import org.springframework.data.domain.Pageable;
  * 조회는 언제나 화자 본인 것이다 — "남의 알림 목록"이라는 질문 자체가 없으므로
  * 대상 지정 파라미터를 두지 않는다.
  *
- * 이 계약과 그 어휘(`NotificationType`)·값(`NotifyCommand`·`NotificationView`)이
- * 모듈 루트에 있는 이유: 알림을 유발하는 모듈(project·resource)이 `notify`를 부르려면
- * 이 넷이 전부 보여야 한다. 하위 패키지에 두면 그 호출이 모듈 경계 위반이 된다
- * (2026-08-22 — audit·person의 공개 계약과 같은 배치).
+ * **적재 경로의 정본은 이벤트다**(§8) — `notify`는 <b>notification의 리스너가 자기 자신을
+ * 부르는</b> 데 쓴다. 다른 모듈이 알림을 직접 만들라고 부르기 시작하면 "발행 측이
+ * 구독자를 모른다"는 성질이 깨지고, 무엇보다 <b>순환이 된다</b>: resource는 이미
+ * `OverbookingDetected`의 발행자라 notification이 그 타입을 import하는데(구독자 → 발행자),
+ * resource가 `notify`를 부르면 반대 간선이 함께 생긴다.
  *
- * 다만 **적재 경로의 정본은 이벤트다**(§8) — 다른 모듈이 알림을 직접 만들라고 부르기
- * 시작하면 "발행 측이 구독자를 모른다"는 성질이 깨진다. `notify`는 구독자 자신이
- * 쓰기 위한 것이다.
+ * <p>2026-08-24 정정: 구 주석은 "알림을 유발하는 모듈(project·resource)이 `notify`를
+ * 부르려면 이 넷이 모듈 루트에 있어야 한다"고 적고 있었는데, 바로 다음 문단과 서로
+ * 반대되는 말이었다(PRD-pms §3 표도 같은 오류였다 — 함께 정정). 밖에서 쓰는 곳이
+ * 0건이므로 루트 배치의 근거도 사라졌다 — 이 넷을 `service/`로 내릴지는 D-b(이슈 등록
+ * 알림)가 붙을 때 함께 판단한다(미해결 등재).
  */
 public interface NotificationService {
 

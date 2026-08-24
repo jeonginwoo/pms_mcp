@@ -168,7 +168,7 @@ B2-1 자연어 검증(2026-08-10)이 실증한 도구 카탈로그 공백 2건�
   | **`WorkforceDirectoryService` · `WorkforceProfile`** | person | resource · `mcp` | **가동률의 분모·모집단·계수**(capacity·billable·gradeCoeff) · team·division **이름과 조직 id 2종**(2026-08-23 추가 — 웹은 `?orgUnitId=`를 받지만 챗은 화자로부터 유도해야 하고 `org_units.name`에 유니크 제약이 없다) · 조직 subtree 인원 · **집계 모집단 전체 명단**(2026-08-23 추가 `findAllAggregatablePersonIds` — 전사 scope 가시성은 `unrestricted`라 인원 집합이 비어 있어 집계 호출자가 명단을 얻을 경로가 없었다. 재직·비시스템만, 사용자 결정) |
   | **`AssignmentDirectoryService` · `MonthlyAssignment`** | project | resource | **가동률의 분자** — 그 달과 겹치는 배정 행(personId·projectId·projectName·**projectStatus**·monthlyMm) (2026-08-23 신설) |
   | `AuditQueryService` · `AuditRecord` 등 | audit | person · project | 감사 조회(권한 판정 없는 순수 조회) |
-  | `NotificationService` · `NotifyCommand` 등 | notification | project · resource | 알림 적재 요청 |
+  | `NotificationService` · `NotifyCommand` 등 | notification | **없음 — 구독자 자신** | 알림 적재. **2026-08-24 정정**: 구 표는 소비자를 `project · resource`로 적었는데, 그러면 §8(발행자 project·resource → 구독자 notification)과 합쳐져 **순환**이 된다. 적재 경로의 정본은 이벤트이고(§8) `notify`는 notification의 리스너가 자기 자신을 부르는 데 쓴다 — 밖에서 부르지 않는다 |
   | **`ProjectLookupService` · `ProjectBrief`·`ProjectDetailBrief`** | project | `mcp` | **`search_projects`** — 가시성 판정 포함(404 은닉), 팀·부문은 **PM 소속 파생** (2026-08-23 신설) |
   | **`ProgressCommandService` · `ProgressResult`** | project | `mcp` | **`update_progress`** — 2단계 확인은 내부 유스케이스가 갖는다(구조 원칙 5). 밖으로 여는 유일한 쓰기 (2026-08-23 신설) |
   | **`MaintenanceLookupService` · `ContractBrief`·`ContractIssues`·`IssueBrief`·`CommentBrief`** | maintenance | `mcp` | **`search_maintenance`·`list_maintenance_logs`** — 가시성 판정 없음(D4-3 전사 공개). 계약 우선 해석 (2026-08-23 신설) |
@@ -460,6 +460,8 @@ POST /api/chat    POST /api/chat/feedback        # chat BFF — AI 호스트 프
 
 ## 8. 이벤트 명세
 
+**구독 방향 (2026-08-24 확정)**: 구독자가 발행자 모듈의 이벤트 타입을 import한다 — 간선은 언제나 **구독자 → 발행자**다. 반대(발행자가 구독자를 부른다)로 가면 `resource → notification`과 `notification → resource`가 함께 생겨 순환이다. notification은 아무것도 의존하지 않는 잎 모듈이라 어느 발행자에 붙어도 안전하고, resource가 project의 배정 이벤트를 구독하는 것은 이미 있는 간선(`resource → project`)을 쓴다.
+
 | 이벤트 | 발행자 | 구독자 | 효과 |
 |--------|--------|--------|------|
 | `MemberAssignedToProject` | project | resource, notification | 가동률 재계산, 알림 |
@@ -575,6 +577,7 @@ POST /api/chat    POST /api/chat/feedback        # chat BFF — AI 호스트 프
 
 - **가동률 집계와 과거 월의 퇴사자 (2026-08-23 등재 — 미해결)**: 집계 모집단을 **재직자만**으로 정했는데(사용자 결정 — "지금 우리 조직 가동률"에 퇴사자를 세면 집계가 틀어진다), 그러면 **지난달을 오늘 조회하면 그 사이 퇴사한 사람의 배정이 빠진다**. person 계약이 이미 두 규칙을 갖고 있는 것이 이 문제의 표면이다: `findPersonIdsInSubtree`는 재직자만이고 `findProfiles`는 "지난달 가동률은 그때 재직 중이던 사람으로 계산된다"며 비활성을 포함한다. 대안은 모집단을 "재직 ∪ 그 달 배정 있음"으로 넓히는 것인데 규칙이 하나 늘고 "재직 0% 행"과 구분이 필요하다. eval 36케이스는 현재 월만 물으므로 **G1을 막지 않는다**
 - **`?orgUnitId=`가 없는/가시성 밖 조직일 때 (2026-08-23 등재 — 미해결)**: 현재 **빈 목록**이다(404가 아니다). 조직 자체의 가시성을 물으려면 person이 계약을 하나 더 열어야 하는데 §7에 그 오류 규칙이 없어, 명세 없는 이유로 모듈 경계를 넓히지 않았다(`UtilizationPopulation`에 `// ASSUMPTION:` 주석). 다른 조회는 가시성 밖을 404로 은닉하므로 규칙이 갈려 있다
+- **notification 루트 계약 4종의 자리 (2026-08-24 등재 — 미해결)**: 이벤트 한 방향이 확정되며(§8) 밖에서 `notify`를 부르는 모듈이 없어졌다 — 실측도 **0건**이다. 그러면 *"모듈 루트 = 밖으로 나가는 전부"*(§0) 규칙상 `NotificationService`·`NotifyCommand`·`NotificationType`·`NotificationView`는 `service/`로 내려가야 맞다. 다만 이 넷은 2026-08-22 리뷰가 **일부러 루트로 올린** 것이고(당시 근거가 "다른 모듈이 부른다"였는데 그것이 이번에 뒤집혔다), **D-b(D3-1 이슈 등록 알림)가 붙을 때가 "정말 아무도 안 부르는가"의 마지막 반증 기회**라 그때 함께 판단한다
 - **통합 감사 로그의 화면 자리가 부록 A와 다르다 (2026-08-24 등재 — 미해결)**: 부록 A는 `/settings` 3탭(사용자 관리·조직 관리·감사 로그)인데, `frontend/`는 사용자·조직을 `/people`("인력 · 조직")에 두고 있어 **감사만 사이드바 별 항목**으로 얹었다(사용자 결정 2026-08-24). 이미 동작하는 화면 2개를 재배치하는 것은 "비어 있는 것을 채운다"는 그 작업의 성격을 벗어나고 회귀 여지가 생긴다는 판단이다. 해소 방향 둘: ①부록 A를 현행 배치에 맞춰 고친다 ②`/settings`를 신설하고 두 화면을 탭으로 옮긴다. **어느 쪽도 급하지 않다** — 세 기능 다 접근 가능하고 권한 판정(manageOrg 플래그)은 세 곳 모두 서버가 같게 한다
 - **시드만 적재한 DB에는 감사 행이 없다 (2026-08-24 실측 — 확인 필요)**: `audit_logs`가 **0행**이다. 구 기록이 "기동 시 시드 적재분은 `source=WEB`이라 `MCP`와 구분된다"고 적고 있었는데(2026-08-23), 실측하면 시드 적재는 감사 행을 **아예 남기지 않는다**. 감사 화면·G1-3 데모는 쓰기를 한 번 해야 내용이 보인다. 의도된 것인지(시드는 "변경"이 아니다) 누락인지 확인이 필요하고, 의도라면 그 문장을 고쳐야 한다
 - **인물 이름 재매핑 (2026-08-23 등재 — 미해결)**: 인원 정본이 `seed_org_proten.sql`(실제 명부)로 바뀌었는데 **기획 문서의 인물 이름은 구 익명 명부(`people.json`) 기준**이다. 두 명부는 이름이 하나도 겹치지 않아, 문서의 이름으로 DB를 조회하면 아무것도 나오지 않는다. 영향 범위: 본 문서 부록 B 검증 케이스(정정 완료) · **`docs/evals/eval-cases.md` 36케이스의 화자·기대값** · **`docs/유저_시나리오.md` 페르소나 8명** · 상위 `PRD.md` §4-1 근거의 인물 언급 · PROGRESS 과거 기록(그 시점의 기록이므로 그대로 둔다). 합계 **194곳**. eval 채점은 이름 대조를 포함하므로 **G1 게이트 전에 반드시 해소**해야 하고, eval·시나리오는 host 트랙 소유라 **공용 결정 기록 경유**다
