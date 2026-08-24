@@ -9,6 +9,7 @@ import kr.proten.pms.person.controller.dto.CreatePersonRequest;
 import kr.proten.pms.person.controller.dto.MoveOrgUnitRequest;
 import kr.proten.pms.person.controller.dto.UpdatePersonRequest;
 import kr.proten.pms.person.service.PersonService;
+import kr.proten.pms.person.service.dto.OrgUnitMoveResult;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -72,9 +73,11 @@ class PeopleController {
     /**
      * 소속 조직 이동 (AC E1-1) — 가시성이 즉시 따라 바뀐다.
      * 진행 중 배정이 있어도 막지 않는다(E1-2) — 조직 개편을 시스템이 거부하면 안 된다.
+     * 대신 **경고를 응답에 실어 보낸다**(2026-08-24 결정): 막지 않으므로 오류로 낼 수 없고,
+     * 조용히 넘기면 개편하는 사람이 "이 사람이 진행 중인 일에 물려 있다"를 모른다.
      */
     @PutMapping("/{personId}/org-unit")
-    ApiResponse<PersonRef> moveOrgUnit(
+    ApiResponse<OrgUnitMoveResult> moveOrgUnit(
             @CallerPersonId long callerPersonId,
             @PathVariable long personId,
             @Valid @RequestBody MoveOrgUnitRequest request) {

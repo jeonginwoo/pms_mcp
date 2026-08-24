@@ -89,6 +89,28 @@ public class PermissionGroup {
         return manageOrg;
     }
 
+    /**
+     * 그룹 정의를 바꾼다 (AC E5-2) — 판정·가시성·404 은닉이 다음 요청부터 새 정의를 탄다.
+     *
+     * <p>{@code systemFixed}는 인자에 없다: 고정 여부는 그룹이 만들어질 때 정해지고
+     * 수정으로 뒤집을 수 있는 값이 아니다(E5-3 — 그럴 수 있으면 관리자 그룹을 풀어
+     * 스스로를 잠글 수 있다). 애초에 고정 그룹은 이 메서드에 닿지 않는다.
+     */
+    public void update(
+            String name,
+            VisibilityScope visibilityScope,
+            boolean createProject,
+            boolean manageContracts,
+            boolean manageAllProjects,
+            boolean manageOrg) {
+        this.name = name;
+        this.visibilityScope = visibilityScope;
+        this.createProject = createProject;
+        this.manageContracts = manageContracts;
+        this.manageAllProjects = manageAllProjects;
+        this.manageOrg = manageOrg;
+    }
+
     public Long getId() {
         return id;
     }

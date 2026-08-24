@@ -69,6 +69,8 @@ class PersonCommandTest {
     private OrgVisibilityService orgVisibilityService;
     @Mock
     private RequesterResolver requesterResolver;
+    @Mock
+    private kr.proten.pms.person.AssignmentCountPort assignmentCountPort;
 
     private PersonServiceImpl service;
 
@@ -84,7 +86,8 @@ class PersonCommandTest {
                 new OrgManagePermission(orgPermissionService),
                 requesterResolver,
                 personRefFactory,
-                personAuditRecorder);
+                personAuditRecorder,
+                assignmentCountPort);
     }
 
     @Test

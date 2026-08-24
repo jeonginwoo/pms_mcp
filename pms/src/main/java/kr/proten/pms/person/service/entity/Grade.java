@@ -36,6 +36,20 @@ public class Grade {
         return new Grade(id, name, coeff);
     }
 
+    /**
+     * 이름·계수를 함께 바꾼다 (AC E4-2).
+     *
+     * <p>둘을 한 메서드로 묶는 이유: 수정 화면이 한 폼이고 §7도 하나의 PUT이다.
+     * 계수만 바꾸는 별도 경로를 두면 "이름은 그대로"를 호출부가 매번 표현해야 한다.
+     *
+     * <p><b>보정 가동률은 다음 조회부터 즉시 바뀐다</b> — 캐시가 없어 매 조회 계산이다
+     * (2026-08-06 결정). 여기서 재계산을 부르지 않는 것이 설계다.
+     */
+    public void update(String name, double coeff) {
+        this.name = name;
+        this.coeff = coeff;
+    }
+
     public Long getId() {
         return id;
     }
