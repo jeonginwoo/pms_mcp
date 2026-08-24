@@ -27,6 +27,10 @@ dependencies {
     implementation 'org.springframework.ai:spring-ai-mcp'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // eval 러너의 픽스처 제어 전용(EvalFixtures) — 케이스마다 시드 기준선으로
+    // 되돌리고 오염 레코드·동시 수정을 주입하려면 pms DB에 직접 닿아야 한다.
+    // 프로덕션 코드는 이 드라이버를 보지 않는다(test 스코프) — host 앱은 DB가 없다.
+    testImplementation 'org.postgresql:postgresql'
 }
 
 tasks.named('test') {
@@ -35,4 +39,15 @@ tasks.named('test') {
     // 목업(8090) → McpConnectivityIT · 실 pms(8080) → RealPmsConnectivityIT
     systemProperty 'pms.mcp.e2e', System.getProperty('pms.mcp.e2e', 'false')
     systemProperty 'pms.real.e2e', System.getProperty('pms.real.e2e', 'false')
+    // eval 러너(EvalRunnerIT)도 opt-in이다 — 실 LLM 비용이 들고 DB를 바꾼다.
+    // eval.only는 장치 확인용 부분 실행(예: -Deval.only=A-05,H-01)
+    systemProperty 'eval.run', System.getProperty('eval.run', 'false')
+    if (System.getProperty('eval.only')) {
+        systemProperty 'eval.only', System.getProperty('eval.only')
+    }
+    // 러너는 시간이 오래 걸린다(36케이스 × 실 LLM) — Gradle 기본 타임아웃에 걸리지 않게
+    testLogging {
+        showStandardStreams = System.getProperty('eval.run') == 'true'
+        events 'passed', 'failed', 'skipped'
+    }
 }
