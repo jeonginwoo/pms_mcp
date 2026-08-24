@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import java.time.Instant;
 import java.time.LocalDate;
 import kr.proten.pms.project.ProjectStatus;
 import kr.proten.pms.common.exception.ConflictException;
@@ -29,6 +30,7 @@ public class Project {
     // 재개 시 되돌리는 진척률 (AC A7-3) — 완료의 전제가 100%였으므로 90은
     // "완료 직전으로 돌아간다"는 뜻이다
     private static final int REOPEN_PROGRESS = 90;
+    private static final int HUNDRED = 100;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -63,6 +65,20 @@ public class Project {
     private ProjectStatus status;
     @Column(nullable = false)
     private int progress;
+
+    /**
+     * 진척률이 100에 <b>도달한 시각</b> (AC F3-1) — 완료 지연 알림이 재는 기준점이다.
+     *
+     * <p>ASSUMPTION: F3-1이 "100% 도달 시각 추적은 단순·표준 구현"을 허용해 컬럼으로
+     * 둔다. <b>null이 곧 "지금 100%가 아니다"</b>이므로 별도 플래그가 없고, 100 미만으로
+     * 내려가면 비워지므로 F3-2의 "재개 후 다시 100% 도달하면 새 사이클"이 저절로
+     * 성립한다 — 시각이 새로 찍히기 때문이다.
+     *
+     * <p>시각은 <b>호출자가 넘긴다</b>({@code ProjectAssignment.close}와 같은 규약) —
+     * 엔티티가 {@code Instant.now()}를 부르면 그 지점은 테스트에서 시간을 고정할 수 없다.
+     */
+    @Column(name = "hundred_reached_at")
+    private Instant hundredReachedAt;
     // soft 삭제 — 목록·중복 검사에서 제외하고 과거 데이터는 보존한다
     @Column(nullable = false)
     private boolean deleted;
@@ -135,12 +151,36 @@ public class Project {
      * 진척률을 갱신한다 (AC A2-2).
      * 100이 되어도 상태는 그대로다 — 완료 전이는 명시적 완료 처리만의 몫이다(§5).
      */
-    public void updateProgress(int rate) {
+    public void updateProgress(int rate, Instant at) {
         if (rate < 0 || rate > 100) {
             throw new ValidationException("진척률은 0에서 100 사이여야 합니다", "progress");
         }
 
         this.progress = rate;
+        markHundred(rate, at);
+    }
+
+    /**
+     * 100% 도달 시각을 갱신한다 (AC F3-1·F3-2).
+     *
+     * <p><b>이미 100이면 시각을 덮지 않는다</b>: 100인 채로 다시 100을 저장하는 것은
+     * 도달이 아니다. 덮으면 매번 저장할 때마다 7일 시계가 처음부터 다시 가서
+     * "완료 처리를 잊었다"가 영원히 성립하지 않는다.
+     *
+     * <p>{@code at}이 null이면 <b>시각을 남기지 않는다</b> — 과거를 재현하는 호출자
+     * (시드 적재)를 위한 것이다. 적재 시점을 도달 시각으로 찍으면 7일 뒤 시드
+     * 프로젝트 전체가 "완료 처리를 잊었다"로 알림을 쏜다.
+     */
+    private void markHundred(int rate, Instant at) {
+        if (rate < HUNDRED) {
+            this.hundredReachedAt = null;
+
+            return;
+        }
+
+        if (hundredReachedAt == null && at != null) {
+            this.hundredReachedAt = at;
+        }
     }
 
     /**
@@ -218,6 +258,8 @@ public class Project {
 
         this.status = ProjectStatus.IN_PROGRESS;
         this.progress = REOPEN_PROGRESS;
+        // 90으로 내려가므로 100% 시계도 멎는다 — 다시 100이 되면 새 사이클이다(F3-2)
+        this.hundredReachedAt = null;
     }
 
     /**
@@ -359,6 +401,11 @@ public class Project {
 
     public int getProgress() {
         return progress;
+    }
+
+    /** 100% 도달 시각 — null이면 지금 100%가 아니다 (F3-1). */
+    public Instant getHundredReachedAt() {
+        return hundredReachedAt;
     }
 
     public boolean isDeleted() {

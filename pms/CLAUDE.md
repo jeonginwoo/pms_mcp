@@ -88,7 +88,7 @@ log). `verify.sh`/CI only look at `pms/gradlew`, so `pms-old/` is not verified.
   adopted 2026-08-22). Every sub-package (`controller/`, `service/`, `repository/`)
   is internal, so the files sitting *directly* in a module directory **are** the
   contract it offers, and that list is the boundary — measured 2026-08-24:
-  `person` 12 · `project` 11 · `audit` 6 · `maintenance` 7 · `resource` 5 ·
+  `person` 12 · `project` 13 · `audit` 6 · `maintenance` 7 · `resource` 5 ·
   `notification` 5 (re-measured 2026-08-24 — four of the six numbers had gone stale
   while the file still said "measured"; `ls <module>/*.java` is the measurement).
   `auth` and `mcp` have empty roots: nothing of theirs crosses
@@ -146,11 +146,13 @@ disappears, and it now has.
   2026-08-23 and `resource.UtilizationLookupService` landed 2026-08-24, so what
   remains is adapter wiring (MCP dev). The other six are live, and `update_progress`
   being among them means audit rows now carry `source=MCP` as well as `WEB`.
-- **EPIC F's remainder** — the **schedulers** (F2 deadline D-7 · F3 completion-overdue;
-  `@EnableScheduling` is not on yet) and the **SSE route** (F1-4), whose `?access_token=`
-  auth and access-log masking are one unit. Registered gap: **a status transition also
-  creates overbooking** (계약대기 → 진행중 pulls that person's assignment into the
-  numerator) and §8 has no event for it — look at it with F2/F3.
+- **EPIC F's remainder is the SSE route alone (F1-4)** — its `?access_token=` auth and
+  access-log masking are one unit; opening the route first leaks tokens into logs. The
+  **schedulers landed 2026-08-25** (`@EnableScheduling` is on; `ProjectReminderScheduler` sweeps
+  daily at 06:00 for F2 deadline D-7 and F3 completion-overdue). Still-registered gap: **a
+  status transition also creates overbooking** (계약대기 → 진행중 pulls that person's assignment
+  into the numerator) and §8 has no event for it — that one is a `resource` trigger, unrelated
+  to these schedulers.
 - **EPIC D is closed (2026-08-25).** Reads (D4, D3-4), contract/site writes (D2), issue
   register/handle/comment (D3) and **handover (D1)** are all live. D1 settled the last open
   question — the **module direction is an inverted port**: `project.HandoverPort` is defined by
@@ -447,15 +449,23 @@ why `projectId` is a filter column filled even when `entityId` is an assignment.
 
 ## Domain events (new 2026-08-24 — read this before adding one)
 
-Three publishers now: `project` publishes `AssignmentChanged`, `resource` republishes
-`OverbookingDetected`, and `maintenance` publishes `MaintenanceIssueRegistered` (D3) and
-`MaintenanceHandedOver` (D1). `notification` subscribes to all of them and stores.
+Three publishers: `project` publishes `AssignmentChanged`, `ProjectLifecycleChanged` and
+`ProjectReminderDue`; `resource` republishes `OverbookingDetected`; `maintenance` publishes
+`MaintenanceIssueRegistered` (D3) and `MaintenanceHandedOver` (D1). `notification` subscribes
+to all of them and stores.
 
-- **§8 lists eight events; four publish.** `ProjectCompleted` and `ProjectReopened` have
-  **zero publish sites** (measured 2026-08-25) even though `NotificationType.PROJECT_COMPLETED`
-  exists, and `NotificationService.withdrawUnread` (F3-3 recall) has **no production caller** —
-  only a test calls it. So reopening a project does not recall its overdue notification. That is
-  a *capability without wiring*; registered in PRD-pms §12 to be fixed with F2/F3.
+- **Schedulers publish too — they do not create notifications.** `ProjectReminderScheduler`
+  (F2/F3, 2026-08-25) finds the due projects and publishes `ProjectReminderDue`; the subscriber
+  stores. Letting a scheduler call `notify` directly would make "no module outside notification
+  calls notify" stop being a rule. It lives in `project` because "which projects are D-7" is a
+  *project* judgement over project data — putting it in notification would move that judgement
+  and force project to open two caller-less queries (`ProjectLookupService` filters by
+  visibility, which a scheduler has none of).
+- **A capability is not a wiring.** Until 2026-08-25 `ProjectCompleted`/`ProjectReopened` had
+  **zero publish sites** and `withdrawUnread` (F3-3 recall) had **no production caller**, so
+  reopening a project left its overdue notification in place — while the method was implemented
+  *and* unit-tested. Both are now published via `ProjectLifecycleChanged`. When §8 lists an
+  event, grep for its publish site before believing the status table.
 
 - **Publish even when nobody will be notified.** `MaintenanceIssueRegistered` fires with a
   null `assigneeId` when the site has no engineer; the *subscriber* decides there is nobody
@@ -487,6 +497,26 @@ Three publishers now: `project` publishes `AssignmentChanged`, `resource` republ
   awaitility).
 - **A status transition also creates overbooking** (계약대기 → 진행중 pulls the
   assignment into the numerator) and §8 has no event for it. Registered gap.
+
+
+## Schedulers (new 2026-08-25 — F2/F3)
+
+`@EnableScheduling` is on `PmsApplication`. There is exactly one scheduled job:
+`project/service/impl/ProjectReminderScheduler.sweep()` at `cron = "0 0 6 * * *"`.
+
+- **One wake-up, two sweeps.** Deadline-near (F2-1) and completion-overdue (F3-1) run in the
+  same method on purpose — splitting them into two crons means they can drift, and then "today's
+  reminders came half-way".
+- **`@Transactional` is required for the publish to be seen.** `@ApplicationModuleListener` runs
+  after commit, so a scheduled method without a transaction publishes into nothing.
+- **Idempotency lives in the dedupe key, not in the scheduler.** F2-2/F3-2 are enforced by the
+  `uq_notification_dedupe` constraint (V7). The two keys differ deliberately: deadline carries
+  the **run date** (so it re-reminds daily as the deadline approaches), overdue carries the
+  **100%-reached date** (so one stuck cycle reminds once). Reopen *clears* that date and the
+  next 100% stamps a new one — which is exactly F3-2's "new cycle".
+- **`hundred_reached_at` (V15) is what F3 measures from.** `null` means "not at 100% now" — the
+  entity clears it whenever progress drops, so no separate flag exists. The **seed loader passes
+  `null`** on purpose: stamping load time would make every seeded 100% project fire a week later.
 
 ## Project permissions
 

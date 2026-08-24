@@ -44,7 +44,7 @@ class ProjectTest {
     void updateProgress_hundred_keepsStatus() {
         Project project = inProgress(90);
 
-        project.updateProgress(100);
+        project.updateProgress(100, java.time.Instant.now());
 
         assertThat(project.getProgress()).isEqualTo(100);
         assertThat(project.getStatus()).isEqualTo(ProjectStatus.IN_PROGRESS);

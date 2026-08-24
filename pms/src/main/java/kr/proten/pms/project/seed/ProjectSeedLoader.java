@@ -173,7 +173,8 @@ class ProjectSeedLoader implements ApplicationRunner {
         }
 
         project.advanceStatusTo(ProjectStatus.IN_PROGRESS);
-        project.updateProgress(record.effectiveProgress());
+        // 시각은 남기지 않는다 — 적재 시점은 도달 시점이 아니다(F3-1 주석)
+        project.updateProgress(record.effectiveProgress(), null);
 
         if (target == ProjectStatus.COMPLETED) {
             project.complete();

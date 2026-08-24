@@ -3,6 +3,7 @@ package kr.proten.pms;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * 재구축 PMS 앱 진입점 — 도메인별 Modulith 모듈러 모놀리스.
@@ -12,6 +13,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
  */
 @SpringBootApplication
 @EnableAsync
+@EnableScheduling
 public class PmsApplication {
     public static void main(String[] args) {
         SpringApplication.run(PmsApplication.class, args);

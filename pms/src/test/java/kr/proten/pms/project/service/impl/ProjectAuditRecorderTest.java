@@ -70,7 +70,7 @@ class ProjectAuditRecorderTest {
         // Given
         Project project = inProgress(90);
         Map<String, Object> before = recorder.snapshot(project);
-        project.updateProgress(95);
+        project.updateProgress(95, java.time.Instant.now());
 
         // When
         recorder.changed(ACTOR_ID, project, before);

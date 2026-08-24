@@ -234,7 +234,6 @@ class MaintenanceHandoverIntegrationTest extends PostgresTestBase {
     void handoverNotifiesTheSiteEngineer() {
         // Given
         ProjectDetail completed = givenCompleted("D1알림");
-        int pmBefore = notificationsOf(PM_ID).size();
 
         // When
         projectLifecycleService.handover(
@@ -247,8 +246,14 @@ class MaintenanceHandoverIntegrationTest extends PostgresTestBase {
                     assertThat(view.refId()).isEqualTo(completed.id());
                     assertThat(view.message()).contains("D1피엠", "MES 유지보수");
                 }));
-        // 자기가 방금 한 일을 자기에게 알리지 않는다
-        assertThat(notificationsOf(PM_ID)).hasSize(pmBefore);
+        // 자기가 방금 한 일을 자기에게 알리지 않는다.
+        // 총 건수로 세지 않는 이유(2026-08-25): 이관 알림은 완료 안내와 유형·대상이
+        // 같으므로(PROJECT_COMPLETED · Project:id — 유형 재사용은 사용자 결정) 픽스처의
+        // 완료 처리가 PM에게 남긴 안내와 섞인다. 구분되는 것은 문구다
+        assertThat(notificationsOf(PM_ID))
+                .noneMatch(view -> "Project".equals(view.refType())
+                        && view.refId() != null && view.refId() == completed.id()
+                        && view.message().contains("유지보수 담당으로 이관"));
     }
 
     @Test

@@ -1,6 +1,9 @@
 package kr.proten.pms.project.repository;
 
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import kr.proten.pms.project.service.entity.Project;
 import org.springframework.data.domain.Page;
@@ -15,6 +18,51 @@ import org.springframework.data.repository.query.Param;
  * 거르는 방식은 금지다(conventions/java-spring.md §6).
  */
 public interface ProjectRepository extends JpaRepository<Project, Long> {
+
+    /**
+     * 마감 임박 — 종료일이 {@code through} 이내인 진행중 프로젝트 (AC F2-1, D-7).
+     *
+     * <p>스케줄러의 질의라 <b>화자가 없다</b>: 가시성은 사람이 볼 때의 규칙이고,
+     * 일일 점검은 회사 전체를 본 뒤 각 프로젝트의 PM에게만 알린다. 그래서
+     * {@code ProjectLookupService}(가시성 판정 포함)를 쓸 수 없다.
+     *
+     * <p><b>하한이 오늘이다</b>(2026-08-25 정정): "임박"은 다가오는 것이고, 이미
+     * 지난 종료일은 임박이 아니라 데이터 문제다. 하한이 없으면 <b>배포 첫날</b>
+     * 시드의 진행중 34건 중 종료일이 지난 16건(2026-05-30까지 거슬러 간다)이
+     * 한꺼번에 "마감 임박"으로 나간다 — V15가 F3에서 막아 둔 것과 같은 사고이고,
+     * F2에만 그 방어가 없었다. 지난 마감을 다루는 AC는 없다.
+     */
+    @Query("""
+            select p from Project p
+            where p.deleted = false
+              and p.status = kr.proten.pms.project.ProjectStatus.IN_PROGRESS
+              and p.endDate is not null
+              and p.endDate >= :from
+              and p.endDate <= :through
+            order by p.endDate asc
+            """)
+    List<Project> findDeadlineNear(
+            @Param("from") LocalDate from, @Param("through") LocalDate through);
+
+    /**
+     * 완료 지연 — 100%에 도달한 지 {@code since} 이전인 진행중 프로젝트 (AC F3-1, 7일).
+     *
+     * <p>{@code hundredReachedAt}이 null이면 애초에 걸리지 않는다 — 지금 100%가
+     * 아니거나(엔티티가 비운다) 시드처럼 도달 시각이 없는 행이다.
+     *
+     * <p>진척률을 함께 보는 것은 방어다: 시각과 진척률이 어긋나는 행이 생기면
+     * (마이그레이션·직접 수정) 알림이 잘못 나가는 쪽보다 안 나가는 쪽이 낫다.
+     */
+    @Query("""
+            select p from Project p
+            where p.deleted = false
+              and p.status = kr.proten.pms.project.ProjectStatus.IN_PROGRESS
+              and p.progress = 100
+              and p.hundredReachedAt is not null
+              and p.hundredReachedAt <= :since
+            order by p.hundredReachedAt asc
+            """)
+    List<Project> findCompletionOverdue(@Param("since") Instant since);
 
     Optional<Project> findByIdAndDeletedFalse(Long id);
 

@@ -26,7 +26,10 @@ import kr.proten.pms.project.service.AssignmentService;
 import kr.proten.pms.project.service.ProjectCommandService;
 import kr.proten.pms.project.service.dto.AssignmentSpec;
 import kr.proten.pms.project.service.dto.CreateAssignmentCommand;
+import kr.proten.pms.project.service.ProjectLifecycleService;
+import kr.proten.pms.project.service.ProjectQueryService;
 import kr.proten.pms.project.service.dto.CreateProjectCommand;
+import kr.proten.pms.project.service.dto.UpdateProgressCommand;
 import kr.proten.pms.project.service.dto.EditProjectCommand;
 import kr.proten.pms.project.service.dto.ProjectDetail;
 import kr.proten.pms.project.service.entity.Engagement;
@@ -76,6 +79,10 @@ class NotificationFlowIntegrationTest extends PostgresTestBase {
     private PersonRepository personRepository;
     @Autowired
     private ProjectCommandService projectCommandService;
+    @Autowired
+    private ProjectQueryService projectQueryService;
+    @Autowired
+    private ProjectLifecycleService projectLifecycleService;
     @Autowired
     private AssignmentService assignmentService;
     @Autowired
@@ -230,9 +237,76 @@ class NotificationFlowIntegrationTest extends PostgresTestBase {
     }
 
     /** §5는 한 칸씩만 전이한다 — 계약대기 → 수주확정 → 진행중. */
+    @Test
+    @DisplayName("§8 — 완료 처리는 배정 인원에게 안내를 보낸다 (2026-08-25까지 발행 0곳이었다)")
+    void completingAProjectNotifiesItsMembers() {
+        // Given: 진행중 · 100%까지 올린다
+        long projectId = givenCompletable();
+
+        // When
+        ProjectDetail detail = projectQueryService.getProject(LEAD_ID, projectId);
+        projectLifecycleService.complete(LEAD_ID, projectId, detail.version());
+
+        // Then — 커밋 후 비동기다
+        await().atMost(Duration.ofSeconds(10)).untilAsserted(() ->
+                assertThat(typesOf(BUSY_ID)).contains(NotificationType.PROJECT_COMPLETED));
+    }
+
+    @Test
+    @DisplayName("F3-3 — 재개하면 그 프로젝트의 미읽음 완료 지연 알림이 회수된다 (배선)")
+    void reopeningWithdrawsOverdueNotifications() {
+        // Given: 완료까지 갔다가 되돌릴 프로젝트 + 그 프로젝트의 완료 지연 알림
+        long projectId = givenCompletable();
+        ProjectDetail completable = projectQueryService.getProject(LEAD_ID, projectId);
+        ProjectDetail completed =
+                projectLifecycleService.complete(LEAD_ID, projectId, completable.version());
+        notificationService.notify(new NotifyCommand(LEAD_ID,
+                NotificationType.COMPLETION_OVERDUE, "Project", projectId, "완료 지연",
+                "overdue:%d:%d".formatted(projectId, LEAD_ID)));
+        assertThat(typesOf(LEAD_ID)).contains(NotificationType.COMPLETION_OVERDUE);
+
+        // When
+        projectLifecycleService.reopen(LEAD_ID, projectId, completed.version());
+
+        // Then — 회수 메서드는 전부터 있었지만 이것을 부르는 자리가 없었다(2026-08-25 실측)
+        await().atMost(Duration.ofSeconds(10)).untilAsserted(() ->
+                assertThat(unread(LEAD_ID))
+                        .noneMatch(view -> view.type() == NotificationType.COMPLETION_OVERDUE
+                                && view.refId() != null && view.refId() == projectId));
+    }
+
+    /** 진행중 · 100%까지 올린 프로젝트 — 완료 처리의 전제다(A7-1). */
+    private long givenCompletable() {
+        ProjectDetail project = projectCommandService.create(LEAD_ID, new CreateProjectCommand(
+                "(주)가온아이", "F 완료대상 " + counter++, "검색엔진", Engagement.REMOTE, 1.0,
+                LocalDate.now().withDayOfMonth(1), LocalDate.now().plusMonths(1),
+                List.of(new AssignmentSpec(LEAD_ID, ProjectRole.PM, null, null, 0.1),
+                        new AssignmentSpec(BUSY_ID, ProjectRole.PARTICIPANT, null, null, 0.1))));
+        String name = project.name();
+        long version = advance(project.id(), project.version(),
+                ProjectStatus.ORDER_CONFIRMED, name);
+        advance(project.id(), version, ProjectStatus.IN_PROGRESS, name);
+        ProjectDetail inProgress = projectQueryService.getProject(LEAD_ID, project.id());
+        projectLifecycleService.updateProgress(LEAD_ID, new UpdateProgressCommand(
+                project.id(), 100, inProgress.version(), true));
+
+        return project.id();
+    }
+
+    private int counter = 1;
+
     private long advance(long projectId, long version, ProjectStatus status) {
+        return advance(projectId, version, status, "F 과부하 유발 구축");
+    }
+
+    /**
+     * 이름을 보존하며 상태만 올린다 — {@code edit}은 전체 교체라 이름을 함께 보내야
+     * 하고, 고정 이름을 쓰면 <b>호출한 쪽의 프로젝트가 개명된다</b>(2026-08-25 실측:
+     * 그래서 두 테스트의 프로젝트 이름이 충돌해 409가 났다).
+     */
+    private long advance(long projectId, long version, ProjectStatus status, String name) {
         return projectCommandService.edit(LEAD_ID, new EditProjectCommand(
-                projectId, "(주)가온아이", "F 과부하 유발 구축", "검색엔진", Engagement.REMOTE,
+                projectId, "(주)가온아이", name, "검색엔진", Engagement.REMOTE,
                 2.0, LocalDate.now().withDayOfMonth(1), LocalDate.now().plusMonths(1),
                 status, version)).version();
     }

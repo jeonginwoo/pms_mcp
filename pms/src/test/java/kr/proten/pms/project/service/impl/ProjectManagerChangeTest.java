@@ -16,6 +16,9 @@ import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.ForbiddenException;
 import kr.proten.pms.common.exception.UnprocessableException;
 import kr.proten.pms.person.PersonDirectoryService;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import kr.proten.pms.project.HandoverPort;
 import kr.proten.pms.project.repository.ProjectAssignmentRepository;
 import kr.proten.pms.project.repository.ProjectRepository;
@@ -33,6 +36,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 /**
  * PM 교체·역할 지정 단위 테스트 — AC A6-1·A6-2·A6-3·A6-4·A6-5·A6-6·A6-7.
@@ -41,6 +45,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
  */
 @ExtendWith(MockitoExtension.class)
 class ProjectManagerChangeTest {
+    /** 시계를 고정한다 — 100% 도달 시각이 단정에 들어온다(F3-1). */
+    private static final Instant NOW = Instant.parse("2026-08-25T00:00:00Z");
     private static final long PROJECT_ID = 7L;
     private static final long CURRENT_PM_ID = 13L;
     private static final long ASSIGNED_MEMBER_ID = 103L;
@@ -62,6 +68,8 @@ class ProjectManagerChangeTest {
     private ProjectViewFactory projectViewFactory;
     @Mock
     private HandoverPort handoverPort;
+    @Mock
+    private ApplicationEventPublisher events;
 
     private ProjectLifecycleServiceImpl service;
 
@@ -76,7 +84,9 @@ class ProjectManagerChangeTest {
                 new AssignmentFactory(),
                 projectAuditRecorder,
                 projectViewFactory,
-                handoverPort);
+                handoverPort,
+                Clock.fixed(NOW, ZoneId.systemDefault()),
+                events);
     }
 
     @Test
