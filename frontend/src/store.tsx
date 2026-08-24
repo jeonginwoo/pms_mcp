@@ -31,6 +31,7 @@ import type {
   EditProjectBody,
   GradeBody,
   GradeDetail,
+  HandoverBody,
   IssueBody,
   IssueEditBody,
   IssueQuery,
@@ -104,6 +105,11 @@ interface Store {
   saveProgress: (progress: number, confirmed: boolean) => Promise<Result<ProgressUpdateResult>>
   complete: () => Promise<Result<ProjectDetail>>
   reopen: () => Promise<Result<ProjectDetail>>
+  /**
+   * 유지보수 이관 (D1-1) — 완료 상태에서만. 성공하면 프로젝트는 유지보수중이 되고
+   * 그 뒤로 상태 행위가 없다(재개도 막힌다 — 이관된 계약과의 정합).
+   */
+  handover: (body: HandoverBody) => Promise<Result<ProjectDetail>>
   changeManager: (personId: number) => Promise<Result<ProjectDetail>>
   changeRole: (personId: number, role: ProjectRole) => Promise<Result<ProjectDetail>>
   deleteProject: () => Promise<Result<null>>
@@ -548,6 +554,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     reopen: () => run(
       () => api.reopen(requireDetail(detail).id, requireDetail(detail).version),
       { detail: requireDetail(detail).id }),
+    handover: (body) => run(
+      () => api.handover(requireDetail(detail).id, body), { detail: requireDetail(detail).id }),
     changeManager: (personId) => run(
       () => api.changeManager(requireDetail(detail).id, personId,
         requireDetail(detail).version),

@@ -30,7 +30,10 @@ class ProjectActionPermission {
             ProjectAction.PROGRESS,
             EnumSet.of(ProjectRole.PM, ProjectRole.PL, ProjectRole.PARTICIPANT),
             ProjectAction.COMPLETE_REOPEN,
-            EnumSet.of(ProjectRole.PM, ProjectRole.PL, ProjectRole.PARTICIPANT));
+            EnumSet.of(ProjectRole.PM, ProjectRole.PL, ProjectRole.PARTICIPANT),
+            // 이관은 PM 하나다(D1) — 완료·재개와 달리 실무 경로가 아니라
+            // 프로젝트를 유지보수로 넘기는 마지막 결정이다
+            ProjectAction.HANDOVER, EnumSet.of(ProjectRole.PM));
 
     private final ProjectRoleResolver projectRoleResolver;
     private final OrgPermissionService orgPermissionService;

@@ -1,6 +1,7 @@
 package kr.proten.pms.notification.service.impl;
 
 import java.util.List;
+import kr.proten.pms.maintenance.MaintenanceHandedOver;
 import kr.proten.pms.maintenance.MaintenanceIssueRegistered;
 import kr.proten.pms.notification.NotificationService;
 import kr.proten.pms.notification.NotificationType;
@@ -116,6 +117,41 @@ class NotificationSubscriber {
                 event.issueId(),
                 "%s 이슈 담당자로 지정되었습니다 — %s".formatted(where, event.title()),
                 "issue-assigned:%d:%d".formatted(event.issueId(), event.assigneeId())));
+    }
+
+
+    /**
+     * 이관 완료 → 이관된 사이트의 담당 엔지니어에게 (AC D1-1 · §8
+     * {@code MaintenanceHandedOver}).
+     *
+     * <p><b>수신자가 §8에 없어서 정했다</b>(ASSUMPTION — PRD-pms §12 등재): 이관으로
+     * 일이 달라지는 사람은 <b>사이트 담당 엔지니어</b>다. 이관을 실행한 PM에게는 보내지
+     * 않는다 — 자기가 방금 한 일이다. 실행자를 문구에 싣는 것은 그것과 다른 일이고,
+     * "누가 넘겼나"는 받는 사람이 알아야 하는 정보다.
+     *
+     * <p><b>유형은 {@code PROJECT_COMPLETED}를 재사용한다</b>(사용자 결정 2026-08-25):
+     * 그 열거의 javadoc이 이미 "완료·<b>이관</b> 안내"이고, 사용자에게 완료와 이관은 한
+     * 사건의 두 단계다. 유형을 늘리면 설정 화면(H1-4)의 칸이 함께 늘어난다.
+     *
+     * <p>멱등 키에 계약 id를 넣는다: 한 프로젝트는 한 번만 이관되지만(유지보수중에서는
+     * 재개도 이관도 불가) 키는 그 사실에 기대지 않는다(F1-2).
+     */
+    @ApplicationModuleListener
+    void onHandedOver(MaintenanceHandedOver event) {
+        if (event.siteEngineerIds().isEmpty()) {
+            return;
+        }
+
+        String message = "%s님이 %s 유지보수 담당으로 이관했습니다"
+                .formatted(nameOf(event.handedOverBy()), event.contractName());
+
+        event.siteEngineerIds().stream()
+                // 이관한 사람이 자기 사이트의 담당이기도 하면 자기에게는 보내지 않는다
+                .filter(engineerId -> engineerId != event.handedOverBy())
+                .forEach(engineerId -> notificationService.notify(new NotifyCommand(
+                        engineerId, NotificationType.PROJECT_COMPLETED, "Project",
+                        event.projectId(), message,
+                        "handed-over:%d:%d".formatted(event.contractId(), engineerId))));
     }
 
     /** 이름을 못 찾으면 알림을 포기하지 않는다 — 문구만 덜 친절해진다. */

@@ -613,3 +613,26 @@ export interface IssueEditBody {
 export interface CommentBody {
   content: string
 }
+
+/**
+ * POST /api/projects/{id}/handover (D1-1) — 계약 필수 정보 + 사이트 1개 이상.
+ *
+ * 계약 상태 칸이 없는 것은 누락이 아니다: 이관 계약은 `유지`로 시작한다(서버가 정한다).
+ * 담당 엔지니어는 **사이트마다 필수**다 — 없으면 그 사이트의 이슈가 영원히 미배정으로
+ * 남는다(D3-1이 사이트에서 담당을 가져온다).
+ */
+export interface HandoverBody {
+  contractor: string
+  name: string
+  startDate?: string | null
+  endDate?: string | null
+  amount?: number | null
+  monthlyAmount?: number | null
+  sites: HandoverSiteBody[]
+  version: number
+}
+
+export interface HandoverSiteBody {
+  name: string
+  engineerId: number
+}

@@ -4,7 +4,7 @@
  * - 계약대기 → `수주확정으로 →` (확인 카드)
  * - 수주확정 → `진행중으로 →` (확인 카드)
  * - 진행중 → `완료 처리`
- * - 완료 → `재개`
+ * - 완료 → `재개` + `유지보수로 이관 →`(PM만 — D1)
  * - 유지보수중 → 없음 (이관 뒤에는 유지보수 계약이 소관이다)
  *
  * 전이 버튼을 헤더에서 여기로 내린 이유(2026-08-22 사용자 결정): 상태를 옮기는 일은
@@ -15,15 +15,18 @@ import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { useStore } from '../store'
 import { nextStatus } from '../labels'
-import { canEditInfo, canUpdateProgress } from '../permissions'
+import { canEditInfo, canHandover, canUpdateProgress } from '../permissions'
 import { ErrorText } from './ui'
 import StatusAdvance from './StatusAdvance'
+import HandoverModal from './HandoverModal'
 import type { MeView, ProjectDetail } from '../types/api'
 
 export default function ProjectActions() {
   const { detail, me, complete, reopen, showToast } = useStore()
   const [error, setError] = useState<{ code: string; message: string } | null>(null)
   const [busy, setBusy] = useState(false)
+  // 이관은 확인 카드가 아니라 폼이다 — 계약 필수 정보를 함께 받는다(D1-1)
+  const [handingOver, setHandingOver] = useState(false)
 
   if (!detail) {
     return null
@@ -48,8 +51,17 @@ export default function ProjectActions() {
     <div style={{ borderTop: '1px solid var(--border-soft)', marginTop: 18, paddingTop: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         {actionFor(me, detail, busy, runTransition)}
+        {/* 완료 상태에서는 재개와 이관이 둘 다 가능하다 — 유일하게 행위가 둘인 칸 */}
+        {detail.status === 'COMPLETED' && canHandover(me, detail) && (
+          <button className="btn btn-primary" disabled={busy}
+            onClick={() => setHandingOver(true)}>유지보수로 이관 →</button>
+        )}
         <span className="muted2" style={{ fontSize: 12 }}>{hintFor(me, detail)}</span>
       </div>
+
+      {handingOver && (
+        <HandoverModal detail={detail} onClose={() => setHandingOver(false)} />
+      )}
 
       {error && (
         <div style={{ marginTop: 12 }}>
@@ -97,7 +109,7 @@ function hintFor(me: MeView | null, detail: ProjectDetail): string {
 
   if (detail.status === 'COMPLETED') {
     return canUpdateProgress(me, detail)
-      ? '재개하면 진척률이 90%로 돌아가고 다시 수정할 수 있습니다.'
+      ? '재개하면 진척률이 90%로 돌아갑니다. 이관은 되돌릴 수 없습니다.'
       : '재개는 이 프로젝트에 배정된 인원만 가능합니다.'
   }
 

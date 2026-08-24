@@ -72,7 +72,7 @@ log). `verify.sh`/CI only look at `pms/gradlew`, so `pms-old/` is not verified.
   | project | `ProjectQueryService` · `ProjectCommandService` · `ProjectLifecycleService` · `AssignmentService` | visibility read · CRUD · §5 state machine · assignment |
   | person | `PersonService` · `OrgUnitService` · `GradeService` · `PermissionGroupService` · `AuditViewService` | one per managed resource |
   | person (cross-module) | `PersonDirectoryService` · `OrgVisibilityService` · `OrgPermissionService` · `PersonLookupService` · `WorkforceDirectoryService` | **different consumers** — these earn the split |
-  | project (cross-module) | `AssignmentDirectoryService` · `ProjectLookupService` · `ProgressCommandService` | one more consumer set (resource · `/mcp`) — 2026-08-23 |
+  | project (cross-module) | `AssignmentDirectoryService` · `ProjectLookupService` · `ProgressCommandService` · **`HandoverPort`** | one more consumer set (resource · `/mcp`) — 2026-08-23. `HandoverPort` is the odd one out: an **inverted** port that project *defines and calls*, implemented by maintenance (D1, 2026-08-25) |
   | resource (cross-module) | `UtilizationLookupService` | `/mcp` only — the web takes `?orgUnitId=`, chat takes a `UtilizationScope` (2026-08-24) |
   | maintenance | `MaintenanceQueryService` · `IssueQueryService` · `ContractCommandService` · `IssueCommandService` | **three axes, not two** — reads are company-wide and take no caller (D4-3); contract writes are gated on the "계약 관리" flag (D2-3); **issue writes take a caller but have no gate** (US-D3 = every logged-in user, 2026-08-24). Same read/write split, same reason, as audit's `AuditTrail` / `AuditQueryService` |
 
@@ -88,7 +88,7 @@ log). `verify.sh`/CI only look at `pms/gradlew`, so `pms-old/` is not verified.
   adopted 2026-08-22). Every sub-package (`controller/`, `service/`, `repository/`)
   is internal, so the files sitting *directly* in a module directory **are** the
   contract it offers, and that list is the boundary — measured 2026-08-24:
-  `person` 12 · `project` 9 · `audit` 6 · `maintenance` 6 · `resource` 5 ·
+  `person` 12 · `project` 11 · `audit` 6 · `maintenance` 7 · `resource` 5 ·
   `notification` 5 (re-measured 2026-08-24 — four of the six numbers had gone stale
   while the file still said "measured"; `ls <module>/*.java` is the measurement).
   `auth` and `mcp` have empty roots: nothing of theirs crosses
@@ -151,16 +151,19 @@ disappears, and it now has.
   auth and access-log masking are one unit. Registered gap: **a status transition also
   creates overbooking** (계약대기 → 진행중 pulls that person's assignment into the
   numerator) and §8 has no event for it — look at it with F2/F3.
-- **EPIC D writes — D2 and D3 landed 2026-08-24; only D1 remains.** Contract/site
-  registration and edit (D2) and issue register/handle/comment (D3) are both live, so
-  maintenance is a fully writable domain. D3 closed the two decisions it was split off for:
-  `NotificationType` gained `ISSUE_ASSIGNED` (named for the *recipient* — the assignee —
-  not the act of registering; user decision), and the registered question of where
-  notification's five root contracts belong got its answer (they move to `service/`;
-  measured 0 external importers even after a new subscriber landed — the move itself is
-  left as a separate unit, PRD-pms §12). **D1 handover** still needs the module-direction
-  decision (the route is project's, the contract is maintenance's, and D1-2 wants one
-  transaction).
+- **EPIC D is closed (2026-08-25).** Reads (D4, D3-4), contract/site writes (D2), issue
+  register/handle/comment (D3) and **handover (D1)** are all live. D1 settled the last open
+  question — the **module direction is an inverted port**: `project.HandoverPort` is defined by
+  project and implemented by maintenance, so the edge runs **maintenance → project**
+  (user decision, shared decision log). What made that a real choice rather than a forced one:
+  the two modules were measured to be **siblings that knew nothing of each other**, so no cycle
+  compelled a direction. The tiebreaker was where the *latent* dependency already pointed —
+  maintenance stores `sourceProjectId` and D4-2 wants the source-project link, so drawing
+  project → maintenance would have become a cycle the day maintenance needed a project.
+  Two traps worth remembering: the adapter must **not** reuse `ContractCommandService`
+  (its `ContractWriteGuard` would stop a PM without the 계약-관리 flag from handing over
+  their own project), and the port needs the **caller** — an audit actor guessed from the
+  site engineer puts someone who did nothing into an append-only log.
 - project AC **A8** (per-project permission matrix),
   and the `?phase=` list filter.
 
@@ -336,6 +339,10 @@ PUT  /api/projects/{id}/pm          PM handover, creates the assignment if neede
 DELETE /api/projects/{id}           200 {success:true}, soft delete — PM or the "프로젝트 생성" flag (A4)
 POST /api/projects/{id}/complete   {version} — needs 진행중 + 100%   (A7-1)
 POST /api/projects/{id}/reopen     {version} — 완료 → 진행중, progress=90 (A7-3)
+POST /api/projects/{id}/handover   201 — {계약 필수 정보 + sites[1..n], version} (D1-1).
+                                   Contract+Site creation and 완료→유지보수중 are **one
+                                   transaction**; 409/400 leave the project 완료 and create no
+                                   contract (D1-2·D1-3). PM only (`ProjectAction.HANDOVER`)
 
 POST   /api/projects/{id}/assignments   201 + assignment view      (B1-1)
 PUT    /api/assignments/{id}            period + monthly M/M       (B1-4)
@@ -370,6 +377,10 @@ have no gate at all** (2026-08-24, D3): US-D3 is `[로그인 사용자 전체]`,
 is the first write contract in this app with no permission guard — the caller id is there for
 the *record* (audit actor, comment author), not for a judgement. Reusing `ContractWriteGuard`
 here would be wrong, not merely redundant: a 팀원 must be able to file the issue they will work.
+**Handover writes take a caller and are gated on the project side** (D1, `ProjectAction.HANDOVER`
+= PM only), so `HandoverAdapter` must not re-gate — reusing `ContractCommandService` there would
+stop a PM without the 계약-관리 flag from handing over their own project. The caller still crosses
+the port, for the audit actor and the event's `handedOverBy`, never for a judgement.
 
 No assignment list route: the project detail already carries them (A3-3).
 Not routed yet, on purpose: A8 (`/permissions`), `?phase=`, and
@@ -436,10 +447,15 @@ why `projectId` is a filter column filled even when `entityId` is an assignment.
 
 ## Domain events (new 2026-08-24 — read this before adding one)
 
-The first events in this project. `project` publishes `AssignmentChanged`, `resource`
-subscribes and republishes `OverbookingDetected`, `notification` subscribes and stores.
-Since 2026-08-24 (D3) `maintenance` publishes `MaintenanceIssueRegistered` too — a second,
-independent publisher confirming the arrangement generalises.
+Three publishers now: `project` publishes `AssignmentChanged`, `resource` republishes
+`OverbookingDetected`, and `maintenance` publishes `MaintenanceIssueRegistered` (D3) and
+`MaintenanceHandedOver` (D1). `notification` subscribes to all of them and stores.
+
+- **§8 lists eight events; four publish.** `ProjectCompleted` and `ProjectReopened` have
+  **zero publish sites** (measured 2026-08-25) even though `NotificationType.PROJECT_COMPLETED`
+  exists, and `NotificationService.withdrawUnread` (F3-3 recall) has **no production caller** —
+  only a test calls it. So reopening a project does not recall its overdue notification. That is
+  a *capability without wiring*; registered in PRD-pms §12 to be fixed with F2/F3.
 
 - **Publish even when nobody will be notified.** `MaintenanceIssueRegistered` fires with a
   null `assigneeId` when the site has no engineer; the *subscriber* decides there is nobody

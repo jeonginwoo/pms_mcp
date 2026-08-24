@@ -221,6 +221,33 @@ public class Project {
     }
 
     /**
+     * 유지보수로 이관한다 (AC D1-1) — 완료 → 유지보수중.
+     *
+     * <p>{@code ProjectStatus.next()}에 이 전이를 넣지 않고 전용 메서드로 둔 이유는
+     * {@code complete()}·{@code reopen()}과 같다: 정보 수정 경로({@code PUT /projects/{id}})가
+     * 상태를 자유 편집하면 전용 경로의 권한 경계가 무너진다(§5 · 2026-08-02 서버 강제 결정).
+     * 그래서 {@code next()}에서 {@code COMPLETED}는 여전히 비어 있다.
+     *
+     * <p>거절 코드가 {@code INVALID_TRANSITION}인 것은 <b>사용자 결정(2026-08-25)</b>이다.
+     * AC D1-2는 {@code NOT_COMPLETED}로 적혀 있었지만 같은 상태 기계의 다른 칸이 다른
+     * 코드를 쓸 이유가 없고({@code complete()}·{@code reopen()}이 이 코드를 쓴다),
+     * `ErrorCode`를 늘리면 `mcp` 모듈의 매핑이 함께 움직여야 해서 소유 경계를 넘는다.
+     * AC 문면을 이쪽으로 정정했다 — 공용 결정 기록.
+     *
+     * <p>유지보수중에서는 재개할 수 없다({@code reopen()}이 이미 막는다) — 이관된 계약과의
+     * 정합을 보호하는 규칙이고, 이 전이가 그 마지막 칸을 채운다.
+     */
+    public void handover() {
+        if (status != ProjectStatus.COMPLETED) {
+            throw new ConflictException(ErrorCode.INVALID_TRANSITION,
+                    "완료된 프로젝트만 유지보수로 이관할 수 있습니다 (현재 "
+                            + status.label() + ")");
+        }
+
+        this.status = ProjectStatus.UNDER_MAINTENANCE;
+    }
+
+    /**
      * soft 삭제 (AC A4-1) — 목록·중복 검사에서 빠지고 과거 데이터는 남는다.
      * 행을 지우지 않는 이유: 배정·감사 로그가 이 프로젝트를 가리키고 있다.
      */

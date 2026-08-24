@@ -14,6 +14,7 @@ import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.ForbiddenException;
 import kr.proten.pms.common.exception.NotFoundException;
 import kr.proten.pms.person.PersonDirectoryService;
+import kr.proten.pms.project.HandoverPort;
 import kr.proten.pms.project.repository.ProjectAssignmentRepository;
 import kr.proten.pms.project.repository.ProjectRepository;
 import kr.proten.pms.project.service.entity.Project;
@@ -49,6 +50,8 @@ class ProjectCompletionTest {
     @Mock
     private ProjectViewFactory projectViewFactory;
     @Mock
+    private HandoverPort handoverPort;
+    @Mock
     private ProjectAssignmentRepository assignmentRepository;
     @Mock
     private PersonDirectoryService personDirectoryService;
@@ -65,7 +68,8 @@ class ProjectCompletionTest {
                 personDirectoryService,
                 new AssignmentFactory(),
                 projectAuditRecorder,
-                projectViewFactory);
+                projectViewFactory,
+                handoverPort);
     }
 
     @Test

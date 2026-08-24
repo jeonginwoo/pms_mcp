@@ -16,6 +16,7 @@ import kr.proten.pms.common.exception.ForbiddenException;
 import kr.proten.pms.common.exception.NotFoundException;
 import kr.proten.pms.common.exception.ValidationException;
 import kr.proten.pms.person.PersonDirectoryService;
+import kr.proten.pms.project.HandoverPort;
 import kr.proten.pms.project.repository.ProjectAssignmentRepository;
 import kr.proten.pms.project.repository.ProjectRepository;
 import kr.proten.pms.project.service.dto.ProgressUpdateResult;
@@ -57,6 +58,8 @@ class ProgressUpdateTest {
     private PersonDirectoryService personDirectoryService;
     @Mock
     private ProjectViewFactory projectViewFactory;
+    @Mock
+    private HandoverPort handoverPort;
 
     private ProjectLifecycleServiceImpl service;
 
@@ -70,7 +73,8 @@ class ProgressUpdateTest {
                 personDirectoryService,
                 new AssignmentFactory(),
                 projectAuditRecorder,
-                projectViewFactory);
+                projectViewFactory,
+                handoverPort);
     }
 
     @Test
