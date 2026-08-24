@@ -1,6 +1,7 @@
 package kr.proten.pms.mcp;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
@@ -11,9 +12,13 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import kr.proten.pms.audit.AuditQueryService;
 import kr.proten.pms.audit.AuditRecord;
 import kr.proten.pms.audit.AuditSource;
@@ -60,11 +65,18 @@ class McpAdapterIntegrationTest {
     // 시드 계정 — 박재완(1) 관리자·전사 가시성 / 남진식(28) 팀원·CS사업팀
     private static final String ADMIN_EMAIL = "pro0001@proten.co.kr";
     private static final String MEMBER_EMAIL = "20230008@proten.co.kr";
+    // 가동률 화자 — 앵커 정본 `docs/evals/seed-anchor-map.md` §3 캐스팅표
+    private static final String DIVISION_LEAD_EMAIL = "pro0006@proten.co.kr"; // 김문수(16) AX솔루션사업부
+    private static final String TEAM_LEAD_EMAIL = "pro0016@proten.co.kr";     // 이현창(17) AX솔루션개발1팀
+    private static final String JUNIOR_EMAIL = "20240008@proten.co.kr";       // 고예림(19) 팀원
+    private static final String SUPPORT_LEAD_EMAIL = "pro0007@proten.co.kr";  // 천용우(2) 경영관리팀
     private static final String SEED_PASSWORD = "proten1!";
     // 도구 결과가 오류로 표시됐는지 — SDK가 실패를 이 플래그로 싣는다
     private static final String ERROR_FLAG = "\"isError\":true";
     // 목록 건수를 파서 없이 세는 기준 필드 — 프로젝트 항목마다 정확히 한 번 실린다
     private static final String CLIENT_FIELD = "\\\"client\\\"";
+    // 가동률 행마다 정확히 한 번 실리는 필드 — 인원수를 파서 없이 센다
+    private static final String CAPACITY_FIELD = "\\\"capacityMm\\\"";
 
     @Container
     @ServiceConnection
@@ -433,13 +445,172 @@ class McpAdapterIntegrationTest {
         assertThat(body).contains("[403 FORBIDDEN]");
     }
 
-    @Test
-    @DisplayName("미구현 포트는 FR-AI-26 표준 오류를 반환한다 — 도구는 노출된 채로")
-    void unimplementedPort_returnsStandardUnavailableError() {
-        // 남은 503은 가동률 2종뿐이다 — EPIC C 실구현에 묶여 있다
-        String body = mcp.call(accessToken(ADMIN_EMAIL), McpHttp.GET_UTILIZATION);
+    // --- 가동률 실연결 (앵커 정본 §4) -----------------------------------------
 
-        assertThat(body).contains("[503 UNAVAILABLE]").contains("준비 중");
+    @Test
+    @DisplayName("eval A-01 — 전사 과부하 2명, 8월 최대 수치자는 명단에 없다(billable=false)")
+    void listOverbooked_matchesAnchorRoster() {
+        String body = mcp.call(accessToken(ADMIN_EMAIL), McpHttp.listOverbooked("2026-08"));
+
+        assertThat(body).contains("이현창", "김경민");
+        // 윤종헌 182%가 8월 최대인데 지원조직이라 집계 모집단 밖이다 — 앵커 §4-2의 유일한 함정
+        assertThat(body).doesNotContain("윤종헌");
+        assertThat(doublesOf(body, "basicPct")).containsExactlyInAnyOrder(191.0, 133.0);
+    }
+
+    @Test
+    @DisplayName("과부하 원인은 큰 것부터, 합 × 100 = 그 사람의 기본 가동률")
+    void listOverbooked_carriesCausesLargestFirst() {
+        // 2026-07 CS사업팀의 과부하는 남진식 한 명(§4-2) — 원인 목록이 한 사람 것으로 확정된다
+        String body = mcp.call(accessToken(MEMBER_EMAIL), McpHttp.listOverbooked("2026-07"));
+        List<Double> causes = doublesOf(body, "mm");
+
+        assertThat(body).contains("남진식");
+        assertThat(doublesOf(body, "basicPct")).containsExactly(105.0);
+        // 첫 줄이 가장 큰 원인이어야 한다 — "왜 과부하인가"를 목록 순서가 답한다
+        assertThat(causes).isNotEmpty().isSortedAccordingTo(Comparator.reverseOrder());
+        // 전원 capacity=1.0이므로 원인 합이 곧 가동률이다(진행중 배정만 세는 모집단 규칙의 방증)
+        assertThat(causes.stream().mapToDouble(Double::doubleValue).sum() * 100)
+                .isCloseTo(105.0, within(0.001));
+    }
+
+    @Test
+    @DisplayName("과부하 범위는 화자 가시성으로 좁혀진다 — 팀원에게 타 팀 명단이 새지 않는다")
+    void listOverbooked_narrowsToCallerVisibility() {
+        String body = mcp.call(accessToken(MEMBER_EMAIL), McpHttp.listOverbooked("2026-08"));
+
+        // 전사 2명은 AX솔루션개발1팀이고 화자는 CS사업팀이다 (§4-2 · §4-4)
+        assertThat(body).doesNotContain("이현창", "김경민");
+        assertThat(doublesOf(body, "basicPct")).isEmpty();
+    }
+
+    @Test
+    @DisplayName("eval A-05 — scope=ME는 personId 없이 완결된다 (기본 63 · 보정 50.4)")
+    void getUtilization_meNeedsNoPersonId() {
+        String body = mcp.call(accessToken(JUNIOR_EMAIL), McpHttp.getUtilization("2026-08", "ME"));
+
+        assertThat(countOf(body, CAPACITY_FIELD)).isEqualTo(1);
+        assertThat(body).contains("고예림");
+        assertThat(doublesOf(body, "basicPct")).containsExactly(63.0);
+        assertThat(doublesOf(body, "adjustedPct")).containsExactly(50.4); // 주임 계수 0.8
+        // 모델이 읽는 값에 부동소수점 잡음이 없어야 한다 — 지난 세션 관찰(`1.9100000000000001`)이
+        // resource 승격의 6자리 반올림으로 닫혔는지 어댑터 출력에서 확인한다
+        assertThat(doublesOf(body, "assignedMm")).containsExactly(0.63);
+    }
+
+    @Test
+    @DisplayName("eval A-03 — scope=PERSON은 지정한 개인 (김경민 2026-09 = 133 / 133.0)")
+    void getUtilization_personScopeReadsNamedPerson() {
+        String body = mcp.call(
+                accessToken(DIVISION_LEAD_EMAIL), McpHttp.getUtilization("2026-09", "PERSON", 18));
+
+        assertThat(body).contains("김경민");
+        assertThat(doublesOf(body, "basicPct")).containsExactly(133.0);
+        // 선임 계수 1.0이라 두 값이 같다 — 채점이 "계산 오류"로 읽지 않게 앵커가 못박은 지점
+        assertThat(doublesOf(body, "adjustedPct")).containsExactly(133.0);
+    }
+
+    @Test
+    @DisplayName("eval A-04 — MY_TEAM은 화자에서 팀을 유도한다 (AX솔루션개발1팀 5명)")
+    void getUtilization_myTeamResolvesCallerTeam() {
+        String body = mcp.call(accessToken(TEAM_LEAD_EMAIL), McpHttp.getUtilization("2026-09", "MY_TEAM"));
+
+        // 어댑터가 조직 id를 만들지 않는다는 단정이기도 하다 — 화자만 넘겼는데 팀이 풀렸다
+        assertThat(countOf(body, CAPACITY_FIELD)).isEqualTo(5);
+        assertThat(body).contains("이현창", "김경민", "고예림", "추인식", "김가은");
+    }
+
+    @Test
+    @DisplayName("eval A-07 — DIVISION은 부문 14명, 타 부문은 섞이지 않는다")
+    void getUtilization_divisionExcludesOtherDivisions() {
+        String body = mcp.call(
+                accessToken(DIVISION_LEAD_EMAIL), McpHttp.getUtilization("2026-07", "DIVISION"));
+
+        assertThat(countOf(body, CAPACITY_FIELD)).isEqualTo(14);
+        // 부문 밖 인원이 섞이면 eval A-07은 F2다 — 윤종헌·김영삼·조규석이 그 판별점
+        assertThat(body).doesNotContain("윤종헌", "김영삼", "조규석");
+    }
+
+    @Test
+    @DisplayName("eval A-01 후속 — COMPANY는 billable 33명, 무배정 부문도 행으로 온다")
+    void getUtilization_companyKeepsZeroPercentRows() {
+        String body = mcp.call(accessToken(ADMIN_EMAIL), McpHttp.getUtilization("2026-08", "COMPANY"));
+
+        assertThat(countOf(body, CAPACITY_FIELD)).isEqualTo(33);
+        // "0.0% 부문을 데이터 없음으로 접으면 불합격"이 A-01 채점 기준이다 — 행은 서버가 준다
+        assertThat(body).contains("AX기술연구소");
+        assertThat(body).doesNotContain("윤종헌");
+    }
+
+    @Test
+    @DisplayName("eval E-04 — 가시성 밖 개인 지정은 부재와 같은 404다 (은닉)")
+    void getUtilization_concealsPersonOutsideVisibility() {
+        // 천용우(경영관리팀 부문장)의 subtree 밖 — 윤종헌은 AX사업기획부다 (앵커 §3)
+        String body = mcp.call(
+                accessToken(SUPPORT_LEAD_EMAIL), McpHttp.getUtilization("2026-08", "PERSON", 7));
+
+        assertThat(body).contains(ERROR_FLAG).contains("[404 NOT_FOUND]");
+    }
+
+    @Test
+    @DisplayName("모르는 scope는 조용히 넓은 범위로 떨어지지 않고 422다")
+    void getUtilization_rejectsUnknownScope() {
+        String body = mcp.call(
+                accessToken(ADMIN_EMAIL), McpHttp.getUtilization("2026-08", "WHOLE_COMPANY"));
+
+        // 지어낸 낱말을 임의 해석하면 사용자는 틀린 범위의 답을 맞는 답으로 받는다
+        assertThat(body).contains(ERROR_FLAG).contains("[422 VALIDATION]");
+    }
+
+    @Test
+    @DisplayName("월 형식 오류는 422 — 무엇을 고쳐 다시 부를지 문구가 말한다")
+    void getUtilization_rejectsMalformedMonth() {
+        String body = mcp.call(accessToken(ADMIN_EMAIL), McpHttp.getUtilization("2026년 8월", "ME"));
+
+        assertThat(body).contains(ERROR_FLAG).contains("[422 VALIDATION]").contains("yyyy-MM");
+    }
+
+    @Test
+    @DisplayName("eval F-01·F-02 — 배정 공백 월: 과부하는 빈 목록, 가동률은 0% 행이다")
+    void emptyMonthsAnswerDifferentlyPerTool() {
+        // F-01 (2027-12 — 시드 최장 종료 2027-09): 과부하 판정이 걸러 빈 목록이 된다
+        String overbooked = mcp.call(accessToken(DIVISION_LEAD_EMAIL), McpHttp.listOverbooked("2027-12"));
+
+        assertThat(doublesOf(overbooked, "basicPct")).isEmpty();
+
+        // F-02 (2015-01 — 시드 공백 과거): 모집단은 현재 소속으로 잡히므로 팀 5명이 0% 행으로 온다.
+        // 빈 목록이 아니다 — A-01이 "무배정 부문도 0.0% 행으로 온다"고 기대하는 것과 같은 규칙이다
+        String utilization = mcp.call(accessToken(TEAM_LEAD_EMAIL), McpHttp.getUtilization("2015-01", "MY_TEAM"));
+
+        assertThat(countOf(utilization, CAPACITY_FIELD)).isEqualTo(5);
+        assertThat(doublesOf(utilization, "basicPct")).containsOnly(0.0);
+    }
+
+    @Test
+    @DisplayName("503으로 답하는 도구가 남아 있지 않다 — 카탈로그 8종 전부 실연결")
+    void everyToolInTheCatalogIsWired() {
+        // 가동률 2종이 마지막 503이었다(2026-08-24 배선). 남은 `ToolError.unavailable`은
+        // ErrorCode.NOT_IMPLEMENTED 매핑뿐이고 그것을 던지는 자리도 0건이다
+        assertThat(mcp.call(accessToken(ADMIN_EMAIL), McpHttp.getUtilization("2026-08", "ME")))
+                .doesNotContain("[503 UNAVAILABLE]");
+        assertThat(mcp.call(accessToken(ADMIN_EMAIL), McpHttp.listOverbooked("2026-08")))
+                .doesNotContain("[503 UNAVAILABLE]");
+    }
+
+    /**
+     * 응답에 실린 그 필드의 값들 — 실린 순서 그대로. 응답 JSON이 텍스트 콘텐트 안에
+     * 이스케이프된 채 오므로 파서를 세우지 않고 필드만 집어낸다(`intFieldOf`와 같은 이유).
+     */
+    private static List<Double> doublesOf(String body, String field) {
+        Matcher matcher = Pattern.compile(Pattern.quote("\\\"" + field + "\\\":") + "(-?[0-9.]+)")
+                .matcher(body);
+        List<Double> values = new ArrayList<>();
+
+        while (matcher.find()) {
+            values.add(Double.parseDouble(matcher.group(1)));
+        }
+
+        return values;
     }
 
     /** 응답에 그 필드가 몇 번 실렸는가 — 이슈 건수를 파서 없이 센다. */

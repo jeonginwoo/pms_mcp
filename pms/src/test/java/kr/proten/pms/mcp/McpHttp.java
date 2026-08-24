@@ -33,9 +33,22 @@ final class McpHttp {
     static final String SEARCH_PROJECTS = """
             {"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"search_projects","arguments":{}}}""";
 
-    /** 남은 유일한 503 — 가동률 2종은 EPIC C 실구현에 묶여 있다. */
-    static final String GET_UTILIZATION = request(
-            11, "get_utilization", "\"month\":\"2026-08\",\"scope\":\"ME\"");
+    /** scope=ME는 personId 없이 완결된다(2026-07-31 결정). */
+    static String getUtilization(String month, String scope) {
+        return request(11, "get_utilization",
+                "\"month\":\"%s\",\"scope\":\"%s\"".formatted(month, scope));
+    }
+
+    static String getUtilization(String month, String scope, int personId) {
+        return request(16, "get_utilization",
+                "\"month\":\"%s\",\"scope\":\"%s\",\"personId\":%d"
+                        .formatted(month, scope, personId));
+    }
+
+    /** 범위 파라미터가 없다 — 조회자의 가시성으로 서버가 판정한다(FR-AI-12). */
+    static String listOverbooked(String month) {
+        return request(17, "list_overbooked", "\"month\":\"%s\"".formatted(month));
+    }
 
     static String searchProjects(String keyword) {
         return request(12, "search_projects", "\"keyword\":\"%s\"".formatted(keyword));

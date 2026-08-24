@@ -107,11 +107,11 @@ docker compose -f pms/docker-compose.yml up -d
                          # /api/people, /api/org-units, /api/grades,
                          # /api/permission-groups, /api/projects (+ assignments),
                          # /api/utilization, /api/notifications, /api/audit —
-                         # some are scaffolds answering 501 NOT_IMPLEMENTED
-                         # (PRD-pms §10 has the per-EPIC status). On an empty DB
-                         # the org seed loads itself from
-                         # reference/seed/seed_org_proten.sql; projects.json (382)
-                         # and maintenance.json are NOT loaded yet.
+                         # nothing answers 501 NOT_IMPLEMENTED any more
+                         # (2026-08-24; PRD-pms §10 has the per-EPIC status).
+                         # On an empty DB three seed loaders fill it: the org from
+                         # reference/seed/seed_org_proten.sql, projects.json (382)
+                         # and maintenance.json (105 contracts).
                          # Auth is built but off by default (pms.auth.enabled) —
                          # the caller is the X-Caller-Person-Id header and it is
                          # trusted, so do not expose this. Login works in both
@@ -119,15 +119,13 @@ docker compose -f pms/docker-compose.yml up -d
                          # and proten1!.
                          # MCP: POST /mcp (Streamable HTTP) — always requires a
                          # login access token regardless of pms.auth.enabled
-                         # (principle 4). 8 tools listed; 6 answer with real
-                         # data (whoami, find_person, search_maintenance,
-                         # list_maintenance_logs, search_projects,
-                         # update_progress). update_progress is the only write
-                         # tool and keeps its 2-step confirmation (principle 5).
-                         # The remaining 2 (utilization) return the FR-AI-26 503,
-                         # and now only adapter wiring is left: EPIC C landed
-                         # 2026-08-23 and resource.UtilizationLookupService
-                         # (+UtilizationScope) landed 2026-08-24.
+                         # (principle 4). All 8 tools answer with real data
+                         # since 2026-08-24 (whoami, find_person, search_projects,
+                         # update_progress, search_maintenance,
+                         # list_maintenance_logs, get_utilization,
+                         # list_overbooked) — nothing returns the FR-AI-26 503.
+                         # update_progress is the only write tool and keeps its
+                         # 2-step confirmation (principle 5).
 ```
 
 ## Way of working
