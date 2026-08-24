@@ -2,9 +2,11 @@ package kr.proten.pms;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.entry;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import kr.proten.pms.common.exception.NotFoundException;
 import kr.proten.pms.maintenance.repository.MaintenanceContractRepository;
@@ -63,6 +65,8 @@ class MaintenanceSeedLoadIntegrationTest {
     private MaintenanceQueryService maintenanceQueryService;
     @Autowired
     private IssueQueryService issueQueryService;
+    @Autowired
+    private kr.proten.pms.person.repository.PersonRepository personRepository;
 
     @Test
     @DisplayName("부록 B — 계약 105건 · 사이트 157건이 적재된다")
@@ -205,6 +209,24 @@ class MaintenanceSeedLoadIntegrationTest {
         assertThat(siteRepository.findAll().stream()
                         .filter(site -> site.getEngineerId() == null))
                 .hasSize(48);
+    }
+
+    private String nameOf(long personId) {
+        return personRepository.findById(personId).orElseThrow().getName();
+    }
+
+    @Test
+    @DisplayName("이슈 작성 엔지니어는 시트 원본 이름 그대로 실인원에 붙는다 (2026-08-24 교정)")
+    void issueWritersMatchTheirOwnNames() {
+        // 변환 당시 작성자를 구 익명 명부로 매핑한 탓에(남진식→26 · 배성수→28) 인원 정본이
+        // 실제 명부로 바뀌며 두 사람이 서로 뒤바뀌어 있었다 — 둘 다 CS사업팀 실인원이라
+        // 화면에는 그럴듯하게 보였다. 이름이 자기 이슈에 붙는지를 여기서 고정한다.
+        Map<String, Long> byWriter = issueRepository.findAll().stream()
+                .map(MaintenanceIssue::getAssigneeId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.groupingBy(this::nameOf, Collectors.counting()));
+
+        assertThat(byWriter).containsOnly(entry("남진식", 7L), entry("배성수", 7L));
     }
 
     @Test
