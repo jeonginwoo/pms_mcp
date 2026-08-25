@@ -2,6 +2,9 @@ package kr.proten.pms.auth.service.impl;
 
 import kr.proten.pms.auth.repository.UserRepository;
 import kr.proten.pms.auth.service.entity.User;
+import kr.proten.pms.common.exception.NotFoundException;
+import java.util.Optional;
+import kr.proten.pms.person.AccountContact;
 import kr.proten.pms.person.AccountPort;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +43,36 @@ class AccountPortAdapter implements AccountPort {
     @Transactional(readOnly = true)
     public boolean emailTaken(String email) {
         return userRepository.existsByEmail(email.trim());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<AccountContact> contactOf(long personId) {
+        return userRepository.findByPersonId(personId)
+                .map(user -> new AccountContact(user.getEmail(), user.getPhone()));
+    }
+
+    /**
+     * 연락처 변경 (AC H1-2) — 호출자의 트랜잭션에 참여한다({@code REQUIRED} 기본값).
+     *
+     * <p><b>계정이 없으면 404다</b>(2026-08-25 정정): 구 주석은 "시스템 계정처럼 로그인
+     * 계정이 없는 인원이 있다"며 조용히 넘겼는데 <b>실측하면 거짓</b>이다 —
+     * `seed_org_proten.sql`이 시스템 계정(person 44)에도 `admin@proten.co.kr` 행을 넣어
+     * 44명 전원이 계정을 갖는다. 없는 것은 정상 상태가 아니라 데이터 이상이고,
+     * 조용히 넘기면 <b>화면이 "저장했습니다"를 띄운 뒤 값이 사라진다</b>.
+     */
+    @Override
+    @Transactional
+    public void updateContact(long personId, String email, String phone) {
+        User user = userRepository.findByPersonId(personId)
+                .orElseThrow(NotFoundException::new);
+        user.updateContact(email.trim(), phone);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean emailTakenByOther(long personId, String email) {
+        return userRepository.existsByEmailAndPersonIdNot(email.trim(), personId);
     }
 
     @Override

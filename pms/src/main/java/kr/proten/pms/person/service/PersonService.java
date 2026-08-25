@@ -1,11 +1,13 @@
 package kr.proten.pms.person.service;
 
 import java.util.List;
+import kr.proten.pms.person.service.dto.AccountView;
 import kr.proten.pms.person.service.dto.CreatePersonCommand;
 import kr.proten.pms.person.service.dto.MeView;
 import kr.proten.pms.person.service.dto.OrgUnitMoveResult;
 import kr.proten.pms.person.service.dto.PersonSummary;
 import kr.proten.pms.person.service.dto.UpdatePersonCommand;
+import kr.proten.pms.person.service.dto.UpdateProfileCommand;
 
 /**
  * 인력 유스케이스 — 조회·등록·수정·소속 이동·비활성 (AC E1-1 · E2-1~E2-5 · H1-1).
@@ -35,6 +37,18 @@ public interface PersonService {
      * 본인은 가시성 scope가 SELF여도 언제나 조회 대상이다.
      */
     MeView me(long callerPersonId);
+
+    /** 내 계정 상세 (AC H1-1) — 연락처는 auth가 갖고 있어 포트로 받아 온다. */
+    AccountView myAccount(long callerPersonId);
+
+    /**
+     * 내 프로필을 고친다 (AC H1-2) — 이름은 person, email·phone은 auth다.
+     *
+     * <p><b>한 트랜잭션이다</b>: 포트 구현이 호출자의 트랜잭션에 참여하므로 이름만
+     * 바뀌고 연락처가 안 바뀌는 중간 상태가 생기지 않는다. email이 <b>나 말고</b>
+     * 누군가 쓰는 값이면 409 DUPLICATE_EMAIL이다.
+     */
+    AccountView updateProfile(long callerPersonId, UpdateProfileCommand command);
 
     /** 인원을 등록하고 로그인 계정을 함께 만든다 (AC E2-1). */
     PersonSummary create(long callerPersonId, CreatePersonCommand command);

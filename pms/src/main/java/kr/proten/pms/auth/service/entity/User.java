@@ -52,6 +52,23 @@ public class User {
         return new User(id, personId, email, passwordHash, phone);
     }
 
+    /**
+     * 연락처를 바꾼다 (AC H1-2) — email은 로그인 ID다.
+     * 비밀번호는 여기서 바뀌지 않는다: 현재 비밀번호 확인이 전제인 다른 행위다(H1-3).
+     */
+    public void updateContact(String email, String phone) {
+        this.email = email;
+        this.phone = phone;
+    }
+
+    /**
+     * 비밀번호를 바꾼다 (AC H1-3) — <b>해시만 받는다</b>.
+     * 평문이 엔티티에 들어오면 그것을 로그·toString으로 흘릴 자리가 생긴다.
+     */
+    public void changePassword(String newPasswordHash) {
+        this.passwordHash = newPasswordHash;
+    }
+
     public Long getId() {
         return id;
     }

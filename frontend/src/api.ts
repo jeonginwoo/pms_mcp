@@ -13,8 +13,10 @@
  * 헤더를 신뢰하는 상태(false)는 개발용이며 그대로 노출하면 안 된다.
  */
 import type {
+  AccountView,
   AssignmentView,
   AuditRecord,
+  ChangePasswordBody,
   CommentBody,
   CommentView,
   ContractBody,
@@ -51,6 +53,7 @@ import type {
   ProjectSummary,
   RenameOrgUnitBody,
   SiteBody,
+  UpdateProfileBody,
   SiteView,
   TokenResponse,
   UpdateAssignmentBody,
@@ -424,6 +427,18 @@ export const api = {
   updateNotifPrefs: (enabled: Record<NotificationType, boolean>) =>
     request<NotificationPreferences>('/api/me/notif-prefs',
       { method: 'PUT', body: JSON.stringify({ enabled }) }),
+
+  /** 내 계정 상세 (H1-1) — 이름은 person, 연락처는 auth에서 온다(서버가 합쳐 준다). */
+  myAccount: () => request<AccountView>('/api/me/account'),
+  /** 내 프로필 수정 (H1-2) — 남이 쓰는 email이면 409 DUPLICATE_EMAIL. */
+  updateProfile: (body: UpdateProfileBody) =>
+    request<AccountView>('/api/me/profile', { method: 'PUT', body: JSON.stringify(body) }),
+  /**
+   * 비밀번호 변경 (H1-3) — 현재 비밀번호 불일치와 새 비밀번호 형식 오류가 **같은 400**이다.
+   * 화면도 그 둘을 구분해 보여 주지 않는다: 갈라 주면 "현재 비밀번호는 맞았다"가 샌다.
+   */
+  changePassword: (body: ChangePasswordBody) =>
+    request<null>('/api/me/password', { method: 'PUT', body: JSON.stringify(body) }),
 
   projects: () =>
     request<PageResponse<ProjectSummary>>(

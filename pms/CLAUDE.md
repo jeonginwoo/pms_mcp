@@ -88,7 +88,7 @@ log). `verify.sh`/CI only look at `pms/gradlew`, so `pms-old/` is not verified.
   adopted 2026-08-22). Every sub-package (`controller/`, `service/`, `repository/`)
   is internal, so the files sitting *directly* in a module directory **are** the
   contract it offers, and that list is the boundary — measured 2026-08-24:
-  `person` 12 · `project` 13 · `audit` 6 · `maintenance` 7 · `resource` 5 ·
+  `person` 13 · `project` 13 · `audit` 6 · `maintenance` 7 · `resource` 5 ·
   `notification` 5 (re-measured 2026-08-24 — four of the six numbers had gone stale
   while the file still said "measured"; `ls <module>/*.java` is the measurement).
   `auth` and `mcp` have empty roots: nothing of theirs crosses
@@ -297,6 +297,11 @@ POST /api/auth/refresh        rotate the pair
 GET  /api/auth/jwks           public keys (the /mcp decoder consumes this)
 
 GET  /api/me                  caller identity + group flags — the front-end gates UI on this
+GET  /api/me/account          name (person) + email·phone (auth), joined over AccountPort (H1-1)
+PUT  /api/me/profile          name + email + phone in **one transaction** (H1-2). Duplicate check
+                              excludes me — otherwise changing only the phone 409s on my own email
+PUT  /api/me/password         current + new (≥8). Lives in **auth**, not person: password never
+                              crosses a module boundary (H1-3)
 GET  /api/people              visible people (43 seeded, system account hidden) — returns
                               `PersonSummary`: display names **plus** orgUnitId/gradeId/
                               groupId/version, because §7 has no person-detail route and this
@@ -390,6 +395,31 @@ the port, for the audit actor and the event's `handedOverBy`, never for a judgem
 
 No assignment list route: the project detail already carries them (A3-3).
 Not routed yet, on purpose: A8 (`/permissions`) and `?phase=`.
+
+
+## `/api/me/*` belongs to whoever owns the data (settled 2026-08-25, EPIC H)
+
+Four routes hang off `/api/me`, and they live in **three different modules**:
+
+| route | module | why |
+|---|---|---|
+| `GET /api/me` · `GET /api/me/account` · `PUT /api/me/profile` | person | the name is person's; contact comes over `AccountPort` |
+| `PUT /api/me/password` | auth | verifying the current password and hashing the new one are auth's, start to finish |
+| `GET`·`PUT /api/me/notif-prefs` | notification | the mutes table is notification's (H1-4, the first case of this rule) |
+
+- **The password never crosses a boundary.** Widening `AccountPort` to carry it would make
+  person know about hashes and current-password checks for no reason. The controller sits in
+  auth and that is the whole story.
+- **Profile is the one that spans two modules** (name in `people`, email/phone in `users`), so
+  it goes through the port and both writes share one transaction.
+- **Duplicate-email has two questions, not one.** Registration (E2-1) asks "does anyone use
+  this?"; profile edit (H1-2) asks "does anyone *else*?". Using the first for the second means
+  a user changing only their phone number gets a 409 on their own email — hence
+  `emailTakenByOther`.
+- **`Person.rename` exists so profile edit cannot touch org/grade/group.** Reusing
+  `update(name, orgUnitId, gradeId, groupId)` (the E2-2 admin path) would open a route for
+  someone to change their own permission group; passing today's values back is no safer,
+  because a new field would then be silently reset by a profile save.
 
 ## Optimistic locking on writes (read this before adding a write path)
 

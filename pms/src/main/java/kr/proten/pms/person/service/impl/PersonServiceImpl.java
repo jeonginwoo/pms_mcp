@@ -8,6 +8,7 @@ import kr.proten.pms.common.exception.NotImplementedException;
 import kr.proten.pms.common.exception.UnprocessableException;
 import java.util.Map;
 import kr.proten.pms.common.exception.ValidationException;
+import kr.proten.pms.person.AccountContact;
 import kr.proten.pms.person.AccountPort;
 import kr.proten.pms.person.OrgVisibility;
 import kr.proten.pms.person.OrgVisibilityService;
@@ -18,11 +19,13 @@ import kr.proten.pms.person.repository.PermissionGroupRepository;
 import kr.proten.pms.person.repository.PersonRepository;
 import kr.proten.pms.person.service.PersonService;
 import kr.proten.pms.person.AssignmentCountPort;
+import kr.proten.pms.person.service.dto.AccountView;
 import kr.proten.pms.person.service.dto.CreatePersonCommand;
 import kr.proten.pms.person.service.dto.MeView;
 import kr.proten.pms.person.service.dto.PersonSummary;
 import kr.proten.pms.person.service.dto.OrgUnitMoveResult;
 import kr.proten.pms.person.service.dto.UpdatePersonCommand;
+import kr.proten.pms.person.service.dto.UpdateProfileCommand;
 import kr.proten.pms.person.service.entity.PermissionGroup;
 import kr.proten.pms.person.service.entity.Person;
 import kr.proten.pms.person.service.impl.requester.Requester;
@@ -142,6 +145,75 @@ public class PersonServiceImpl implements PersonService {
                 group.isManageOrg());
     }
 
+    /** 내 계정 상세 (AC H1-1) — 연락처는 auth가 갖고 있어 포트로 받아 온다. */
+    @Override
+    @Transactional(readOnly = true)
+    public AccountView myAccount(long callerPersonId) {
+        Person me = personRepository.findByIdAndActiveTrue(callerPersonId)
+                .orElseThrow(NotFoundException::new);
+        AccountContact contact = accountPort.contactOf(callerPersonId)
+                // 실측상 44명 전원이 계정을 갖는다(시드가 시스템 계정에도 넣는다) —
+                // 빈 값은 정상 상태가 아니라 데이터 이상이다. 다만 <b>조회</b>는 그것
+                // 때문에 화면을 막지 않는다: 쓰기(updateContact)가 404로 거절한다
+                .orElse(new AccountContact(null, null));
+
+        return new AccountView(me.getId(), me.getName(), contact.email(), contact.phone());
+    }
+
+    /**
+     * 내 프로필 수정 (AC H1-2) — 이름은 person, email·phone은 auth다.
+     *
+     * <p>순서가 <b>중복 검사 → 변경</b>인 것은 다른 쓰기와 같다: 409를 받을 요청이
+     * 이름을 먼저 바꿔 두면 롤백에 기대게 된다. 포트 구현이 호출자의 트랜잭션에
+     * 참여하므로 둘은 함께 커밋되거나 함께 사라진다.
+     */
+    @Override
+    @Transactional
+    public AccountView updateProfile(long callerPersonId, UpdateProfileCommand command) {
+        Person me = personRepository.findByIdAndActiveTrue(callerPersonId)
+                .orElseThrow(NotFoundException::new);
+        String name = required(command.name(), "이름은 필수입니다", "name");
+        String email = required(command.email(), "이메일은 필수입니다", "email");
+        String phone = blankToNull(command.phone());
+
+        if (accountPort.emailTakenByOther(callerPersonId, email)) {
+            throw new ConflictException(ErrorCode.DUPLICATE_EMAIL, "이미 사용 중인 이메일입니다");
+        }
+
+        // 연락처는 auth 행이라 person 스냅샷에 안 들어온다 — 따로 뜬다
+        AccountContact contactBefore = accountPort.contactOf(callerPersonId)
+                .orElse(new AccountContact(null, null));
+        AccountContact contactAfter = new AccountContact(email, phone);
+        Map<String, Object> before = personAuditRecorder.snapshot(me);
+        me.rename(name);
+        Person saved = personRepository.saveAndFlush(me);
+        accountPort.updateContact(callerPersonId, email, phone);
+        personAuditRecorder.personChanged(callerPersonId, saved, before);
+        // 이름이 안 바뀌어도 email만 바뀌면 여기서 행이 남는다 — 로그인 ID
+        // 변경이 흔적 없이 일어나지 않게 한다(2026-08-25 리뷰)
+        personAuditRecorder.contactChanged(
+                callerPersonId, saved, contactBefore, contactAfter);
+
+        return myAccountOf(saved, email, phone);
+    }
+
+    private static AccountView myAccountOf(Person person, String email, String phone) {
+        return new AccountView(person.getId(), person.getName(), email, phone);
+    }
+
+    private static String required(String value, String message, String field) {
+        if (value == null || value.isBlank()) {
+            throw new ValidationException(message, field);
+        }
+
+        return value.trim();
+    }
+
+    /** 빈 문자열은 "없음"이다 — 전화번호는 없는 것이 정상 상태다. */
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
+
     /**
      * 인원 + 로그인 계정을 한 트랜잭션에서 만든다 (AC E2-1).
      * 둘을 쪼개지 않는 이유: 계정 없는 인원은 로그인할 수 없고, 인원 없는 계정은
@@ -205,7 +277,6 @@ public class PersonServiceImpl implements PersonService {
         // 다시 저장하려다 409를 받는다(project·maintenance가 같은 이유로 saveAndFlush)
         Person saved = personRepository.saveAndFlush(target);
         personAuditRecorder.personChanged(callerPersonId, saved, before);
-
         return personRefFactory.toSummary(saved);
     }
 
@@ -238,7 +309,6 @@ public class PersonServiceImpl implements PersonService {
         Person saved = personRepository.saveAndFlush(target);
         // 소속 이동도 UPDATE다 — STATE_CHANGE는 §5 프로젝트 상태 전이 전용(v2.1 정리)
         personAuditRecorder.personChanged(callerPersonId, saved, before);
-
         return OrgUnitMoveResult.of(personRefFactory.toSummary(saved), activeAssignments);
     }
 

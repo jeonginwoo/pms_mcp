@@ -636,3 +636,24 @@ export interface HandoverSiteBody {
   name: string
   engineerId: number
 }
+
+/** GET /api/me/account (H1-1) — 수정 폼을 되채우는 값. 알림 설정은 별 라우트다(H1-4) */
+export interface AccountView {
+  id: number
+  name: string
+  email: string | null
+  phone: string | null
+}
+
+/** PUT /api/me/profile (H1-2) — 소속·직급·권한 그룹 칸이 없는 것은 의도다(E2-2의 몫) */
+export interface UpdateProfileBody {
+  name: string
+  email: string
+  phone?: string | null
+}
+
+/** PUT /api/me/password (H1-3) — 불일치·형식 오류가 같은 400이다 */
+export interface ChangePasswordBody {
+  current: string
+  newPassword: string
+}

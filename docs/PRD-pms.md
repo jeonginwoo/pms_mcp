@@ -3,7 +3,7 @@
 | 항목 | 내용 |
 |------|------|
 | 문서 | PMS 본체 구현명세 (코딩 에이전트용) · **소유: pms 트랙** |
-| 버전 / 상태 | v2.22 · **확정** (게이트 P 통과 2026-08-09. v2.6 = 가동률 의미 재정의 + 시드 정책 완결(2026-08-10 — MCP 담당 확인 완료). v2.7 = M-1 카탈로그 공백 2건 해소의 PMS 측 반영(2026-08-11 결정 기록, 2026-08-12 MCP 담당 확인 완료 — 양측 합의 성립·host 반영 완료). 이슈→계약 링크 기준 = 사이트명 포함 확정(2026-08-14 — 부록 B·결정 기록). v2.8 = 재구축·골격 확장 이후의 문서↔코드 정합(2026-08-23 — 결정 기록). v2.9 = 모듈 간 계약 2종 신설(가동률 분자·분모) + B2-1 종료일 규칙(2026-08-23 — MCP 담당 확인 요청). v2.10 = 프로젝트 시드 적재 + 인원 정본 확정(`seed_org_proten.sql`). v2.11 = 감사 조회 2뷰 실구현(G1-3·G2-2). v2.12 = maintenance 모듈 신설(EPIC D 조회분) + 시드↔모델 괴리 결정 7건. v2.13 = 도메인 루트 계약 3종 승격(안 ② 이행) + 조직 id·시드 원본 id(2026-08-23 결정 기록). v2.14 = `resource` 루트 계약 승격 + 승격 소유자 결정 선행(2026-08-24). v2.15 = 부록 B 재앵커 + 이슈 작성자 교정(2026-08-24). v2.16 = EPIC E 쓰기 5종 + §4 id 발급 규칙 승격(2026-08-24). v2.17 = 알림 이벤트 방향 확정(§3·§8) + EPIC F F1 전량 + H1-4 설정 단위 확정(Flyway V12) — 2026-08-24. **v2.18 = 사용자 검수 반영 — US-E3에 노드 이동 AC 신설(E3-5·E3-6) · A6-3 역할 지정 실구현 표기 · 조직 재편(노드 17→18)과 직급 2종 개명(Flyway V13·V14) · 부록 A 조직/배정 화면 문구 · §12에 미구현 기획 결정 4건 등재 — 2026-08-24, 공용 결정 기록 2행. **v2.19 = EPIC D 쓰기 D3 실구현(이슈 등록·처리·append-only 코멘트) + `NotificationType` 6종화(`ISSUE_ASSIGNED`) + §12 notification 루트 계약 판정 종결·재배정 알림 공백 등재 — 2026-08-24. **v2.20 = EPIC D 완결(D1 이관 — 역포트 `project.HandoverPort`, 한 트랜잭션, D1-2 문면 `INVALID_TRANSITION`으로 정정) + §12에 `ProjectCompleted` 미발행 등재 — 2026-08-25. **v2.21 = EPIC F 스케줄러(F2·F3) + §8에 `ProjectReminderDue` 2종 신설 + `ProjectCompleted`·`ProjectReopened` 배선(F3-3 회수가 실제로 돈다) + Flyway V15 — 2026-08-25. **v2.22 = F1-4 SSE로 EPIC F 완결 — 쿼리 토큰은 스트림 라우트 하나로 좁히고 Nginx 마스킹을 배포 요구로 등재 — 2026-08-25** |
+| 버전 / 상태 | v2.23 · **확정** (게이트 P 통과 2026-08-09. v2.6 = 가동률 의미 재정의 + 시드 정책 완결(2026-08-10 — MCP 담당 확인 완료). v2.7 = M-1 카탈로그 공백 2건 해소의 PMS 측 반영(2026-08-11 결정 기록, 2026-08-12 MCP 담당 확인 완료 — 양측 합의 성립·host 반영 완료). 이슈→계약 링크 기준 = 사이트명 포함 확정(2026-08-14 — 부록 B·결정 기록). v2.8 = 재구축·골격 확장 이후의 문서↔코드 정합(2026-08-23 — 결정 기록). v2.9 = 모듈 간 계약 2종 신설(가동률 분자·분모) + B2-1 종료일 규칙(2026-08-23 — MCP 담당 확인 요청). v2.10 = 프로젝트 시드 적재 + 인원 정본 확정(`seed_org_proten.sql`). v2.11 = 감사 조회 2뷰 실구현(G1-3·G2-2). v2.12 = maintenance 모듈 신설(EPIC D 조회분) + 시드↔모델 괴리 결정 7건. v2.13 = 도메인 루트 계약 3종 승격(안 ② 이행) + 조직 id·시드 원본 id(2026-08-23 결정 기록). v2.14 = `resource` 루트 계약 승격 + 승격 소유자 결정 선행(2026-08-24). v2.15 = 부록 B 재앵커 + 이슈 작성자 교정(2026-08-24). v2.16 = EPIC E 쓰기 5종 + §4 id 발급 규칙 승격(2026-08-24). v2.17 = 알림 이벤트 방향 확정(§3·§8) + EPIC F F1 전량 + H1-4 설정 단위 확정(Flyway V12) — 2026-08-24. **v2.18 = 사용자 검수 반영 — US-E3에 노드 이동 AC 신설(E3-5·E3-6) · A6-3 역할 지정 실구현 표기 · 조직 재편(노드 17→18)과 직급 2종 개명(Flyway V13·V14) · 부록 A 조직/배정 화면 문구 · §12에 미구현 기획 결정 4건 등재 — 2026-08-24, 공용 결정 기록 2행. **v2.19 = EPIC D 쓰기 D3 실구현(이슈 등록·처리·append-only 코멘트) + `NotificationType` 6종화(`ISSUE_ASSIGNED`) + §12 notification 루트 계약 판정 종결·재배정 알림 공백 등재 — 2026-08-24. **v2.20 = EPIC D 완결(D1 이관 — 역포트 `project.HandoverPort`, 한 트랜잭션, D1-2 문면 `INVALID_TRANSITION`으로 정정) + §12에 `ProjectCompleted` 미발행 등재 — 2026-08-25. **v2.21 = EPIC F 스케줄러(F2·F3) + §8에 `ProjectReminderDue` 2종 신설 + `ProjectCompleted`·`ProjectReopened` 배선(F3-3 회수가 실제로 돈다) + Flyway V15 — 2026-08-25. **v2.22 = F1-4 SSE로 EPIC F 완결 — 쿼리 토큰은 스트림 라우트 하나로 좁히고 Nginx 마스킹을 배포 요구로 등재 — 2026-08-25. **v2.23 = EPIC H 완결(`/api/me/account`·H1-2·H1-3) + `/api/me/*`는 데이터를 가진 모듈이 갖는다는 규칙 명시화 — 2026-08-25** |
 | 작성일 | 2026-08-02 — 구 "PMS — AI 구현용 PRD" v1.0(2026-06-21, 전사본 `reference/PMS_구현용_PRD_v1.0.md`) 현행화 이관 |
 | 범위 | 프로텐 전사 1차 |
 | 규모 | 약 40명(시드 기준 44명) · 2인 개발(MCP 담당 + PMS 담당) |
@@ -156,6 +156,17 @@ B2-1 자연어 검증(2026-08-10)이 실증한 도구 카탈로그 공백 2건�
   예외 문구에도 토큰이 들어가지 않는다.
 - 부수: 재연결 복구는 표준 `Last-Event-ID`이고 **재생 상한 50건**이다(오래 꺼 둔
   브라우저는 재생보다 목록 재조회가 맞다).
+
+### v2.23 반영 (2026-08-25 — EPIC H 완결, PROGRESS 결정 기록)
+
+- **§10 EPIC H 전량 실구현** — `/api/me/account`·H1-2·H1-3이 마지막 칸이었다.
+- **`/api/me/*`의 소유 규칙을 명시화**: 그 경로는 **데이터를 가진 모듈**이 갖는다.
+  비밀번호는 auth가 통째로 가져 **모듈 경계를 아예 넘지 않는다** — `AccountPort`를
+  넓혔다면 person이 해시·현재 비밀번호 확인을 알게 됐을 것이다. 알림 설정이
+  notification에 있는 것(H1-4)이 이미 그 규칙이었다.
+- **§3 모듈 간 계약 확장**: `AccountPort`에 연락처 조회·수정과 **나를 뺀 중복 검사**가
+  붙었다. `emailTaken`(등록용)을 수정에 쓰면 전화번호만 바꾸려는 사람이 자기 email
+  때문에 409를 받는다.
 
 ## 0. AI 에이전트에게 주는 지시
 
@@ -454,7 +465,7 @@ B2-1 자연어 검증(2026-08-10)이 실증한 도구 카탈로그 공백 2건�
 ### EPIC H · 내 계정 (2026-08-02 채택 — 프로토타입 기구현)
 
 **US-H1 로그인 사용자로서 내 계정을 관리한다**
-- H1-1 When `GET /api/me` Then 본인 personId·이름·소속 조직(팀·부문 — OrgUnit 경로 파생)·**권한 그룹명**(2026-08-09 ⑦ — 구 orgRole 대체. MCP `whoami` 응답 동일 변경, PRD-host·eval 반영은 host 트랙 소유) — MCP `whoami` 도구(PRD-host FR-AI-16)와 동일 서비스. `GET /api/me/account`는 계정 상세(email·phone·notifPrefs — 프로토타입 내 계정 모달 대응)
+- H1-1 When `GET /api/me` Then 본인 personId·이름·소속 조직(팀·부문 — OrgUnit 경로 파생)·**권한 그룹명**(2026-08-09 ⑦ — 구 orgRole 대체. MCP `whoami` 응답 동일 변경, PRD-host·eval 반영은 host 트랙 소유) — MCP `whoami` 도구(PRD-host FR-AI-16)와 동일 서비스. `GET /api/me/account`는 계정 상세(**email·phone** — 프로토타입 내 계정 모달 대응). **2026-08-25 정정**: 구 문면은 `notifPrefs`도 담는다고 적었지만 §7이 `GET /api/me/notif-prefs`를 따로 뒀고(H1-4) 화면도 그 라우트를 쓴다 — 얹으면 같은 값의 원천이 둘이 된다
 - H1-2 When `PUT /api/me/profile {name, email, phone}` Then `200` + AuditLog UPDATE. email은 로그인 ID — 타 사용자와 중복 시 `409 DUPLICATE_EMAIL`
 - H1-3 Given 현재 비밀번호 일치·새 비밀번호 8자 이상 When `PUT /api/me/password {current, newPassword}` Then `200`(해시 저장) / 불일치·형식 오류 Then `400`
 - H1-4 When `GET`·`PUT /api/me/notif-prefs {enabled: {유형: bool}}` Then `200` — **설정 단위는 `NotificationType` 5종**(ASSIGNED·OVERBOOKED·PROJECT_COMPLETED·DEADLINE_NEAR·COMPLETION_OVERDUE)이고, 알림 적재·푸시 시 수신자 설정 필터로 적용된다(F1-5). **2026-08-24 정정**: 구 문구는 `{progress, project, org, weekly}` 네 칸이었는데 알림 유형이 정해지기 전에 쓰인 것이다 — 넷 중 `project` 말고는 대응하는 알림이 없고 `weekly`는 유형이 아니라 주기다. `NotificationType`의 javadoc이 이미 "수신자의 알림 설정이 켜고 끄는 단위"라고 선언하고 있어 그쪽에 맞췄다. 저장은 **끈 것만**(`notification_mutes`, V12 — 행이 없으면 켜짐)이고 소유는 notification이다(auth `User`에 붙이면 필터를 거는 쪽이 auth를 읽게 된다)
@@ -550,7 +561,7 @@ POST /api/chat    POST /api/chat/feedback        # chat BFF — AI 호스트 프
 | **E 조직·사용자** | **전량 실구현**(2026-08-24) — E1-1 소속 이동(+E1-2 경고) · E2-1 등록 · E2-2 수정 · E2-3 비활성 · E2-4 플래그 403 · E2-5 시스템 계정 422 · E3-1 생성 · E3-2 개명 · E3-3 `IN_USE` 삭제 거절 · E3-4 subtree 가시성 · **E3-5 이동 · E3-6 순환·root 거절**(2026-08-24 신설) · **E4 직급 3종** · **E5 권한 그룹 3종** | 없다(화면도 붙었다 — 2026-08-24). 부수 2건: ①직급·권한 그룹 id를 **시퀀스**로 발급(Flyway V11) ②**낙관적 락 결함 수정**(2026-08-24) — E2-2·E4-2·E5-2가 요청의 `version`을 받아만 두고 검사하지 않아 마지막 쓰기가 조용히 이기고 있었고, 응답의 version도 flush 전 값이었다. 목록 반환형이 `ReferenceItem` → `GradeDetail`·`PermissionGroupDetail`(+`memberCount`)로 넓어졌다 — §7에 상세 라우트가 없어 목록이 곧 관리 화면의 원천이다 — 하드 삭제가 있는 명시 id 참조 데이터의 규칙(부록 B)을 따랐다 |
 | **F 알림** | **전량 실구현**(2026-08-25 — EPIC F가 닫혔다). F1-1 과부하 · F1-2 멱등 · F1-3 목록·읽음 · **F1-4 SSE** · F1-5 설정 필터 · F2 마감 임박 · F3 완료 지연·회수. 유형 6종. **스트림은 `?access_token=` 쿼리로만 인증한다**(§7 — EventSource가 헤더를 못 싣는다). 그 구멍을 앱 전체로 퍼뜨리지 않으려고 `StreamCallerResolver`를 `notification/controller/stream/`에 따로 뒀다 — common의 `CallerIdentityResolver`를 넓혔다면 **모든 라우트**가 쿼리 토큰으로 불릴 수 있게 되고 토큰이 액세스 로그에 남는 자리가 앱 전체가 된다. 이미터는 웹 타입이라 `controller`에만 둘 수 있어(`LayerRuleTest`) 서비스는 **모듈 내부 이벤트**(`NotificationStored`)로 알리고 컨트롤러가 밀어낸다. 재연결·재조회는 **화면이 한다**(연결될 때마다 목록 재조회 — 서버 재생은 리뷰에서 결함 3건이 나와 제거했다) · `X-Accel-Buffering: no` | 없다. **배포 요구 1건**: Nginx 로그 포맷에서 `access_token` **마스킹 필수**(구현 노트 §6) — 앱은 스스로 남기지 않는 것까지만 책임진다 |
 | **G 감사** | 실구현 — G1-1 자동 기록 · G1-2 append-only 구조 · G2-1 `projectId` 채움 · **G1-3 `/api/audit`** · **G2-2 `/projects/{id}/audit`**(2026-08-23) | 없음. 두 뷰는 같은 테이블의 필터 차이이고 정렬은 호출자가 뒤집을 수 없다(이력은 시간 순서가 의미의 일부) |
-| **H 내 계정** | 부분 — H1-1 `GET /api/me` · **H1-4 notif-prefs**(2026-08-24 — 설정 단위를 `NotificationType`으로 확정. 화면은 알림 벨의 설정 모달이고 유형 전체를 서버 응답에서 그리므로 D3의 6번째 유형이 자동으로 붙었다) | `GET /api/me/account` · H1-2 profile · H1-3 password |
+| **H 내 계정** | **전량 실구현**(2026-08-25 — EPIC H가 닫혔다). H1-1 `GET /api/me` + **`GET /api/me/account`**(이름은 person, 연락처는 auth — 포트로 합친다) · **H1-2 `PUT /api/me/profile`**(이름·email·phone이 **한 트랜잭션** · 나를 뺀 중복 검사 · 감사 UPDATE) · **H1-3 `PUT /api/me/password`**(현재 확인 · 8자 이상 · 해시 저장) · H1-4 notif-prefs. **`/api/me/*`는 데이터를 가진 모듈이 갖는다**: 비밀번호는 auth가 통째로 가져 **모듈 경계를 아예 넘지 않고**(포트를 넓혔다면 person이 알 이유 없는 것을 알게 된다), 알림 설정은 notification이 갖는 선례를 따랐다. 프로필이 person인 것은 이름이 person의 것이기 때문이다. 부수: `Person.rename` 신설 — `update`(E2-2 관리자 경로)를 재사용하면 **자기 권한 그룹을 스스로 바꾸는 길**이 열린다 | 없다 |
 
 **횡단 기반 (EPIC 밖)**
 

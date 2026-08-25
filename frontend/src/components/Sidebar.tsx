@@ -4,7 +4,9 @@
  * 2026-08-24: 가동률(EPIC C)·유지보수 조회(EPIC D 조회분)가 들어왔다. 알림은 백엔드가
  * 아직 501 골격이라 항목이 없다.
  */
+import { useState } from 'react'
 import { useStore } from '../store'
+import MyAccountModal from './MyAccountModal'
 import type { Route } from '../store'
 
 const ICONS: Record<Route, string> = {
@@ -32,6 +34,7 @@ const NAV: { key: Route; label: string }[] = [
 
 export default function Sidebar() {
   const { route, go, me, logout, sessionMode } = useStore()
+  const [accountOpen, setAccountOpen] = useState(false)
 
   return (
     <aside className="sidebar">
@@ -73,6 +76,13 @@ export default function Sidebar() {
             <div className="muted" style={{ fontSize: 11.5 }}>{me?.orgUnit ?? ''}</div>
           </div>
         </div>
+        <button className="profile-item" onClick={() => setAccountOpen(true)}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }}>
+            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" />
+          </svg>
+          내 계정
+        </button>
         <button className="profile-item danger" onClick={logout}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
             strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }}>
@@ -81,6 +91,8 @@ export default function Sidebar() {
           {sessionMode === 'caller' ? '화자 해제' : '로그아웃'}
         </button>
       </div>
+
+      {accountOpen && <MyAccountModal onClose={() => setAccountOpen(false)} />}
     </aside>
   )
 }
