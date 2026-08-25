@@ -166,8 +166,11 @@ disappears, and it now has.
   (its `ContractWriteGuard` would stop a PM without the 계약-관리 flag from handing over
   their own project), and the port needs the **caller** — an audit actor guessed from the
   site engineer puts someone who did nothing into an append-only log.
-- project AC **A8** (per-project permission matrix) — the last open item in this app.
-  The `?phase=` list filter landed 2026-08-25 (see the ProjectPhase note below).
+**Nothing from the M1 pms track is left.** A8 (per-project permission matrix) landed
+2026-08-26 and closed EPIC A; `?phase=` landed 2026-08-25. What remains in this app is the
+registered-gap list in PRD-pms §12 (sales-stage PM removal, person deletion, `billable`
+toggle, per-node project counts, the notification root-contract move), none of which is a
+ROADMAP checklist item yet.
 
 ## Ownership inside this app
 
@@ -357,6 +360,14 @@ PUT  /api/projects/{id}/pm          PM handover, creates the assignment if neede
 DELETE /api/projects/{id}           200 {success:true}, soft delete — PM or the "프로젝트 생성" flag (A4)
 POST /api/projects/{id}/complete   {version} — needs 진행중 + 100%   (A7-1)
 POST /api/projects/{id}/reopen     {version} — 완료 → 진행중, progress=90 (A7-3)
+GET  /api/projects/{id}/permissions   role×action matrix: merged value + `editable` per cell
+                                   (A8-1). **Read is visibility-wide** — the screen has to draw
+                                   the locks; only the write is PM-only
+PUT  /api/projects/{id}/permissions   {overrides[], version} — **full replacement** (A8-2).
+                                   `overrides: []` restores all defaults, which is why there is
+                                   no separate restore route. PM only (A8-3) · a fixed cell
+                                   anywhere in the list 422s and changes nothing (A8-4) ·
+                                   409 on stale `Project.version` (A8-7)
 POST /api/projects/{id}/handover   201 — {계약 필수 정보 + sites[1..n], version} (D1-1).
                                    Contract+Site creation and 완료→유지보수중 are **one
                                    transaction**; 409/400 leave the project 완료 and create no
@@ -401,7 +412,7 @@ stop a PM without the 계약-관리 flag from handing over their own project. Th
 the port, for the audit actor and the event's `handedOverBy`, never for a judgement.
 
 No assignment list route: the project detail already carries them (A3-3).
-Not routed yet, on purpose: A8 (`/permissions`).
+**Every EPIC-A route now exists** — the last one (`/permissions`) landed 2026-08-26.
 
 
 ## `/api/me/*` belongs to whoever owns the data (settled 2026-08-25, EPIC H)
@@ -613,12 +624,36 @@ the single-project response goes status → phase, the list filter goes phase �
 
 ## Project permissions
 
-`ProjectActionPermission` holds the §4-2 default matrix in one place —
-`EDIT_INFO` = PM·PL, `ASSIGN` = PM, `PROGRESS`/`COMPLETE_REOPEN` = every assigned
-role. Delete is separate (`requireDelete`): PM **or** the "프로젝트 생성" flag
-(2026-08-22 decision extending §4-2 fixed row). The "전 프로젝트 관리" flag substitution (admins count as PM everywhere) is
-already handled by `ProjectRoleResolver`. When US-A8 arrives, merge the per-project
-overrides here — call sites stay unchanged.
+`ProjectActionPermission` is the single judgement point. Delete is separate
+(`requireDelete`): PM **or** the "프로젝트 생성" flag (2026-08-22 decision extending the §4-2
+fixed row). The "전 프로젝트 관리" flag substitution (admins count as PM everywhere) is already
+handled by `ProjectRoleResolver`.
+
+**Since US-A8 (2026-08-26) the table does not live in that class.** Three pieces, each read
+from more than one direction — that is the whole reason they are separate:
+
+- `ProjectPermissionRules` (entity pkg) — the §4-2 **defaults** and the **fixed-cell rule**.
+  Editable cells are {PL, 참여자} × {EDIT_INFO, ASSIGN, PROGRESS, COMPLETE_REOPEN}, **eight**.
+  PM's whole column and the `HANDOVER` row are fixed (§4-2: the role that edits the matrix must
+  not be able to lock itself out, and handover is the irreversible-action safeguard). 조회/삭제
+  are fixed too but are not `ProjectAction` values at all — visibility owns one, `requireDelete`
+  the other.
+- `EffectiveProjectPermissions` (entity pkg) — the **merge**, defaults + stored overrides.
+  It exists because the merge has two readers: the write judgement and the A8-1 response. Split
+  them and the screen draws a cell as allowed while the server 403s it.
+- `ProjectPermissionMatrixResolver` (impl) — loads the overrides **once** and hands over the
+  value object. Do not re-query per cell; a matrix is 15 cells.
+
+Two things that are easy to get wrong here:
+
+- **Only deviations are stored.** "No row = the §4-2 default" is the invariant (A8-2). Writing
+  defaults as rows means a later change to §4-2 leaves stored rows holding the old default.
+- **The lock query must run before the visibility check.** The matrix lives in its own table, so
+  `projects` is never dirtied and the optimistic lock would guard nothing — hence
+  `findWithVersionBumpById` (`OPTIMISTIC_FORCE_INCREMENT`). But if `requireVisible` loads the
+  project first, the lock query meets an **already-managed instance** and the lock mode is not
+  applied: measured 2026-08-26, version stayed 0 across saves. Reordering is safe — a missing
+  project 404s at the lock query, an invisible one at the very next line.
 
 ## Workflow
 

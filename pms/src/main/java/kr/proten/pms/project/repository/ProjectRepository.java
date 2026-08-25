@@ -10,6 +10,7 @@ import kr.proten.pms.project.service.entity.Project;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -81,6 +82,32 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     Page<Project> findByDeletedFalse(Pageable pageable);
 
     Page<Project> findByIdInAndDeletedFalse(Collection<Long> ids, Pageable pageable);
+
+    /**
+     * 프로젝트의 {@code @Version}을 <b>조건부로 올린다</b> — 원자적 compare-and-set
+     * (US-A8 저장 · AC A8-7). 바뀐 행 수를 돌려주므로 {@code 0}이 곧 version 불일치다.
+     *
+     * <p><b>왜 필요한가</b>: 권한 매트릭스는 별도 표(`project_permission_overrides`)에
+     * 저장돼 `projects` 행이 더러워지지 않는다. 그러면 낙관적 락이 <b>아무것도 막지
+     * 못한다</b> — 두 PM이 같은 version으로 각자 저장해 나중 것이 상대의 매트릭스를
+     * 통째로 덮고(전체 교체다) 아무 경고도 없다. 2026-08-24에 세 라우트에서 겪은
+     * "version을 받아 놓고 비교하지 않아 마지막 쓰기가 조용히 이긴" 그 모양이다.
+     *
+     * <p><b>왜 락 모드가 아닌가</b>(2026-08-26 실측): {@code OPTIMISTIC_FORCE_INCREMENT}는
+     * 증가를 <b>커밋 직전</b>에 미루므로 이 트랜잭션 안에서는 엔티티의 version이 옛 값
+     * 그대로다. 그것을 응답에 실으면 클라이언트가 <b>위반한 적 없는 락에 걸려 409</b>를
+     * 받는다(§7 왕복 규칙 위반 — `pms/CLAUDE.md` "Return the flushed version").
+     * 게다가 그 방식은 가시성 검사가 엔티티를 먼저 영속성 컨텍스트에 올리면 락 모드가
+     * 아예 적용되지 않는 순서 의존까지 있었다. 여기서는 {@code where version = :expected}가
+     * 검사이자 증가라 <b>새 version이 언제나 {@code expected + 1}</b>로 결정된다.
+     *
+     * <p>벌크 갱신이라 영속성 컨텍스트의 {@code Project}는 낡은 version을 들고 남는다 —
+     * 호출자는 그 엔티티의 version을 읽지 말고 {@code expected + 1}을 쓴다.
+     */
+    @Modifying
+    @Query("update Project p set p.version = p.version + 1 "
+            + "where p.id = :id and p.version = :expected")
+    int bumpVersion(@Param("id") Long id, @Param("expected") long expected);
 
     /**
      * phase 탭 필터 (AC A3-1 · §7 `?phase=`) — 갈래 둘은 위와 같고 상태 집합만 더 건다.

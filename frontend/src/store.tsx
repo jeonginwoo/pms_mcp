@@ -51,6 +51,7 @@ import type {
   PersonSummary,
   ProgressUpdateResult,
   ProjectDetail,
+  ProjectPermissionMatrix,
   ProjectPhase,
   ProjectRole,
   ProjectSummary,
@@ -58,6 +59,7 @@ import type {
   UpdateProfileBody,
   SiteView,
   UpdateAssignmentBody,
+  UpdatePermissionsBody,
   UpdatePersonBody,
   UtilizationQuery,
   UtilizationView,
@@ -94,6 +96,17 @@ interface Store {
   totalProjects: number
   route: Route
   detail: ProjectDetail | null
+  /**
+   * 열려 있는 프로젝트의 권한 매트릭스 (US-A8) — 상세와 함께 받는다.
+   *
+   * 버튼 노출 판정이 이것을 쓴다: `permissions.ts`가 §4-2 기본값을 그대로 들고 있으면
+   * override가 걸린 프로젝트에서 **끈 기능의 버튼이 그대로 보이고** 눌러야 403을 만난다.
+   * 병합은 서버가 하고 화면은 그 답을 읽기만 한다.
+   */
+  projectPermissions: ProjectPermissionMatrix | null
+  /** 매트릭스 저장 (A8-2) — PM만. 전체 교체이며 빈 목록이 전체 기본값 복원이다 */
+  savePermissions: (overrides: UpdatePermissionsBody['overrides'])
+    => Promise<Result<ProjectPermissionMatrix>>
   /** 열려 있는 유지보수 계약 — 프로젝트 상세와 같은 자리다(라우트 안의 상세 갈래) */
   contract: ContractDetail | null
   toast: string | null
@@ -193,7 +206,9 @@ interface Store {
    * 알림은 **부팅 때 한 번 읽고 그 뒤로는 SSE로 흘러든다**(F1-4, 2026-08-25).
    * 그 전에는 "부팅 + 벨 열기" 재조회였다 — 폴링을 두지 않은 것은 44명 규모에
    * 끊임없는 요청이 생기기 때문이고, 이제 스트림이 그 자리를 대신한다.
-   * 재연결은 브라우저가 하고 끊겨 있던 동안의 것은 서버가 재생한다(Last-Event-ID).
+   * 재연결은 **앱이 직접** 하고(브라우저에 맡기면 URL에 굳은 낡은 토큰으로 붙어
+   * 영구 실패한다), 끊겨 있던 구간은 **연결될 때마다의 목록 재조회**가 메운다 —
+   * 서버 재생(Last-Event-ID)은 2026-08-25에 걷어냈다.
    */
   notifications: NotificationView[]
   unreadNotifications: number
@@ -240,6 +255,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [totalProjects, setTotalProjects] = useState(0)
   const [route, setRoute] = useState<Route>('home')
   const [detail, setDetail] = useState<ProjectDetail | null>(null)
+  const [projectPermissions, setProjectPermissions] =
+    useState<ProjectPermissionMatrix | null>(null)
   const [contract, setContract] = useState<ContractDetail | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [loginError, setLoginError] = useState<string | null>(null)
@@ -391,7 +408,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const openProject = useCallback(async (projectId: number) => {
     try {
-      setDetail(await api.project(projectId))
+      /*
+       * 상세와 권한 매트릭스를 함께 받는다 — 버튼 노출 판정이 매트릭스를 쓰므로,
+       * 늦게 받으면 override로 끈 기능의 버튼이 잠깐 보였다 사라진다.
+       * 매트릭스 조회는 가시성 범위 전원에게 열려 있어(A8-1) 화자를 가리지 않는다.
+       */
+      const [loaded, matrix] = await Promise.all([
+        api.project(projectId),
+        api.projectPermissions(projectId),
+      ])
+      setDetail(loaded)
+      setProjectPermissions(matrix)
       // 영업 화면에서 열었으면 영업에 머문다 — 여기서 무조건 'projects'로 옮기면
       // 상세를 닫았을 때 사용자가 오지 않은 목록으로 떨어진다. 다른 곳(홈·계약의
       // 원 프로젝트 링크·감사)에서 열었을 때의 착지는 'projects'다
@@ -401,7 +428,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, [showToast])
 
-  const closeProject = useCallback(() => setDetail(null), [])
+  const closeProject = useCallback(() => {
+    setDetail(null)
+    // 매트릭스도 함께 비운다 — 남겨 두면 다음에 연 프로젝트가 **직전 프로젝트의
+    // 권한**으로 버튼을 그린다(그것이 A8이 만드는 바로 그 차이다)
+    setProjectPermissions(null)
+  }, [])
 
   /** 계약 상세 — 전사 공개라 404는 "그런 계약이 없다"는 뜻뿐이다(은닉이 아니다). */
   const openContract = useCallback(async (contractId: number) => {
@@ -448,6 +480,33 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return { ok: false, error }
     }
   }, [refreshProjects])
+
+  /**
+   * 매트릭스 저장 (A8-2) — 응답이 곧 최신 매트릭스이자 최신 version이라 그대로 싣는다.
+   * 상세도 다시 읽는다: 저장이 `Project.version`을 올리므로, 두지 않으면 화면에 남은
+   * 낡은 version으로 다음 쓰기(진척률·수정)가 409를 받는다.
+   */
+  const savePermissions = useCallback(
+    async (overrides: UpdatePermissionsBody['overrides']) => {
+      const projectId = detail?.id
+      const version = projectPermissions?.version
+
+      if (projectId === undefined || version === undefined) {
+        return { ok: false as const, error: new ApiError(
+          409, 'STALE_VERSION', '권한 정보를 다시 읽어 주세요', null, null) }
+      }
+
+      const result = await run(
+        () => api.updateProjectPermissions(projectId, { overrides, version }),
+        { refresh: false })
+
+      if (result.ok) {
+        setProjectPermissions(result.value)
+        setDetail(await api.project(projectId))
+      }
+
+      return result
+    }, [detail?.id, projectPermissions?.version, run])
 
   /** 인력·조직 쓰기 공통 — 성공하면 두 목록을 다시 읽는다(프로젝트 목록은 무관하다). */
   const runOrganization = useCallback(async <T,>(
@@ -585,6 +644,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     totalProjects,
     route,
     detail,
+    projectPermissions,
+    savePermissions,
     contract,
     toast,
     loginError,
@@ -701,7 +762,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     loadNotifPrefs,
     updateNotifPrefs,
   }), [phase, bootError, sessionMode, me, people, roster, orgUnits, grades, permissionGroups,
-    projects, totalProjects, route, detail, contract, toast, loginError, submitLogin,
+    projects, totalProjects, route, detail, projectPermissions, savePermissions, contract,
+    toast, loginError, submitLogin,
     enterAsCaller, logout, reload, openProject, closeProject, openContract, closeContract,
     showToast, run, runOrganization, runContract, notifications,
     loadUtilization, loadProjects, loadContracts, loadContractDetail, loadIssues, loadAudit,

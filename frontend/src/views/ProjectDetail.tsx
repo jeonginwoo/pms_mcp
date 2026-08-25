@@ -12,16 +12,17 @@
 import { useState } from 'react'
 import { useStore } from '../store'
 import { ENGAGEMENT_LABEL, PHASE_LABEL, ROLE_LABEL, dday, period } from '../labels'
-import { canAssign, canDelete, canEditInfo, myRole } from '../permissions'
+import { canAssign, canDelete, canEditInfo, canEditPermissions, myRole } from '../permissions'
 import { ErrorText, Metric, StatusBadge } from '../components/ui'
 import ProgressEditor from '../components/ProgressEditor'
 import ProjectActions from '../components/ProjectActions'
 import AssignmentPanel from '../components/AssignmentPanel'
 import ProjectAuditPanel from '../components/ProjectAuditPanel'
+import PermissionPanel from '../components/PermissionPanel'
 import ProjectEditModal from '../components/ProjectEditModal'
 
 export default function ProjectDetail() {
-  const { detail, me, closeProject, deleteProject, showToast } = useStore()
+  const { detail, me, projectPermissions, closeProject, deleteProject, showToast } = useStore()
   const [editing, setEditing] = useState(false)
   const [tab, setTab] = useState<'info' | 'audit'>('info')
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -89,7 +90,7 @@ export default function ProjectDetail() {
               </div>
               <div style={{ flex: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <StatusBadge status={detail.status} big />
-                {canEditInfo(me, detail) && (
+                {canEditInfo(me, detail, projectPermissions) && (
                   <button className="btn btn-ghost btn-sm" style={{ padding: '6px 12px', fontSize: 12 }}
                     onClick={() => setEditing(true)}>
                     정보 수정
@@ -144,7 +145,9 @@ export default function ProjectDetail() {
         </div>
 
         <aside style={{ display: 'grid', gap: 16 }}>
-          <AssignmentPanel editable={canAssign(me, detail)} />
+          <AssignmentPanel editable={canAssign(me, detail, projectPermissions)} />
+          {/* 권한 패널은 PM에게만 보인다 (A8-3) — 조회는 전원이지만 조정이 PM 몫이다 */}
+          {canEditPermissions(me, detail) && <PermissionPanel />}
         </aside>
       </div>
 

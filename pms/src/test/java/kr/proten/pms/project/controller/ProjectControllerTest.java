@@ -22,12 +22,15 @@ import kr.proten.pms.common.exception.UnprocessableException;
 import kr.proten.pms.project.HandoverSpec;
 import kr.proten.pms.project.service.ProjectCommandService;
 import kr.proten.pms.project.service.ProjectLifecycleService;
+import kr.proten.pms.project.service.ProjectPermissionService;
 import kr.proten.pms.project.service.ProjectQueryService;
 import kr.proten.pms.project.service.dto.AssignmentView;
 import kr.proten.pms.project.service.dto.CreateProjectCommand;
 import kr.proten.pms.project.service.dto.EditProjectCommand;
 import kr.proten.pms.project.service.dto.ProgressUpdateResult;
 import kr.proten.pms.project.service.dto.ProjectDetail;
+import kr.proten.pms.project.service.dto.ProjectPermissionMatrix;
+import kr.proten.pms.project.service.dto.UpdateProjectPermissionsCommand;
 import kr.proten.pms.project.service.dto.ProjectSummary;
 import kr.proten.pms.project.service.dto.UpdateProgressCommand;
 import kr.proten.pms.project.service.entity.Engagement;
@@ -66,6 +69,8 @@ class ProjectControllerTest {
     private ProjectQueryService projectQueryService;
     @MockitoBean
     private ProjectLifecycleService projectLifecycleService;
+    @MockitoBean
+    private ProjectPermissionService projectPermissionService;
     @Test
     @DisplayName("생성 — 201 + 생성된 상세, 요청 본문이 명령으로 옮겨진다")
     void create_validRequest_returnsCreated() throws Exception {
@@ -636,6 +641,109 @@ class ProjectControllerTest {
                 }
                 """;
     }
+    @Test
+    @DisplayName("A8-1 — 매트릭스 조회는 셀 목록과 version을 그대로 싣는다")
+    void permissions_returnsMatrix() throws Exception {
+        when(projectPermissionService.getMatrix(102L, PROJECT_ID)).thenReturn(matrix());
+
+        mockMvc.perform(get("/api/projects/" + PROJECT_ID + "/permissions")
+                        .header(CALLER_HEADER, "102"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.cells[0].role").value("PL"))
+                .andExpect(jsonPath("$.data.cells[0].editable").value(true))
+                .andExpect(jsonPath("$.data.version").value(3));
+    }
+
+    @Test
+    @DisplayName("A8-2 — 저장 요청 본문이 명령으로 그대로 옮겨진다")
+    void updatePermissions_passesCommandThrough() throws Exception {
+        when(projectPermissionService.updateOverrides(anyLong(), anyLong(), any()))
+                .thenReturn(matrix());
+
+        mockMvc.perform(put("/api/projects/" + PROJECT_ID + "/permissions")
+                        .header(CALLER_HEADER, "102")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "overrides": [
+                                    {"role": "PL", "action": "ASSIGN", "allowed": true}
+                                  ],
+                                  "version": 3
+                                }
+                                """))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<UpdateProjectPermissionsCommand> captor =
+                ArgumentCaptor.forClass(UpdateProjectPermissionsCommand.class);
+        verify(projectPermissionService).updateOverrides(eq(102L), eq(PROJECT_ID), captor.capture());
+        assertThat(captor.getValue().version()).isEqualTo(3);
+        assertThat(captor.getValue().overrides()).singleElement()
+                .satisfies(o -> {
+                    assertThat(o.role()).isEqualTo(ProjectRole.PL);
+                    assertThat(o.allowed()).isTrue();
+                });
+    }
+
+    @Test
+    @DisplayName("A8-2 — overrides 누락은 400이다 (빈 배열 = 전체 복원과 구별해야 한다)")
+    void updatePermissions_missingOverrides_isValidationError() throws Exception {
+        mockMvc.perform(put("/api/projects/" + PROJECT_ID + "/permissions")
+                        .header(CALLER_HEADER, "102")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"version\": 3}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.error.field").value("overrides"));
+        verify(projectPermissionService, never()).updateOverrides(anyLong(), anyLong(), any());
+    }
+
+    @Test
+    @DisplayName("A8-4 — 고정 칸은 §7 봉투 422 IMMUTABLE_PERMISSION으로 나간다")
+    void updatePermissions_fixedCell_isUnprocessable() throws Exception {
+        when(projectPermissionService.updateOverrides(anyLong(), anyLong(), any()))
+                .thenThrow(new UnprocessableException(
+                        ErrorCode.IMMUTABLE_PERMISSION, "고정된 권한 칸은 조정할 수 없습니다"));
+
+        mockMvc.perform(put("/api/projects/" + PROJECT_ID + "/permissions")
+                        .header(CALLER_HEADER, "102")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "overrides": [
+                                    {"role": "PM", "action": "PROGRESS", "allowed": false}
+                                  ],
+                                  "version": 3
+                                }
+                                """))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.error.code").value("IMMUTABLE_PERMISSION"));
+    }
+
+    @Test
+    @DisplayName("A8-4 — 모르는 기능 이름은 422가 아니라 400이다 (없는 칸과 못 바꾸는 칸은 다르다)")
+    void updatePermissions_unknownAction_isValidationError() throws Exception {
+        mockMvc.perform(put("/api/projects/" + PROJECT_ID + "/permissions")
+                        .header(CALLER_HEADER, "102")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "overrides": [
+                                    {"role": "PL", "action": "COMPLETE", "allowed": true}
+                                  ],
+                                  "version": 3
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error.code").value("VALIDATION_ERROR"));
+        verify(projectPermissionService, never()).updateOverrides(anyLong(), anyLong(), any());
+    }
+
+    private ProjectPermissionMatrix matrix() {
+        return new ProjectPermissionMatrix(PROJECT_ID, List.of(
+                new ProjectPermissionMatrix.Cell("PL", "ASSIGN", true, true, true),
+                new ProjectPermissionMatrix.Cell("PM", "HANDOVER", true, false, false)), 3L);
+    }
+
     private ProjectDetail detail() {
         return new ProjectDetail(
                 PROJECT_ID,

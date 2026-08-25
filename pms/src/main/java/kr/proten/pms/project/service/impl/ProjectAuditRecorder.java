@@ -86,6 +86,21 @@ class ProjectAuditRecorder {
                 before, snapshot(project));
     }
 
+    /**
+     * 권한 매트릭스 조정 이력 (AC A8-2) — <b>저장 한 번에 한 행</b>이다.
+     *
+     * <p>칸마다 한 행이 아닌 이유: PM은 매트릭스를 한 화면에서 여러 칸 바꾸고 한 번
+     * 저장하며, 그것이 사람이 읽는 사건의 단위다(2026-08-09 ② 프로토타입 검증).
+     * 스냅샷은 조정 가능한 8칸의 <b>유효값</b>이라 diff가 곧 "무엇이 바뀌었나"다 —
+     * 저장된 override 목록을 찍으면 기본값으로 되돌린 칸이 diff에서 사라져 버린다.
+     *
+     * <p>바뀐 칸이 없으면 행도 없다({@code recordDiff}의 규칙 — "변화 없으면 행 없음").
+     */
+    void permissionsChanged(
+            long actorId, Long projectId, Map<String, Object> before, Map<String, Object> after) {
+        recordDiff(PROJECT, projectId, projectId, AuditAction.UPDATE, actorId, before, after);
+    }
+
     /** 배정 생성 이력 (AC B1-1). */
     void assignmentCreated(long actorId, ProjectAssignment assignment) {
         auditTrail.record(new AuditEntry(ASSIGNMENT, assignment.getId(),

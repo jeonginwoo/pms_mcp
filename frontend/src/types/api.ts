@@ -185,6 +185,39 @@ export interface AssignmentView {
 }
 
 /** GET /api/projects/{id} */
+/** 프로젝트 안에서 역할별로 갈리는 기능 (§4-2 · 서버 `ProjectAction`) */
+export type ProjectAction =
+  | 'EDIT_INFO' | 'ASSIGN' | 'PROGRESS' | 'COMPLETE_REOPEN' | 'HANDOVER'
+
+/**
+ * GET /api/projects/{id}/permissions — 역할×기능 매트릭스 (US-A8).
+ *
+ * 화면은 이 표를 **자기가 만들지 않는다**: 기본값과 override의 병합은 서버가 하고
+ * 여기 오는 `allowed`가 그 결과다. 클라이언트가 §4-2를 다시 적으면 override가 걸린
+ * 프로젝트에서 화면과 서버의 답이 갈린다.
+ */
+export interface ProjectPermissionMatrix {
+  projectId: number
+  cells: PermissionCell[]
+  version: number
+}
+
+export interface PermissionCell {
+  role: ProjectRole
+  action: ProjectAction
+  /** 병합 결과 — 지금 이 프로젝트에서 그 역할이 그 기능을 할 수 있는가 */
+  allowed: boolean
+  /** PM이 조정할 수 있는 칸인가 (§4-2 고정 칸이면 false — 화면은 잠금으로 그린다) */
+  editable: boolean
+  /** 기본값과 달라 저장된 칸인가 — "커스텀" 뱃지와 기본값 복원 버튼의 근거 */
+  overridden: boolean
+}
+
+export interface UpdatePermissionsBody {
+  overrides: { role: ProjectRole; action: ProjectAction; allowed: boolean }[]
+  version: number
+}
+
 export interface ProjectDetail {
   id: number
   client: string

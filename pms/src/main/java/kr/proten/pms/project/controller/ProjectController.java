@@ -10,13 +10,16 @@ import kr.proten.pms.project.controller.dto.ChangeRoleRequest;
 import kr.proten.pms.project.controller.dto.CreateProjectRequest;
 import kr.proten.pms.project.controller.dto.EditProjectRequest;
 import kr.proten.pms.project.controller.dto.HandoverRequest;
+import kr.proten.pms.project.controller.dto.UpdatePermissionsRequest;
 import kr.proten.pms.project.controller.dto.UpdateProgressRequest;
 import kr.proten.pms.project.controller.dto.VersionRequest;
 import kr.proten.pms.project.service.ProjectCommandService;
 import kr.proten.pms.project.service.ProjectLifecycleService;
+import kr.proten.pms.project.service.ProjectPermissionService;
 import kr.proten.pms.project.service.ProjectQueryService;
 import kr.proten.pms.project.service.dto.ProgressUpdateResult;
 import kr.proten.pms.project.service.dto.ProjectDetail;
+import kr.proten.pms.project.service.dto.ProjectPermissionMatrix;
 import kr.proten.pms.project.service.dto.ProjectSummary;
 import kr.proten.pms.project.service.entity.ProjectPhase;
 import org.springframework.data.domain.Pageable;
@@ -34,12 +37,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 프로젝트 API — EPIC A의 구현 범위(A1 생성 · A2 진척률 2단계 · A3 가시성 조회 ·
- * A4 소프트 삭제 · A5 정보·상태 수정 · A6-1 PM 교체 · A7 완료 처리·재개) + G2-2 이력.
+ * A4 소프트 삭제 · A5 정보·상태 수정 · A6-1 PM 교체 · A7 완료 처리·재개 ·
+ * A8 권한 커스텀) + G2-2 이력.
  *
  * 컨트롤러는 HTTP 변환만 한다 — 가시성·권한·404 은닉·낙관적 락은 전부 서비스가
  * 판정하고, 예외 → 에러 봉투 변환은 common의 전역 핸들러 한 곳이 담당한다.
- * 서비스는 셋이다: 조회 · CRUD · 생애주기(§5 상태 머신).
- * A6-3(역할 지정)·A8(권한 커스텀)은 아직 라우트를 만들지 않는다.
+ * 서비스는 넷이다: 조회 · CRUD · 생애주기(§5 상태 머신) · 권한 매트릭스(US-A8).
+ * 권한은 계약을 따로 두는데 판정 축이 달라서다 — 조회는 가시성, 저장은 PM만이다.
  */
 @RestController
 @RequestMapping("/api/projects")
@@ -47,14 +51,17 @@ class ProjectController {
     private final ProjectQueryService projectQueryService;
     private final ProjectCommandService projectCommandService;
     private final ProjectLifecycleService projectLifecycleService;
+    private final ProjectPermissionService projectPermissionService;
 
     ProjectController(
             ProjectQueryService projectQueryService,
             ProjectCommandService projectCommandService,
-            ProjectLifecycleService projectLifecycleService) {
+            ProjectLifecycleService projectLifecycleService,
+            ProjectPermissionService projectPermissionService) {
         this.projectQueryService = projectQueryService;
         this.projectCommandService = projectCommandService;
         this.projectLifecycleService = projectLifecycleService;
+        this.projectPermissionService = projectPermissionService;
     }
 
     /** 프로젝트 생성 (AC A1-1) — 성공 시 201 + 생성된 상세. */
@@ -101,6 +108,29 @@ class ProjectController {
             Pageable pageable) {
         return ApiResponse.ok(PageResponse.of(
                 projectQueryService.listAudit(callerPersonId, projectId, pageable)));
+    }
+
+    /**
+     * 권한 매트릭스 조회 (AC A8-1) — 기본값 + override 병합 결과와 셀별 고정 여부.
+     * 저장은 PM만이지만 <b>조회는 가시성 범위 전원</b>이다: 화면이 잠금 표시를 그려야 한다.
+     */
+    @GetMapping("/{projectId}/permissions")
+    ApiResponse<ProjectPermissionMatrix> permissions(
+            @CallerPersonId long callerPersonId, @PathVariable long projectId) {
+        return ApiResponse.ok(projectPermissionService.getMatrix(callerPersonId, projectId));
+    }
+
+    /**
+     * 권한 매트릭스 조정 (AC A8-2~A8-4·A8-7) — PM만 · 전체 교체 · 고정 칸은 422.
+     * {@code overrides: []}가 전체 기본값 복원이라 별도 복원 라우트가 없다.
+     */
+    @PutMapping("/{projectId}/permissions")
+    ApiResponse<ProjectPermissionMatrix> updatePermissions(
+            @CallerPersonId long callerPersonId,
+            @PathVariable long projectId,
+            @Valid @RequestBody UpdatePermissionsRequest request) {
+        return ApiResponse.ok(projectPermissionService.updateOverrides(
+                callerPersonId, projectId, request.toCommand()));
     }
 
     /** 정보·상태 수정 (AC A5-1~A5-3) — 완료·재개·이관은 이 경로가 아니다. */

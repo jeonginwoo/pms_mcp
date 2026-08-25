@@ -49,6 +49,7 @@ import type {
   PersonSummary,
   ProgressUpdateResult,
   ProjectDetail,
+  ProjectPermissionMatrix,
   ProjectPhase,
   ProjectRole,
   ProjectSummary,
@@ -58,6 +59,7 @@ import type {
   SiteView,
   TokenResponse,
   UpdateAssignmentBody,
+  UpdatePermissionsBody,
   UpdatePersonBody,
   UpdateProgressBody,
   UtilizationQuery,
@@ -452,6 +454,13 @@ export const api = {
     request<PageResponse<ProjectSummary>>(
       `/api/projects?${queryOf({ page: 0, size: LIST_PAGE_SIZE, sort: 'id,desc', phase })}`),
   project: (projectId: number) => request<ProjectDetail>(`/api/projects/${projectId}`),
+
+  /** 권한 매트릭스 (US-A8) — 조회는 가시성 범위 전원, 저장은 PM만이다 */
+  projectPermissions: (projectId: number) =>
+    request<ProjectPermissionMatrix>(`/api/projects/${projectId}/permissions`),
+  updateProjectPermissions: (projectId: number, body: UpdatePermissionsBody) =>
+    request<ProjectPermissionMatrix>(`/api/projects/${projectId}/permissions`,
+      { method: 'PUT', body: JSON.stringify(body) }),
 
   createProject: (body: CreateProjectBody) =>
     request<ProjectDetail>('/api/projects', { method: 'POST', body: JSON.stringify(body) }),
