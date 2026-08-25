@@ -3,6 +3,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Stream;
 import kr.proten.pms.common.exception.ConflictException;
 import kr.proten.pms.common.exception.ErrorCode;
 import kr.proten.pms.common.exception.ForbiddenException;
@@ -29,6 +30,7 @@ import kr.proten.pms.project.service.dto.ProjectDetail;
 import kr.proten.pms.project.service.dto.ProjectSummary;
 import kr.proten.pms.project.service.dto.UpdateProgressCommand;
 import kr.proten.pms.project.service.entity.Engagement;
+import kr.proten.pms.project.service.entity.ProjectPhase;
 import kr.proten.pms.project.service.entity.ProjectRole;
 import kr.proten.pms.project.ProjectStatus;
 import org.junit.jupiter.api.BeforeAll;
@@ -163,10 +165,10 @@ class ProjectFlowIntegrationTest extends PostgresTestBase {
     @Test
     @DisplayName("A3-1 — 팀장은 팀 범위, 타부문원은 본인 배정으로 같은 프로젝트를 본다")
     void listVisible_perCaller_appliesUnionOfOrgAndAssignment() {
-        var leadPage = projectQueryService.listVisible(SI_LEAD_ID, PageRequest.of(0, 20));
+        var leadPage = projectQueryService.listVisible(SI_LEAD_ID, null, PageRequest.of(0, 20));
         var outsiderPage =
-                projectQueryService.listVisible(OTHER_DIVISION_MEMBER_ID, PageRequest.of(0, 20));
-        var adminPage = projectQueryService.listVisible(ADMIN_ID, PageRequest.of(0, 20));
+                projectQueryService.listVisible(OTHER_DIVISION_MEMBER_ID, null, PageRequest.of(0, 20));
+        var adminPage = projectQueryService.listVisible(ADMIN_ID, null, PageRequest.of(0, 20));
 
         assertThat(leadPage.getContent()).map(ProjectSummary::id).contains(visibleProjectId);
         assertThat(leadPage.getContent())
@@ -176,6 +178,38 @@ class ProjectFlowIntegrationTest extends PostgresTestBase {
         // 타부문원은 조직 가시성 밖이지만 본인 배정이라 보인다 (상위 PRD §4-4 합집합)
         assertThat(outsiderPage.getContent()).map(ProjectSummary::id).contains(visibleProjectId);
         assertThat(adminPage.getContent()).map(ProjectSummary::id).contains(visibleProjectId);
+    }
+
+    @Test
+    @DisplayName("A3-1 ?phase= — 필터는 가시성을 넓히지 않고 두 탭이 무필터 목록을 정확히 나눈다")
+    void listVisible_phaseFilter_partitionsWithoutWideningVisibility() {
+        // 특정 프로젝트의 상태에 기대지 않는다 — 이 클래스는 PER_CLASS라 다른 테스트가
+        // 상태를 옮길 수 있다. 성립해야 하는 것은 그것과 무관한 두 성질이다.
+        List<Long> all = idsOf(OTHER_DIVISION_MEMBER_ID, null);
+        List<Long> sales = idsOf(OTHER_DIVISION_MEMBER_ID, ProjectPhase.SALES);
+        List<Long> solution = idsOf(OTHER_DIVISION_MEMBER_ID, ProjectPhase.SOLUTION);
+
+        // ① 필터를 걸었다고 범위 밖 프로젝트가 따라 들어오지 않는다 — 판정이 먼저다
+        assertThat(sales).isSubsetOf(all);
+        assertThat(solution).isSubsetOf(all);
+        // ② 이 픽스처에는 유지보수중이 없으므로 두 탭이 무필터를 정확히 나눈다.
+        // 한 프로젝트가 두 탭에 걸치면 concat에 중복이 생겨 이 단정이 깨진다 —
+        // 겹침 검사를 따로 두지 않는 이유이고, 한쪽 탭이 비어도 성립한다.
+        assertThat(all).containsExactlyInAnyOrderElementsOf(
+                Stream.concat(sales.stream(), solution.stream()).toList());
+        assertThat(all).contains(visibleProjectId);
+
+        assertThat(projectQueryService
+                .listVisible(OTHER_DIVISION_MEMBER_ID, ProjectPhase.SALES, PageRequest.of(0, 20))
+                .getContent())
+                .allSatisfy(summary -> assertThat(summary.phase()).isEqualTo(ProjectPhase.SALES));
+    }
+
+    private List<Long> idsOf(long callerPersonId, ProjectPhase phase) {
+        return projectQueryService.listVisible(callerPersonId, phase, PageRequest.of(0, 20))
+                .getContent().stream()
+                .map(ProjectSummary::id)
+                .toList();
     }
 
     @Test

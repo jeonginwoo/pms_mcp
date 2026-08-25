@@ -12,20 +12,22 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import kr.proten.pms.audit.AuditQueryService;
 import kr.proten.pms.common.exception.NotFoundException;
 import kr.proten.pms.person.PersonDirectoryService;
 import kr.proten.pms.person.PersonRef;
+import kr.proten.pms.project.ProjectStatus;
 import kr.proten.pms.project.repository.ProjectAssignmentRepository;
 import kr.proten.pms.project.repository.ProjectRepository;
 import kr.proten.pms.project.service.entity.AssignmentStatus;
 import kr.proten.pms.project.service.entity.Project;
 import kr.proten.pms.project.service.entity.ProjectAssignment;
 import kr.proten.pms.project.service.entity.ProjectFixtures;
+import kr.proten.pms.project.service.entity.ProjectPhase;
 import kr.proten.pms.project.service.entity.ProjectRole;
-import kr.proten.pms.project.ProjectStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -87,7 +89,7 @@ class ProjectQueryServiceImplTest {
                         new PersonRef(PM_ID, "이피엠", "SI팀", "SI부문", "책임", true)));
 
         // When
-        var page = service.listVisible(TEAM_LEAD_ID, pageable);
+        var page = service.listVisible(TEAM_LEAD_ID, null, pageable);
 
         // Then
         assertThat(page.getTotalElements()).isEqualTo(1);
@@ -104,7 +106,7 @@ class ProjectQueryServiceImplTest {
                 .thenReturn(ProjectVisibility.of(Set.of()));
 
         // When
-        var page = service.listVisible(TEAM_LEAD_ID, pageable);
+        var page = service.listVisible(TEAM_LEAD_ID, null, pageable);
 
         // Then
         assertThat(page).isEmpty();
@@ -122,10 +124,97 @@ class ProjectQueryServiceImplTest {
                 .thenReturn(new PageImpl<>(List.of(), pageable, 0));
 
         // When
-        service.listVisible(1L, pageable);
+        service.listVisible(1L, null, pageable);
 
         // Then
         verify(projectRepository, never()).findByIdInAndDeletedFalse(anyCollection(), any());
+    }
+
+    @Test
+    @DisplayName("A3-1 ?phase= — 전사 가시성은 그룹의 상태 집합으로 좁혀 질의한다")
+    void listVisible_unrestrictedWithPhase_queriesStatusSet() {
+        // Given
+        Pageable pageable = PageRequest.of(0, 20);
+        when(projectVisibilityService.visibilityOf(1L)).thenReturn(ProjectVisibility.all());
+        when(projectRepository.findByDeletedFalseAndStatusIn(
+                ProjectPhase.SALES.statuses(), pageable))
+                .thenReturn(new PageImpl<>(List.of(), pageable, 0));
+
+        // When
+        service.listVisible(1L, ProjectPhase.SALES, pageable);
+
+        // Then — 무필터 질의로 새지 않는다(전체를 받아 메모리에서 거르면 안 된다)
+        verify(projectRepository, never()).findByDeletedFalse(any());
+    }
+
+    @Test
+    @DisplayName("A3-1 ?phase= — 제한 가시성은 id 집합과 상태 집합을 함께 건다")
+    void listVisible_restrictedWithPhase_queriesBothIdsAndStatuses() {
+        // Given
+        Pageable pageable = PageRequest.of(0, 20);
+        when(projectVisibilityService.visibilityOf(TEAM_LEAD_ID))
+                .thenReturn(ProjectVisibility.of(Set.of(PROJECT_ID)));
+        when(projectRepository.findByIdInAndDeletedFalseAndStatusIn(
+                Set.of(PROJECT_ID), ProjectPhase.SOLUTION.statuses(), pageable))
+                .thenReturn(new PageImpl<>(List.of(), pageable, 0));
+
+        // When
+        service.listVisible(TEAM_LEAD_ID, ProjectPhase.SOLUTION, pageable);
+
+        // Then — 필터가 가시성을 대체하지 않는다: id 조건이 빠진 질의는 부르지 않는다
+        verify(projectRepository, never()).findByDeletedFalseAndStatusIn(anyCollection(), any());
+        verify(projectRepository, never()).findByIdInAndDeletedFalse(anyCollection(), any());
+    }
+
+    @Test
+    @DisplayName("A3-1 ?phase= — 가시 프로젝트가 없으면 필터가 있어도 질의하지 않는다")
+    void listVisible_nothingVisibleWithPhase_returnsEmptyPageWithoutQuery() {
+        // Given
+        Pageable pageable = PageRequest.of(0, 20);
+        when(projectVisibilityService.visibilityOf(TEAM_LEAD_ID))
+                .thenReturn(ProjectVisibility.of(Set.of()));
+
+        // When
+        var page = service.listVisible(TEAM_LEAD_ID, ProjectPhase.SALES, pageable);
+
+        // Then
+        assertThat(page).isEmpty();
+        verify(projectRepository, never())
+                .findByIdInAndDeletedFalseAndStatusIn(anyCollection(), anyCollection(), any());
+    }
+
+    /*
+     * 기대 표를 여기 손으로 적는 것이 이 테스트의 전부다 — 구현에서 파생한 값끼리
+     * 대조하면(예: `of(s)`가 준 phase의 `statuses()`가 s를 담는지) 항진명제가 되어
+     * §5 문면과의 어긋남을 잡지 못한다. 상태가 늘면 `of`의 switch가 컴파일을 깨고
+     * 이 표가 테스트를 깨서, 두 곳이 함께 결정을 요구한다.
+     */
+    @Test
+    @DisplayName("§5 — phase 표는 §5 문면과 같고 두 그룹이 유지보수중을 뺀 전부를 나눈다")
+    void projectPhase_tableMatchesTheSpec() {
+        // §5: 영업={계약대기,수주확정} · 솔루션={진행중,완료} · 유지보수중은 어디에도 없다
+        assertThat(ProjectPhase.SALES.statuses())
+                .containsExactlyInAnyOrder(
+                        ProjectStatus.CONTRACT_PENDING, ProjectStatus.ORDER_CONFIRMED);
+        assertThat(ProjectPhase.SOLUTION.statuses())
+                .containsExactlyInAnyOrder(ProjectStatus.IN_PROGRESS, ProjectStatus.COMPLETED);
+        assertThat(ProjectPhase.of(ProjectStatus.UNDER_MAINTENANCE)).isNull();
+
+        // 두 그룹이 겹치지 않고, 둘의 합집합 + 유지보수중이 상태 전부다 —
+        // 새 상태가 조용히 "어느 탭에도 없음"으로 떨어지면 여기서 걸린다
+        assertThat(ProjectPhase.SALES.statuses())
+                .doesNotContainAnyElementsOf(ProjectPhase.SOLUTION.statuses());
+        Set<ProjectStatus> grouped = EnumSet.copyOf(ProjectPhase.SALES.statuses());
+        grouped.addAll(ProjectPhase.SOLUTION.statuses());
+        grouped.add(ProjectStatus.UNDER_MAINTENANCE);
+        assertThat(grouped).containsExactlyInAnyOrder(ProjectStatus.values());
+
+        // 양방향이 서로 뒤집힌다 — status → phase와 phase → 집합이 같은 표를 본다
+        for (ProjectPhase phase : ProjectPhase.values()) {
+            for (ProjectStatus status : phase.statuses()) {
+                assertThat(ProjectPhase.of(status)).isEqualTo(phase);
+            }
+        }
     }
 
     @Test

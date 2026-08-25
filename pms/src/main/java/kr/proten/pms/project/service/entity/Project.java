@@ -326,11 +326,7 @@ public class Project {
      * (PRD-pms §5 · §7 단건 응답 파생 필드).
      */
     public ProjectPhase getPhase() {
-        return switch (status) {
-            case CONTRACT_PENDING, ORDER_CONFIRMED -> ProjectPhase.SALES;
-            case IN_PROGRESS, COMPLETED -> ProjectPhase.SOLUTION;
-            case UNDER_MAINTENANCE -> null;
-        };
+        return ProjectPhase.of(status);
     }
 
     /** 완료 상태 여부 — 완료 상태의 진척률 직접 수정은 거절된다 (AC A2-8). */

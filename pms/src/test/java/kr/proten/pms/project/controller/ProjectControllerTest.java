@@ -197,10 +197,10 @@ class ProjectControllerTest {
     @DisplayName("목록 — §7 page 봉투 형태로 나가고 페이징 파라미터가 전달된다")
     void list_returnsSevenSectionPageEnvelope() throws Exception {
         var pageable = PageRequest.of(1, 2);
-        when(projectQueryService.listVisible(102L, pageable)).thenReturn(new PageImpl<>(
+        when(projectQueryService.listVisible(102L, null, pageable)).thenReturn(new PageImpl<>(
                 List.of(new ProjectSummary(
                         PROJECT_ID, "(주)가온아이", "포털 재구축",
-                        ProjectStatus.IN_PROGRESS, 90, 13L, "이피엠")),
+                        ProjectStatus.IN_PROGRESS, ProjectPhase.SOLUTION, 90, 13L, "이피엠")),
                 pageable,
                 5));
         mockMvc.perform(get("/api/projects")
@@ -214,6 +214,35 @@ class ProjectControllerTest {
                 .andExpect(jsonPath("$.data.size").value(2))
                 .andExpect(jsonPath("$.data.totalElements").value(5))
                 .andExpect(jsonPath("$.data.totalPages").value(3));
+    }
+
+    @Test
+    @DisplayName("목록 ?phase= — 값이 서비스로 그대로 전달된다")
+    void list_passesPhaseFilterThrough() throws Exception {
+        var pageable = PageRequest.of(0, 20);
+        when(projectQueryService.listVisible(102L, ProjectPhase.SALES, pageable))
+                .thenReturn(new PageImpl<>(List.of(), pageable, 0));
+
+        mockMvc.perform(get("/api/projects")
+                        .header(CALLER_HEADER, "102")
+                        .param("phase", "SALES"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("목록 ?phase= — 모르는 값은 §7 봉투 400이다 (조용히 무시하지 않는다)")
+    void list_unknownPhase_rejectsWithBadRequest() throws Exception {
+        mockMvc.perform(get("/api/projects")
+                        .header(CALLER_HEADER, "102")
+                        .param("phase", "MAINTENANCE"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error.code").value("VALIDATION_ERROR"))
+                // 화면이 어느 칸이 틀렸는지 말해 주려면 field가 필요하다 (§7)
+                .andExpect(jsonPath("$.error.field").value("phase"));
+
+        // 오타를 "필터 없음"으로 흘리면 사용자가 전량을 받고 걸렀다고 믿는다
+        verify(projectQueryService, never()).listVisible(anyLong(), any(), any());
     }
 
     @Test

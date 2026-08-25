@@ -51,6 +51,7 @@ import type {
   PersonSummary,
   ProgressUpdateResult,
   ProjectDetail,
+  ProjectPhase,
   ProjectRole,
   ProjectSummary,
   SiteBody,
@@ -64,8 +65,12 @@ import type {
 
 export type Result<T> = { ok: true; value: T } | { ok: false; error: ApiError }
 
+/**
+ * `sales`와 `projects`는 같은 목록 화면의 두 phase다 (§7 `?phase=` — 2026-08-25 결정).
+ * 라우트를 둘로 가른 것은 사이드바 항목이 둘이기 때문이고, 화면 안에는 단계 탭이 없다.
+ */
 export type Route =
-  | 'home' | 'projects' | 'people' | 'utilization' | 'maintenance' | 'issues' | 'audit'
+  | 'home' | 'sales' | 'projects' | 'people' | 'utilization' | 'maintenance' | 'issues' | 'audit'
 
 export type BootPhase = 'anon' | 'loading' | 'ready' | 'error'
 
@@ -152,6 +157,13 @@ interface Store {
    * 매번 서버에 다시 물어야 한다(조회 시점 계산이라 캐시가 없다 — 2026-08-06).
    */
   loadUtilization: (query: UtilizationQuery) => Promise<Result<UtilizationView[]>>
+  /**
+   * phase 탭이 부르는 목록 (§7 `?phase=`) — 그 그룹의 **전량**을 서버에서 다시 받는다.
+   *
+   * 위 `projects`(무필터 전량)를 그대로 두고 따로 부르는 이유: 홈이 그 배열로 상태
+   * 분포를 그리므로 탭이 그것을 갈아 끼우면 홈의 수치가 탭을 따라 움직인다.
+   */
+  loadProjects: (phase: ProjectPhase) => Promise<Result<PageResponse<ProjectSummary>>>
   /**
    * 유지보수 조회 — 가동률과 같은 이유로 라우트 진입 시 부른다.
    * 전사 공개라 가시성 판정이 없고(D4-3) 화자가 바뀌어도 같은 답이 온다.
@@ -380,7 +392,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const openProject = useCallback(async (projectId: number) => {
     try {
       setDetail(await api.project(projectId))
-      setRoute('projects')
+      // 영업 화면에서 열었으면 영업에 머문다 — 여기서 무조건 'projects'로 옮기면
+      // 상세를 닫았을 때 사용자가 오지 않은 목록으로 떨어진다. 다른 곳(홈·계약의
+      // 원 프로젝트 링크·감사)에서 열었을 때의 착지는 'projects'다
+      setRoute((current) => (current === 'sales' ? 'sales' : 'projects'))
     } catch (e) {
       showToast(e instanceof Error ? e.message : '프로젝트를 열 수 없습니다')
     }
@@ -482,6 +497,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    */
   const loadUtilization = useCallback(
     (query: UtilizationQuery) => run(() => api.utilization(query), { refresh: false }), [run])
+  const loadProjects = useCallback(
+    (phase: ProjectPhase) => run(() => api.projects(phase), { refresh: false }), [run])
   const loadContracts = useCallback(
     (query: ContractQuery) => run(() => api.maintenanceContracts(query), { refresh: false }),
     [run])
@@ -659,6 +676,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // 조회 동작은 위에서 안정화한 것을 그대로 싣는다 — 여기서 즉석으로 만들면
     // store 값이 다시 만들어질 때마다 화면의 조회 effect가 함께 깨어난다
     loadUtilization,
+    loadProjects,
     loadContracts,
     loadContractDetail,
     loadIssues,
@@ -686,7 +704,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     projects, totalProjects, route, detail, contract, toast, loginError, submitLogin,
     enterAsCaller, logout, reload, openProject, closeProject, openContract, closeContract,
     showToast, run, runOrganization, runContract, notifications,
-    loadUtilization, loadContracts, loadContractDetail, loadIssues, loadAudit, loadProjectAudit,
+    loadUtilization, loadProjects, loadContracts, loadContractDetail, loadIssues, loadAudit,
+    loadProjectAudit,
     loadNotifications, markNotificationRead, loadNotifPrefs, updateNotifPrefs])
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>

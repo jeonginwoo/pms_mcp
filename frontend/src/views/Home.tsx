@@ -35,7 +35,15 @@ export default function Home() {
       <section className="card">
         <div className="card-head">
           <h2>상태 분포</h2>
-          <button className="btn-link" onClick={() => go('projects')}>프로젝트 전체 보기 →</button>
+          {/*
+            분포는 가시성 범위 **전량**(유지보수중 포함)인데 목록 화면은 phase로 갈려
+            있으므로(2026-08-25) 링크도 둘이다 — "전체 보기" 하나로 두면 영업 건을
+            보여 주지 않는 목록으로 데려간다.
+          */}
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button className="btn-link" onClick={() => go('sales')}>영업 →</button>
+            <button className="btn-link" onClick={() => go('projects')}>프로젝트 →</button>
+          </div>
         </div>
         <div style={{ display: 'grid', gap: 10 }}>
           {counts.map((row) => (
