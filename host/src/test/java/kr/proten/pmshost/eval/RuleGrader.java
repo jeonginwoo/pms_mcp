@@ -48,6 +48,23 @@ final class RuleGrader {
      */
     private static final Set<String> TIME_UNITS = Set.of("년", "월", "일", "분기", "주");
 
+    /**
+     * 임계·비교 표현의 꼬리 — <b>기준을 설명하는 수치</b>는 데이터 주장이 아니다.
+     * "과부하(기본 가동률 <b>100%</b> 초과)"의 100은 도구 결과가 아니라 판정 기준이고
+     * (상위 PRD §3), 그것이 도구 결과에 없다고 환각이라 부르면 정의를 밝히는 모범
+     * 응답일수록 벌을 받는다 — 2026-08-25 기준 회차에서 A-01·A-07·F-01이 그렇게 걸렸다.
+     */
+    private static final Set<String> COMPARATORS = Set.of("초과", "이상", "이하", "미만", "이내");
+
+    /**
+     * 목록 서수 — `2. 한국거래소 …`의 2는 값이 아니라 번호다.
+     * (2026-08-25 회차 D-05가 이 자리에서 치명으로 잡혔다.)
+     */
+    private static final Pattern ORDINAL = Pattern.compile("(?m)^\\s*\\d+\\.\\s");
+
+    /** 예시 표기 — `(예: 100%)`의 100은 사용자에게 형식을 보여 주는 값이다 (D-07). */
+    private static final Pattern EXAMPLE_LEAD = Pattern.compile("예\\s*[:：]\\s*$");
+
     /** 반올림 허용치 — 서버 190.9를 답이 191%로 적는 것은 환각이 아니다 */
     private static final double ROUNDING_TOLERANCE = 0.5;
 
@@ -299,8 +316,9 @@ final class RuleGrader {
                 continue;
             }
             for (String unsourced : unsourcedNumbers(turn.reply(), corpus)) {
-                findings.add(new Finding("F1", "치명",
-                        "T%d 도구 결과에 없는 수치 `%s`".formatted(turn.n(), unsourced)));
+                findings.add(new Finding("F1?", "미확정",
+                        "T%d 도구 결과에 없는 수치 `%s` — 데이터 주장이면 F1"
+                                .formatted(turn.n(), unsourced)));
             }
         }
     }
@@ -342,7 +360,7 @@ final class RuleGrader {
         Matcher m = NUMBER.matcher(reply);
         while (m.find()) {
             String literal = m.group();
-            if (isDerived(reply, m.end())) {
+            if (isNonData(reply, m.start(), m.end())) {
                 continue;
             }
             var value = parse(literal);
@@ -360,8 +378,14 @@ final class RuleGrader {
         return unsourced;
     }
 
-    /** 수치 바로 뒤가 세는 단위(`6건`·`2명`)나 시점 단위(`9월`)인가 */
-    private static boolean isDerived(String reply, int end) {
+    /**
+     * <b>이 수치가 애초에 데이터 주장이 아닌가.</b> 여기서 거르는 것들은 케이스 지식
+     * 없이 형태만으로 판별되므로 규칙층이 단독으로 정할 수 있다 — 세는 값(`6건`),
+     * 시점 값(`9월`), 목록 서수(`2. …`), 임계·비교(`100% 초과`), 범위(`0~100%`),
+     * 예시(`(예: 100%)`)다. 반대로 "인물·프로젝트에 붙은 값이 맞는가"는 형태로
+     * 갈리지 않으므로 여기서 정하지 않고 Judge에게 넘긴다(F1? — 위 checkNumbers).
+     */
+    private static boolean isNonData(String reply, int start, int end) {
         int at = end;
         while (at < reply.length() && reply.charAt(at) == ' ') {
             at++;
@@ -377,7 +401,46 @@ final class RuleGrader {
             }
         }
 
-        return false;
+        // 임계·비교: `100% 초과` — `%`와 공백은 건너뛰고 비교어를 본다
+        int tail = at;
+        if (tail < reply.length() && reply.charAt(tail) == '%') {
+            tail++;
+        }
+        while (tail < reply.length() && reply.charAt(tail) == ' ') {
+            tail++;
+        }
+        for (String word : COMPARATORS) {
+            if (reply.startsWith(word, tail)) {
+                return true;
+            }
+        }
+
+        // 범위: `0~100%` — 물결의 어느 쪽에 붙어도 범위의 끝값이다
+        if (start > 0 && isTilde(reply.charAt(start - 1))) {
+            return true;
+        }
+        if (at < reply.length() && isTilde(reply.charAt(at))) {
+            return true;
+        }
+
+        // 목록 서수: 줄 앞의 `2. `
+        if (ORDINAL.matcher(reply).region(lineStart(reply, start), reply.length())
+                .lookingAt() && reply.startsWith(".", end)) {
+            return true;
+        }
+
+        // 예시: 바로 앞이 `예:`
+        return EXAMPLE_LEAD.matcher(reply.substring(lineStart(reply, start), start)).find();
+    }
+
+    private static boolean isTilde(char c) {
+        return c == '~' || c == '～' || c == '∼';
+    }
+
+    private static int lineStart(String reply, int at) {
+        int from = reply.lastIndexOf('\n', Math.max(0, at - 1));
+
+        return from < 0 ? 0 : from + 1;
     }
 
     private static String context(String reply, int start, int end) {

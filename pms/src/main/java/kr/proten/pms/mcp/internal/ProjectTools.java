@@ -46,7 +46,10 @@ public class ProjectTools {
             프로젝트를 검색하거나 상세를 조회한다. 조회 가능한 범위(가시성)는 서버가 판정한다.
             projectId를 지정하면 그 프로젝트의 상세(일정·진행률·배정 인원·version)를 반환한다 —
             진척률 수정(update_progress)에 필요한 version은 이 상세 조회로 확보한다.
-            projectId가 없으면 status·keyword로 필터한 목록을 반환한다.
+            projectId가 없으면 status·keyword로 필터한 목록을 반환한다 — 인자를 하나도
+            주지 않으면 화자가 조회할 수 있는 프로젝트 전량이 온다("내 프로젝트"·"우리 팀
+            프로젝트"류 질문의 출발점이다). 목록에는 배정 인원이 없으므로, 화자가 맡은
+            건인지는 projectId 상세의 배정 인원으로 확인한다.
             목록은 착수일 내림차순으로 최근 50건까지만 반환된다 — 결과가 잘렸을 수 있으므로
             전체 개수를 단정하지 말고, 많으면 status·keyword로 좁혀 다시 검색한다.""",
             annotations = @McpTool.McpAnnotations(
