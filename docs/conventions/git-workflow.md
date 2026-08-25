@@ -62,6 +62,25 @@
   In the shared `docs/PROGRESS.md`, decision-log entries are appended and both
   are preserved; for shared "current state", the most recent session wins.
 
+
+## 5. Stacked PRs (learned the hard way, 2026-08-25)
+
+Stacking a branch on another *open* PR is sometimes right — same EPIC, overlapping files, the
+second branch's reasoning cites the first. #43 (D1 on D3) worked that way. But the base branch
+is consumed the moment its own PR merges, and **merging the stacked PR after that lands it
+nowhere**: #46 (EPIC H) was based on `feat/m1-sse`; #45 merged that branch into main first, then
+#46 merged into the now-dead `feat/m1-sse`, so EPIC H never reached main. Nothing failed loudly —
+GitHub reported both as merged and `main` was green without the work.
+
+Rules:
+
+- **Retarget the stacked PR to `main` the moment its base PR merges**, before merging it. The
+  base PR's merge is the trigger; do not wait until the stacked PR's own review finishes.
+- **Prefer not to stack.** Branch from `main` and accept the conflict — resolving one
+  `NotificationSubscriber` or one docs section is cheaper than an orphaned merge.
+- After merging anything, check `git log --oneline main | grep <the commit subject>`. A PR marked
+  merged is not evidence that main has the code.
+
 ## 4. Forbidden
 
 - No force push to main (settings.json blocks the agent's `git push --force`).
