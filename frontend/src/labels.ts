@@ -11,6 +11,7 @@ import type {
   IssueType,
   NotificationType,
   ProjectPhase,
+  ProjectAction,
   ProjectRole,
   ProjectStatus,
   VisibilityScope,
@@ -53,6 +54,18 @@ export const ROLE_LABEL: Record<ProjectRole, string> = {
   PM: 'PM',
   PL: 'PL',
   PARTICIPANT: '참여자',
+}
+
+/**
+ * 프로젝트 안 기능 (§4-2 표의 행) — 권한 패널이 쓴다.
+ * 완료·재개가 한 칸인 것은 §4-2 규칙이다("사고 낼 수 있는 사람이 수습도 해야 한다").
+ */
+export const ACTION_LABEL: Record<ProjectAction, string> = {
+  EDIT_INFO: '정보 수정',
+  ASSIGN: '인력 배정 · M/M',
+  PROGRESS: '진척률 수정',
+  COMPLETE_REOPEN: '완료 처리 · 재개',
+  HANDOVER: '유지보수 이관',
 }
 
 /**

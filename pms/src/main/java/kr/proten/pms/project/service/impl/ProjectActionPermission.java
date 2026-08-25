@@ -1,8 +1,5 @@
 package kr.proten.pms.project.service.impl;
 
-import java.util.EnumSet;
-import java.util.Map;
-import java.util.Set;
 import kr.proten.pms.common.exception.ForbiddenException;
 import kr.proten.pms.person.OrgPermission;
 import kr.proten.pms.person.OrgPermissionService;
@@ -13,36 +10,32 @@ import org.springframework.stereotype.Component;
 /**
  * 프로젝트 기능별 권한 판정 (상위 PRD §4-2 기본 매트릭스) — 판정의 단일 지점.
  *
- * 표를 여기 한 곳에 두는 이유: 같은 규칙이 유스케이스마다 흩어지면(진척률은
+ * 판정을 여기 한 곳에 두는 이유: 같은 규칙이 유스케이스마다 흩어지면(진척률은
  * 배정 전원, 정보 수정은 PM·PL, 배정은 PM) 한 칸만 바뀌어도 어디를 고쳐야 하는지
- * 알 수 없다. 프로젝트별 권한 커스텀(US-A8)이 들어오면 이 클래스가 기본값 위에
- * override를 병합하는 자리가 된다 — 호출부는 그대로다.
+ * 알 수 없다.
+ *
+ * <p><b>2026-08-26(US-A8)부터 표는 이 클래스가 갖지 않는다</b>: §4-2 기본값은
+ * {@code ProjectPermissionRules}가, 프로젝트별 override 병합은
+ * {@code ProjectPermissionMatrixResolver}가 든다 — A8-1 조회 응답이 같은 병합을
+ * 읽어야 하므로, 여기 표를 두면 화면이 "할 수 있다"고 그린 칸에서 서버가 403을 내는
+ * 어긋남이 생긴다. 예고대로 <b>호출부는 한 줄도 바뀌지 않았다</b>.
  *
  * ADMIN 치환(§4-1: "전 프로젝트 관리" 플래그 보유자는 모든 프로젝트에서 PM)은
  * {@link ProjectRoleResolver}가 이미 처리하므로 여기서 다시 다루지 않는다.
  */
 @Component
 class ProjectActionPermission {
-    // 상위 PRD §4-2 기본값 — 완료·재개는 진척률과 같은 실무 경로라 배정 전원이다
-    private static final Map<ProjectAction, Set<ProjectRole>> DEFAULTS = Map.of(
-            ProjectAction.EDIT_INFO, EnumSet.of(ProjectRole.PM, ProjectRole.PL),
-            ProjectAction.ASSIGN, EnumSet.of(ProjectRole.PM),
-            ProjectAction.PROGRESS,
-            EnumSet.of(ProjectRole.PM, ProjectRole.PL, ProjectRole.PARTICIPANT),
-            ProjectAction.COMPLETE_REOPEN,
-            EnumSet.of(ProjectRole.PM, ProjectRole.PL, ProjectRole.PARTICIPANT),
-            // 이관은 PM 하나다(D1) — 완료·재개와 달리 실무 경로가 아니라
-            // 프로젝트를 유지보수로 넘기는 마지막 결정이다
-            ProjectAction.HANDOVER, EnumSet.of(ProjectRole.PM));
-
     private final ProjectRoleResolver projectRoleResolver;
     private final OrgPermissionService orgPermissionService;
+    private final ProjectPermissionMatrixResolver matrixResolver;
 
     ProjectActionPermission(
             ProjectRoleResolver projectRoleResolver,
-            OrgPermissionService orgPermissionService) {
+            OrgPermissionService orgPermissionService,
+            ProjectPermissionMatrixResolver matrixResolver) {
         this.projectRoleResolver = projectRoleResolver;
         this.orgPermissionService = orgPermissionService;
+        this.matrixResolver = matrixResolver;
     }
 
     /**
@@ -52,7 +45,7 @@ class ProjectActionPermission {
      */
     void require(long callerPersonId, long projectId, ProjectAction action) {
         boolean allowed = projectRoleResolver.roleOf(callerPersonId, projectId)
-                .filter(role -> DEFAULTS.get(action).contains(role))
+                .filter(role -> matrixResolver.allows(projectId, role, action))
                 .isPresent();
 
         if (!allowed) {
