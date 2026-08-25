@@ -2,6 +2,7 @@ package kr.proten.pms.notification.repository;
 
 import kr.proten.pms.notification.NotificationType;
 import kr.proten.pms.notification.service.entity.Notification;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,6 +20,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     /** 멱등 판정 (F1-2·F2-2·F3-2) — 유니크 제약과 짝을 이루는 선검사. */
     boolean existsByRecipientIdAndDedupeKey(Long recipientId, String dedupeKey);
+
 
     /**
      * 미읽음 알림 회수 (AC F3-3) — 읽은 알림은 남긴다.

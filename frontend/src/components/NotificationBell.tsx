@@ -17,18 +17,15 @@ import { NOTIFICATION_TYPE_LABEL } from '../labels'
 import NotificationPrefsModal from './NotificationPrefsModal'
 
 export default function NotificationBell() {
-  const { notifications, unreadNotifications, loadNotifications, markNotificationRead, showToast }
+  const { notifications, unreadNotifications, markNotificationRead, showToast }
     = useStore()
   const [open, setOpen] = useState(false)
   const [prefsOpen, setPrefsOpen] = useState(false)
   const wrap = useRef<HTMLDivElement>(null)
 
-  // 열 때마다 서버에서 다시 읽는다 — 다른 탭·챗에서 생긴 알림이 여기서 처음 보인다
-  useEffect(() => {
-    if (open) {
-      void loadNotifications()
-    }
-  }, [open, loadNotifications])
+  // 열 때 재조회하지 않는다(2026-08-25): SSE가 열려 있는 동안 새 알림이 이미
+  // 흘러들고, 재연결 시 끊겨 있던 동안의 것은 서버가 재생한다(F1-4). 열 때마다
+  // 읽으면 스트림이 채운 목록을 같은 내용으로 덮어쓰는 왕복이 하나 더 생긴다
 
   // 바깥을 누르면 닫는다 — 드롭다운의 기본 기대 동작이다
   useEffect(() => {

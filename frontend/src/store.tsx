@@ -14,6 +14,7 @@ import {
   currentSession,
   login as apiLogin,
   startAsCaller,
+  subscribeNotifications,
 } from './api'
 import type {
   AssignmentView,
@@ -174,10 +175,10 @@ interface Store {
     Promise<Result<PageResponse<AuditRecord>>>
   // ── 알림 (EPIC F · H1-4) ──
   /**
-   * 알림은 **부팅 때 한 번 읽고 벨을 열 때 다시 읽는다**.
-   * SSE(F1-4)가 서버에 아직 없어 즉시 푸시가 불가능한데, 폴링을 두면 44명 규모에
-   * 끊임없는 요청이 생긴다 — 부록 A가 요구하는 "미읽음 수"는 이 두 시점으로 충분하다.
-   * 서버에 스트림이 열리면 이 자리가 구독으로 바뀐다.
+   * 알림은 **부팅 때 한 번 읽고 그 뒤로는 SSE로 흘러든다**(F1-4, 2026-08-25).
+   * 그 전에는 "부팅 + 벨 열기" 재조회였다 — 폴링을 두지 않은 것은 44명 규모에
+   * 끊임없는 요청이 생기기 때문이고, 이제 스트림이 그 자리를 대신한다.
+   * 재연결은 브라우저가 하고 끊겨 있던 동안의 것은 서버가 재생한다(Last-Event-ID).
    */
   notifications: NotificationView[]
   unreadNotifications: number
@@ -297,6 +298,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       void reload()
     }
   }, [reload])
+
 
   const submitLogin = useCallback(async (email: string, password: string) => {
     setLoginError(null)
@@ -477,6 +479,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const loadContractDetail = useCallback(
     (contractId: number) =>
       run(() => api.maintenanceContract(contractId), { refresh: false }), [run])
+
   const loadAudit = useCallback(
     (page: number) => run(() => api.audit(page), { refresh: false }), [run])
   const loadProjectAudit = useCallback(
@@ -491,6 +494,36 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     return result
   }, [run])
+
+  /*
+   * 알림 SSE 구독 (AC F1-4, 2026-08-25) — 부팅 로드가 목록을 채우고 그 뒤로는
+   * 여기로 흘러든다. 벨을 열 때마다 재조회하던 것을 이것이 대신한다.
+   *
+   * **의존성이 `phase`뿐인 것이 중요하다**: `notifications`를 걸면 알림이 한 건 올
+   * 때마다 이 effect가 다시 돌아 연결을 끊고 다시 붙는다 — 2026-08-24에 벨이 겪은
+   * "끝나지 않는 고리"와 같은 종류이고, 여기서는 그것이 재연결 폭풍이 된다.
+   * 갱신은 세터의 함수형 형태로 하므로 최신 목록을 의존성으로 들 이유가 없다.
+   *
+   * **연결될 때마다 목록을 다시 읽는다**: 서버는 끊겨 있던 동안의 것을 재생하지
+   * 않으므로(그 설계의 근거는 서버 컨트롤러 주석) 재조회가 그 구간을 메운다 —
+   * AC F1-4의 "미연결이면 재연결·재조회 시 반영" 그대로다. 첫 연결에서도 도는데,
+   * 부팅 로드와 겹치는 한 번의 왕복은 재연결 경로를 하나로 두는 값이다.
+   *
+   * 중복은 id로 거른다: 재조회가 담은 것을 스트림이 다시 보낼 수 있다.
+   */
+  useEffect(() => {
+    if (phase !== 'ready') {
+      return
+    }
+
+    return subscribeNotifications(
+      (view) =>
+        setNotifications((current) =>
+          current.some((existing) => existing.id === view.id)
+            ? current
+            : [view, ...current]),
+      () => void loadNotifications())
+  }, [phase, loadNotifications])
   const markNotificationRead = useCallback(async (notificationId: number) => {
     const result = await run(() => api.markNotificationRead(notificationId), { refresh: false })
 

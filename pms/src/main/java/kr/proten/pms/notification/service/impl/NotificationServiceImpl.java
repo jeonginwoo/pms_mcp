@@ -12,6 +12,7 @@ import kr.proten.pms.notification.NotificationPreferences;
 import kr.proten.pms.notification.NotificationService;
 import kr.proten.pms.notification.NotificationType;
 import kr.proten.pms.notification.NotificationView;
+import kr.proten.pms.notification.service.dto.NotificationStored;
 import kr.proten.pms.notification.NotifyCommand;
 import kr.proten.pms.notification.repository.NotificationMuteRepository;
 import kr.proten.pms.notification.repository.NotificationRepository;
@@ -19,6 +20,7 @@ import kr.proten.pms.notification.service.entity.Notification;
 import kr.proten.pms.notification.service.entity.NotificationMute;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,14 +46,17 @@ class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
     private final NotificationMuteRepository muteRepository;
     private final Clock clock;
+    private final ApplicationEventPublisher events;
 
     NotificationServiceImpl(
             NotificationRepository notificationRepository,
             NotificationMuteRepository muteRepository,
-            Clock clock) {
+            Clock clock,
+            ApplicationEventPublisher events) {
         this.notificationRepository = notificationRepository;
         this.muteRepository = muteRepository;
         this.clock = clock;
+        this.events = events;
     }
 
     @Override
@@ -94,7 +99,7 @@ class NotificationServiceImpl implements NotificationService {
             return;
         }
 
-        notificationRepository.save(Notification.of(
+        Notification saved = notificationRepository.save(Notification.of(
                 command.recipientId(),
                 command.type(),
                 command.refType(),
@@ -102,6 +107,8 @@ class NotificationServiceImpl implements NotificationService {
                 command.message(),
                 command.dedupeKey(),
                 Instant.now(clock)));
+        // 커밋 후에 컨트롤러가 밀어낸다 — 롤백된 알림을 화면에 띄우지 않는다
+        events.publishEvent(new NotificationStored(command.recipientId(), toView(saved)));
     }
 
     @Override
@@ -138,6 +145,8 @@ class NotificationServiceImpl implements NotificationService {
                 .map(NotificationMute::getType)
                 .collect(Collectors.toUnmodifiableSet());
     }
+
+
 
     private static NotificationView toView(Notification notification) {
         return new NotificationView(

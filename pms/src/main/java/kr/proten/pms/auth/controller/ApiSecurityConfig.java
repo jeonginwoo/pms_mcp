@@ -46,6 +46,11 @@ class ApiSecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> a
+                        // 스트림은 토큰이 헤더가 아니라 쿼리에 있어 리소스 서버
+                        // 필터가 못 읽는다 — 체인은 통과시키고 검증은
+                        // StreamCallerResolver가 한다(같은 accessTokenDecoder를 쓴다).
+                        // 여기를 빼면 EventSource가 언제나 401이다
+                        .requestMatchers("/api/notifications/stream").permitAll()
                         .requestMatchers("/api/auth/login", "/api/auth/refresh", "/api/auth/jwks")
                         .permitAll()
                         .anyRequest().authenticated())

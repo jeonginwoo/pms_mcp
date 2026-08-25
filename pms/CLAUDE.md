@@ -326,6 +326,10 @@ POST/PUT/DELETE /api/grades[/{id}]              grade CRUD (E4) — 409 IN_USE w
 POST/PUT/DELETE /api/permission-groups[/{id}]   group CRUD (E5) — 422 on the fixed group
 GET  /api/utilization?month=&personId=&orgUnitId=&overbooked=   (EPIC C)
 GET  /api/notifications  ·  PATCH /api/notifications/{id}/read  (F1-3)
+GET  /api/notifications/stream     SSE (F1-4). **The only route authenticated by query
+                                   param** — EventSource cannot send headers, so
+                                   `?access_token=` carries the JWT (auth on) or the personId
+                                   (auth off). Reconnect replay via standard `Last-Event-ID`
 GET/PUT /api/me/notif-prefs        per-type on/off (H1-4) — the controller lives in
                                    notification, not person: the data is notification's
 GET  /api/audit                    integrated log, manage flag — 403 is real (G1-3)
@@ -385,9 +389,7 @@ stop a PM without the 계약-관리 flag from handing over their own project. Th
 the port, for the audit actor and the event's `handedOverBy`, never for a judgement.
 
 No assignment list route: the project detail already carries them (A3-3).
-Not routed yet, on purpose: A8 (`/permissions`), `?phase=`, and
-the SSE stream `GET /api/notifications/stream` (its `?access_token=` auth and the
-access-log masking are one unit — opening the route first leaks tokens into logs).
+Not routed yet, on purpose: A8 (`/permissions`) and `?phase=`.
 
 ## Optimistic locking on writes (read this before adding a write path)
 
@@ -498,6 +500,34 @@ to all of them and stores.
 - **A status transition also creates overbooking** (계약대기 → 진행중 pulls the
   assignment into the numerator) and §8 has no event for it. Registered gap.
 
+
+
+## SSE notification stream (new 2026-08-25 — F1-4)
+
+`GET /api/notifications/stream`. Everything for it lives in
+`notification/controller/stream/` — controller, emitter registry, pusher, caller resolver.
+
+- **Query-param auth is scoped to this one route.** EventSource cannot set headers, so the
+  token rides in `?access_token=`. Widening common's `CallerIdentityResolver` to read the query
+  would let **every** route be called that way, and then the token lands in access logs
+  everywhere. `StreamCallerResolver` lives beside the stream instead, with two impls chosen by
+  `pms.auth.enabled` — JWT when on, personId when off (same trust model as the header).
+  `ApiSecurityConfig` must `permitAll` this path: the resource-server filter reads the
+  `Authorization` header and there isn't one, so it would 401 every EventSource.
+- **Masking is the deployment's job, not the app's** (구현_노트 §6): the Nginx log format has to
+  hide `access_token`. What the app owes is never logging it *itself* — that is why no exception
+  message in this package contains the token.
+- **The emitter is a web type, and that decided the design.** `LayerRuleTest` keeps
+  `org.springframework.web..` out of `service`, but storing happens in `service`, and
+  service → controller is forbidden. So the service publishes an in-module event
+  (`service/dto/NotificationStored`) and `NotificationPusher` (controller side) pushes on
+  `AFTER_COMMIT`. Neither layer imports the other.
+- **A failed push is swallowed.** Raising it would roll back the storing transaction — the
+  notification would vanish *because* it could not be delivered, which is the opposite of F1-4's
+  "미연결이면 재연결·재조회 시 반영". The table is the record; the stream is a convenience.
+- **One JVM only** (ASSUMPTION): emitters live in this instance's memory. A second instance
+  cannot reach connections held by the first. Fine for the single-instance premise (§3); the day
+  it scales, a broker replaces `NotificationStream` and nothing else.
 
 ## Schedulers (new 2026-08-25 — F2/F3)
 
