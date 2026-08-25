@@ -11,6 +11,7 @@ import type { Route } from '../store'
 
 const ICONS: Record<Route, string> = {
   home: 'M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1z',
+  sales: 'M3 17l6-6 4 4 8-8M21 7h-5m5 0v5',
   projects: 'M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z',
   people: 'M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2M14 7a4 4 0 11-8 0 4 4 0 018 0M21 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75',
   utilization: 'M3 3v18h18M7 15l3-4 3 3 4-6',
@@ -22,8 +23,14 @@ const ICONS: Record<Route, string> = {
 /** 관리 플래그가 있을 때만 보이는 항목 — 숨기는 것은 표시용이고 판정은 서버다 */
 const MANAGED: Route[] = ['audit']
 
+/*
+ * 영업과 프로젝트는 같은 목록의 두 phase다 (2026-08-25 사용자 결정 — 화면 안의
+ * 단계 탭을 걷고 내비 항목 둘로 갈랐다): 영업 = 계약대기·수주확정,
+ * 프로젝트 = 진행중·완료. 유지보수중은 둘 중 어디에도 없고 유지보수 항목이 든다(§5).
+ */
 const NAV: { key: Route; label: string }[] = [
   { key: 'home', label: '홈' },
+  { key: 'sales', label: '영업' },
   { key: 'projects', label: '프로젝트' },
   { key: 'people', label: '인력 · 조직' },
   { key: 'utilization', label: '가동률' },

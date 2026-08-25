@@ -58,7 +58,14 @@ function Shell() {
         <Header theme={theme} onToggleTheme={toggle} />
         <main className="content">
           {route === 'home' && <Home />}
-          {route === 'projects' && (detail ? <ProjectDetail /> : <Projects />)}
+          {/*
+            영업·프로젝트는 같은 목록 화면의 두 phase다 (§7 ?phase=). 상세는 한 벌이라
+            어느 쪽에서 열어도 같은 화면이고, 닫으면 열었던 목록으로 돌아간다
+            (store의 openProject가 현재 라우트를 지킨다).
+          */}
+          {route === 'sales' && (detail ? <ProjectDetail /> : <Projects phase="SALES" title="영업" />)}
+          {route === 'projects'
+            && (detail ? <ProjectDetail /> : <Projects phase="SOLUTION" title="프로젝트" />)}
           {route === 'people' && <People />}
           {route === 'utilization' && <Utilization />}
           {route === 'maintenance' && (contract ? <MaintenanceContract /> : <Maintenance />)}

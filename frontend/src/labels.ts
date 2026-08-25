@@ -43,9 +43,6 @@ export const PHASE_LABEL: Record<ProjectPhase, string> = {
   SOLUTION: '솔루션',
 }
 
-/** phase 탭 순서 — 서버 열거 순서(§5 영업 → 솔루션)를 그대로 따른다 */
-export const PHASE_ORDER: ProjectPhase[] = ['SALES', 'SOLUTION']
-
 export const ENGAGEMENT_LABEL: Record<Engagement, string> = {
   REMOTE: '원격',
   ONSITE: '상주',

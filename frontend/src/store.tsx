@@ -65,8 +65,12 @@ import type {
 
 export type Result<T> = { ok: true; value: T } | { ok: false; error: ApiError }
 
+/**
+ * `sales`와 `projects`는 같은 목록 화면의 두 phase다 (§7 `?phase=` — 2026-08-25 결정).
+ * 라우트를 둘로 가른 것은 사이드바 항목이 둘이기 때문이고, 화면 안에는 단계 탭이 없다.
+ */
 export type Route =
-  | 'home' | 'projects' | 'people' | 'utilization' | 'maintenance' | 'issues' | 'audit'
+  | 'home' | 'sales' | 'projects' | 'people' | 'utilization' | 'maintenance' | 'issues' | 'audit'
 
 export type BootPhase = 'anon' | 'loading' | 'ready' | 'error'
 
@@ -388,7 +392,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const openProject = useCallback(async (projectId: number) => {
     try {
       setDetail(await api.project(projectId))
-      setRoute('projects')
+      // 영업 화면에서 열었으면 영업에 머문다 — 여기서 무조건 'projects'로 옮기면
+      // 상세를 닫았을 때 사용자가 오지 않은 목록으로 떨어진다. 다른 곳(홈·계약의
+      // 원 프로젝트 링크·감사)에서 열었을 때의 착지는 'projects'다
+      setRoute((current) => (current === 'sales' ? 'sales' : 'projects'))
     } catch (e) {
       showToast(e instanceof Error ? e.message : '프로젝트를 열 수 없습니다')
     }

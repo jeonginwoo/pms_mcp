@@ -12,6 +12,7 @@ import type { Theme } from '../theme'
 
 const TITLES: Record<Route, string> = {
   home: '홈',
+  sales: '영업',
   projects: '프로젝트',
   people: '인력 · 조직',
   utilization: '가동률',

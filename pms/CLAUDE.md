@@ -334,7 +334,9 @@ GET  /api/notifications  ·  PATCH /api/notifications/{id}/read  (F1-3)
 GET  /api/notifications/stream     SSE (F1-4). **The only route authenticated by query
                                    param** — EventSource cannot send headers, so
                                    `?access_token=` carries the JWT (auth on) or the personId
-                                   (auth off). Reconnect replay via standard `Last-Event-ID`
+                                   (auth off). **Reconnect recovery is a list re-fetch**, not
+                                   server replay — `Last-Event-ID` was removed 2026-08-25
+                                   (see the SSE section below)
 GET/PUT /api/me/notif-prefs        per-type on/off (H1-4) — the controller lives in
                                    notification, not person: the data is notification's
 GET  /api/audit                    integrated log, manage flag — 403 is real (G1-3)
@@ -560,6 +562,14 @@ to all of them and stores.
 - **A failed push is swallowed.** Raising it would roll back the storing transaction — the
   notification would vanish *because* it could not be delivered, which is the opposite of F1-4's
   "미연결이면 재연결·재조회 시 반영". The table is the record; the stream is a convenience.
+- **Recovery is a list re-fetch, not server replay.** `Last-Event-ID` replay was built and then
+  removed on 2026-08-25: the replayed rows broadcast to **all** of that person's connections
+  (rewinding another tab's cursor), a truncated replay had no way to say so, and an exception
+  mid-replay leaked the emitter. F1-4 asks for "미연결이면 재연결·재조회 시 반영", and the client
+  re-fetching the list on every connect **is** that sentence. The client also reconnects itself
+  rather than letting the browser do it — the browser reuses the URL, and the token frozen in it
+  expires (1h) before the server's own emitter timeout matters, after which `EventSource` fails
+  permanently on the non-200.
 - **One JVM only** (ASSUMPTION): emitters live in this instance's memory. A second instance
   cannot reach connections held by the first. Fine for the single-instance premise (§3); the day
   it scales, a broker replaces `NotificationStream` and nothing else.
