@@ -79,6 +79,7 @@ npm install && npm run dev                          # 이 앱 :5173
 | 알림 벨·읽음 | `GET /api/notifications` · `PATCH /{id}/read` | F1-3 — 미읽음 뱃지 · 부팅 로드 + SSE 재연결 시 재조회(벨 열기 재조회는 2026-08-25에 없앴다) |
 | 알림 SSE 구독 | `GET /api/notifications/stream` | F1-4 — 부팅 로드가 목록을 채우고 그 뒤로는 스트림으로 흘러든다. **벨 열 때 재조회를 없앴다**. 재연결은 브라우저가 하고 끊겨 있던 동안의 것은 서버가 `Last-Event-ID`로 재생한다 |
 | 알림 설정 | `GET`·`PUT /api/me/notif-prefs` | H1-4 — 유형 **6종** on/off(전체 교체) · 토글은 서버 응답의 유형 전체를 그리므로 유형이 늘면 칸이 저절로 는다 |
+| 내 계정 | `GET /api/me/account` · `PUT /api/me/profile` · `PUT /api/me/password` | EPIC H — 사이드바 프로필에서 연다. **소속·직급·권한 그룹 칸이 없다**(E2-2 관리자 경로의 몫 — 열면 자기 권한 그룹을 스스로 바꾼다). 비밀번호 오류는 **갈라 보여 주지 않는다**: 서버가 불일치·형식을 같은 400으로 수렴시키고, 갈라 주면 "현재 비밀번호는 맞았다"가 샌다 |
 | 유지보수 계약 등록·수정 | `POST`·`PUT /api/maintenance/contracts[/{id}]` | D2-1·D2-2 — **"계약 관리" 플래그**만 · 삭제 없음(종료는 상태로) |
 | 사이트 등록·수정 + 연락처 | `POST /contracts/{id}/sites` · `PUT /api/maintenance/sites/{id}` | D2-4 — 연락처는 **전체 교체**, 원문(raw)은 서버가 조각으로 조립 |
 | 이슈 등록 | `POST /api/maintenance/issues` | D3-1 — **권한 판정 없음**(로그인 사용자 전체) · 담당자 칸이 없다: 사이트의 담당 엔지니어가 기본 담당자다. 계약 상세에서 열면 사이트 선택이 한 단계 |

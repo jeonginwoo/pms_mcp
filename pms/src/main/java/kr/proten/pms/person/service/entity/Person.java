@@ -84,6 +84,22 @@ public class Person {
      * 행을 지우지 않는 이유: 과거 배정·감사 로그·집계가 이 인원을 가리키고 있고,
      * 그것들은 그때의 사실이라 사라져서는 안 된다.
      */
+    public void deactivate() {
+        this.active = false;
+    }
+
+    /**
+     * 이름만 바꾼다 (AC H1-2 내 프로필).
+     *
+     * <p><b>{@link #update}를 쓰지 않는 이유</b>: 그쪽은 소속·직급·권한 그룹까지 받는
+     * 관리자 경로(E2-2)라, 내 프로필 수정이 그것을 부르면 <b>자기 권한 그룹을 스스로
+     * 바꿀 수 있는 길</b>이 열린다. 지금 값을 그대로 다시 넘기는 방식도 안전하지 않다 —
+     * 나중에 칸이 하나 늘면 프로필 수정이 그것을 조용히 초기화한다.
+     */
+    public void rename(String name) {
+        this.name = name;
+    }
+
     /**
      * 이름·소속·직급·권한 그룹을 바꾼다 (AC E2-2 — 그룹 부여도 이 경로다, 2026-08-09 ⑦).
      *
@@ -106,10 +122,6 @@ public class Person {
      */
     public void moveTo(Long orgUnitId) {
         this.orgUnitId = orgUnitId;
-    }
-
-    public void deactivate() {
-        this.active = false;
     }
 
     public Long getId() {
