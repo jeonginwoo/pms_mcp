@@ -18,6 +18,7 @@ import kr.proten.pms.project.service.ProjectQueryService;
 import kr.proten.pms.project.service.dto.ProgressUpdateResult;
 import kr.proten.pms.project.service.dto.ProjectDetail;
 import kr.proten.pms.project.service.dto.ProjectSummary;
+import kr.proten.pms.project.service.entity.ProjectPhase;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -67,13 +69,19 @@ class ProjectController {
     /**
      * 가시성 범위 내 프로젝트 목록 (AC A3-1) — page 봉투.
      * 페이징·정렬은 ?page=0&size=20&sort=field,desc (§7).
-     * ASSUMPTION: ?phase= 파생 필터(§7·v2.4)는 아직 없다 — 목록 화면 작업과 함께 넣는다.
+     *
+     * <p>{@code ?phase=SALES|SOLUTION}은 선택 필터다(§7·v2.4). 접근 제한은 두지 않는다
+     * (2026-08-24 사용자 결정 — 탭은 전원 공개다). 모르는 값은 스프링의 열거 변환이
+     * 실패하고 {@code GlobalExceptionHandler}가 §7 봉투 400으로 답한다 — 여기서 다시
+     * 검사하면 같은 판정이 두 곳에 생긴다.
      */
     @GetMapping
     ApiResponse<PageResponse<ProjectSummary>> list(
-            @CallerPersonId long callerPersonId, Pageable pageable) {
+            @CallerPersonId long callerPersonId,
+            @RequestParam(required = false) ProjectPhase phase,
+            Pageable pageable) {
         return ApiResponse.ok(
-                PageResponse.of(projectQueryService.listVisible(callerPersonId, pageable)));
+                PageResponse.of(projectQueryService.listVisible(callerPersonId, phase, pageable)));
     }
 
     /** 프로젝트 단건 조회 (AC A3-2·A3-3) — 가시성 밖은 404 은닉. */

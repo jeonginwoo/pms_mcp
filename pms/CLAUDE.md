@@ -166,8 +166,8 @@ disappears, and it now has.
   (its `ContractWriteGuard` would stop a PM without the 계약-관리 flag from handing over
   their own project), and the port needs the **caller** — an audit actor guessed from the
   site engineer puts someone who did nothing into an append-only log.
-- project AC **A8** (per-project permission matrix),
-  and the `?phase=` list filter.
+- project AC **A8** (per-project permission matrix) — the last open item in this app.
+  The `?phase=` list filter landed 2026-08-25 (see the ProjectPhase note below).
 
 ## Ownership inside this app
 
@@ -342,6 +342,11 @@ GET  /api/projects/{id}/audit      per-project, visibility — 404 is real (G2-2
 
 POST /api/projects            201 + detail                       (A1)
 GET  /api/projects            §7 page envelope, ?page&size&sort   (A3-1)
+                              **?phase=SALES|SOLUTION** — derived filter (§5, 2026-08-25).
+                              Optional, no permission gate (tabs are public); the filter is
+                              applied **after** the visibility judgement, so it can only narrow.
+                              An unknown value 400s through Spring's enum conversion — the
+                              controller must not re-check it, or the same judgement lives twice
 GET  /api/projects/{id}        detail + assignments + derived phase (A3-2·A3-3)
 PUT  /api/projects/{id}         edit info + one forward transition (A5)
 PUT  /api/projects/{id}/progress   two-step: confirmed=false → true (A2)
@@ -394,7 +399,7 @@ stop a PM without the 계약-관리 flag from handing over their own project. Th
 the port, for the audit actor and the event's `handedOverBy`, never for a judgement.
 
 No assignment list route: the project detail already carries them (A3-3).
-Not routed yet, on purpose: A8 (`/permissions`) and `?phase=`.
+Not routed yet, on purpose: A8 (`/permissions`).
 
 
 ## `/api/me/*` belongs to whoever owns the data (settled 2026-08-25, EPIC H)
@@ -577,6 +582,24 @@ to all of them and stores.
 - **`hundred_reached_at` (V15) is what F3 measures from.** `null` means "not at 100% now" — the
   entity clears it whenever progress drops, so no separate flag exists. The **seed loader passes
   `null`** on purpose: stamping load time would make every seeded 100% project fire a week later.
+
+## Derived values read in two directions (`ProjectPhase`, 2026-08-25)
+
+PRD-pms §5 makes phase a **derived** grouping of status and forbids duplicating the source.
+The `?phase=` list filter is what showed that "the source" has to be read **both ways**:
+the single-project response goes status → phase, the list filter goes phase → status set.
+
+- **The table is the `default`-less `switch` in `ProjectPhase.of`, and `statuses()` is built
+  from it** at class-init. Writing the table twice — once per direction — reproduces the very
+  duplication §5 bans, except in code rather than in a column, and then adding a status and
+  fixing only one side fails nothing.
+- **Do not move the table into the enum constants' arguments.** That reads nicely and loses
+  the compile-time forcing: a new `ProjectStatus` then falls silently out of *both* groups
+  (treated like 유지보수중) with nothing failing. Same reason `ToolError.from` has no `default`.
+  A test cannot replace this — an assertion derived from the implementation
+  (`of(s).statuses()` contains `s`) is a tautology. The test holds the §5 table **by hand**.
+- **The list DTO carries the derived value too.** Leaving it out means the screen drawing the
+  tabs keeps a third copy of the table.
 
 ## Project permissions
 

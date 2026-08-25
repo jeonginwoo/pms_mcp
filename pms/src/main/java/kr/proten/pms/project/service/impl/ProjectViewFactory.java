@@ -47,6 +47,7 @@ class ProjectViewFactory {
                         project.getClient(),
                         project.getName(),
                         project.getStatus(),
+                        project.getPhase(),
                         project.getProgress(),
                         project.getManagerId(),
                         managerNames.get(project.getManagerId())))

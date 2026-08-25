@@ -49,6 +49,7 @@ import type {
   PersonSummary,
   ProgressUpdateResult,
   ProjectDetail,
+  ProjectPhase,
   ProjectRole,
   ProjectSummary,
   RenameOrgUnitBody,
@@ -294,8 +295,14 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
  * 프로젝트 목록 — 서버 페이징을 쓰되 한 번에 받아 화면에서 필터한다.
  *
  * ASSUMPTION: 전사 프로젝트가 시드 기준 382건이라 한 번에 받는 편이 단순하고,
- * 서버에 이름 검색(`?keyword=`)·phase 필터가 아직 없다. 수천 건이 되거나 서버
- * 필터가 생기면 페이지 단위 조회로 되돌린다(그때 이 주석이 트리거다).
+ * 서버에 이름 검색(`?keyword=`)이 아직 없다. 수천 건이 되면 페이지 단위 조회로
+ * 되돌린다(그때 이 주석이 트리거다).
+ *
+ * **`?phase=`가 생겼는데도(2026-08-25) 페이지 단위로 되돌리지 않은 이유**: 상태 칩과
+ * 이름 검색이 아직 화면 필터라, 지금 페이지로 끊으면 그 둘이 **현재 페이지 밖을 못 본다**
+ * — 사용자는 "없다"는 답을 받고 그것을 믿는다. 되돌리기는 그 둘이 서버로 갈 때의 몫이고
+ * 그때가 이 트리거의 진짜 발화 지점이다. phase는 탭이므로 그 사이에도 안전하다:
+ * 탭을 고르면 그 그룹 **전량**을 다시 받아 오고, 화면 필터는 그 부분집합 위에서 돈다.
  */
 const LIST_PAGE_SIZE = 500
 
@@ -440,9 +447,10 @@ export const api = {
   changePassword: (body: ChangePasswordBody) =>
     request<null>('/api/me/password', { method: 'PUT', body: JSON.stringify(body) }),
 
-  projects: () =>
+  /** 목록 — `phase`를 주면 그 탭의 전량, 안 주면 가시성 범위 전량이다(§7). */
+  projects: (phase?: ProjectPhase | null) =>
     request<PageResponse<ProjectSummary>>(
-      `/api/projects?page=0&size=${LIST_PAGE_SIZE}&sort=id,desc`),
+      `/api/projects?${queryOf({ page: 0, size: LIST_PAGE_SIZE, sort: 'id,desc', phase })}`),
   project: (projectId: number) => request<ProjectDetail>(`/api/projects/${projectId}`),
 
   createProject: (body: CreateProjectBody) =>

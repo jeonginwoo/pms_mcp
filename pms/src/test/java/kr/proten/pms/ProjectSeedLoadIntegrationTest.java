@@ -12,9 +12,12 @@ import kr.proten.pms.person.service.entity.Person;
 import kr.proten.pms.project.ProjectStatus;
 import kr.proten.pms.project.repository.ProjectAssignmentRepository;
 import kr.proten.pms.project.repository.ProjectRepository;
+import kr.proten.pms.project.service.ProjectQueryService;
+import kr.proten.pms.project.service.dto.ProjectSummary;
 import kr.proten.pms.project.service.entity.Engagement;
 import kr.proten.pms.project.service.entity.Project;
 import kr.proten.pms.project.service.entity.ProjectAssignment;
+import kr.proten.pms.project.service.entity.ProjectPhase;
 import kr.proten.pms.project.service.entity.ProjectRole;
 import kr.proten.pms.resource.service.UtilizationQueryService;
 import kr.proten.pms.resource.service.dto.UtilizationQuery;
@@ -24,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.data.domain.PageRequest;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
@@ -64,6 +68,8 @@ class ProjectSeedLoadIntegrationTest {
     private PersonRepository personRepository;
     @Autowired
     private UtilizationQueryService utilizationQueryService;
+    @Autowired
+    private ProjectQueryService projectQueryService;
 
     @Test
     @DisplayName("부록 B — 프로젝트 382건이 상태 분포 그대로 적재된다")
@@ -78,6 +84,36 @@ class ProjectSeedLoadIntegrationTest {
                 ProjectStatus.IN_PROGRESS, 34L,
                 ProjectStatus.ORDER_CONFIRMED, 19L,
                 ProjectStatus.CONTRACT_PENDING, 10L));
+    }
+
+    @Test
+    @DisplayName("§7 ?phase= — 실 시드 382건이 영업 29 · 솔루션 353으로 갈린다")
+    void phaseFilterSplitsTheRealSeed() {
+        // 위 상태 분포(계약대기 10 · 수주확정 19 · 진행중 34 · 완료 319)의 파생값이다 —
+        // 여기서 어긋나면 탭이 상태 분포와 다른 표를 보고 있다는 뜻이다
+        assertThat(phaseCount(ProjectPhase.SALES)).isEqualTo(29);
+        assertThat(phaseCount(ProjectPhase.SOLUTION)).isEqualTo(353);
+        // 시드에 유지보수중이 0건이라 둘의 합이 전량이다(이관만이 그 상태를 만든다)
+        assertThat(phaseCount(ProjectPhase.SALES) + phaseCount(ProjectPhase.SOLUTION))
+                .isEqualTo(phaseCount(null))
+                .isEqualTo(382);
+    }
+
+    @Test
+    @DisplayName("§5 — 목록이 실어 주는 phase는 상태 파생값과 어긋나지 않는다")
+    void listedPhaseAgreesWithStatus() {
+        List<ProjectSummary> page = projectQueryService
+                .listVisible(COMPANY_SCOPE_CALLER_ID, null, PageRequest.of(0, 400))
+                .getContent();
+
+        assertThat(page).hasSize(382).allSatisfy(summary ->
+                assertThat(summary.phase()).isEqualTo(ProjectPhase.of(summary.status())));
+    }
+
+    private long phaseCount(ProjectPhase phase) {
+        return projectQueryService
+                .listVisible(COMPANY_SCOPE_CALLER_ID, phase, PageRequest.of(0, 1))
+                .getTotalElements();
     }
 
     @Test

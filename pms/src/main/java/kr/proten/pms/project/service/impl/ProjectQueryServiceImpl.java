@@ -8,6 +8,7 @@ import kr.proten.pms.project.service.dto.ProjectDetail;
 import kr.proten.pms.project.service.dto.ProjectSummary;
 import kr.proten.pms.project.service.dto.ProjectVisibility;
 import kr.proten.pms.project.service.entity.Project;
+import kr.proten.pms.project.service.entity.ProjectPhase;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -38,20 +39,29 @@ public class ProjectQueryServiceImpl implements ProjectQueryService {
         this.auditQueryService = auditQueryService;
     }
 
-    /** 가시성 범위 내 프로젝트 목록 — 조직 범위와 본인 배정의 합집합이다. */
-    public Page<ProjectSummary> listVisible(long callerPersonId, Pageable pageable) {
+    /**
+     * 가시성 범위 내 프로젝트 목록 — 조직 범위와 본인 배정의 합집합이다.
+     * phase는 그 위에 얹는 선택 필터이며 질의 조건으로 내려간다(§7 {@code ?phase=}).
+     */
+    public Page<ProjectSummary> listVisible(
+            long callerPersonId, ProjectPhase phase, Pageable pageable) {
         ProjectVisibility visibility = projectVisibilityService.visibilityOf(callerPersonId);
 
         if (visibility.unrestricted()) {
-            return toSummaryPage(projectRepository.findByDeletedFalse(pageable));
+            return toSummaryPage(phase == null
+                    ? projectRepository.findByDeletedFalse(pageable)
+                    : projectRepository.findByDeletedFalseAndStatusIn(phase.statuses(), pageable));
         }
 
         if (visibility.visibleProjectIds().isEmpty()) {
             return Page.empty(pageable);
         }
 
-        return toSummaryPage(projectRepository.findByIdInAndDeletedFalse(
-                visibility.visibleProjectIds(), pageable));
+        return toSummaryPage(phase == null
+                ? projectRepository.findByIdInAndDeletedFalse(
+                        visibility.visibleProjectIds(), pageable)
+                : projectRepository.findByIdInAndDeletedFalseAndStatusIn(
+                        visibility.visibleProjectIds(), phase.statuses(), pageable));
     }
 
     /**

@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import kr.proten.pms.project.ProjectStatus;
 import kr.proten.pms.project.service.entity.Project;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -80,6 +81,23 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     Page<Project> findByDeletedFalse(Pageable pageable);
 
     Page<Project> findByIdInAndDeletedFalse(Collection<Long> ids, Pageable pageable);
+
+    /**
+     * phase 탭 필터 (AC A3-1 · §7 `?phase=`) — 갈래 둘은 위와 같고 상태 집합만 더 건다.
+     *
+     * <p>집합을 호출자가 짜 오지 않는다: {@code ProjectPhase.statuses()}가 정본이고
+     * (§5 파생 정의), 저장소는 그것을 그대로 받는다. 여기에 상태를 다시 나열하면
+     * 단건 응답의 phase와 목록 필터가 서로 다른 표를 보게 된다.
+     *
+     * <p>{@code search}(MCP {@code search_projects})를 빌려 쓰지 않는 이유는 그쪽이
+     * {@code order by}를 질의 안에 고정하기 때문이다 — 웹 목록은 호출자의
+     * {@code Pageable} 정렬을 따른다(§7 {@code ?sort=}).
+     */
+    Page<Project> findByDeletedFalseAndStatusIn(
+            Collection<ProjectStatus> statuses, Pageable pageable);
+
+    Page<Project> findByIdInAndDeletedFalseAndStatusIn(
+            Collection<Long> ids, Collection<ProjectStatus> statuses, Pageable pageable);
 
     /**
      * 가시성 범위 안에서 상태·키워드로 거른 목록 (AC A3-1 · MCP {@code search_projects}).

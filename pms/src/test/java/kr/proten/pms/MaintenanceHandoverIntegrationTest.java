@@ -38,8 +38,10 @@ import kr.proten.pms.project.service.dto.AssignmentSpec;
 import kr.proten.pms.project.service.dto.CreateProjectCommand;
 import kr.proten.pms.project.service.dto.EditProjectCommand;
 import kr.proten.pms.project.service.dto.ProjectDetail;
+import kr.proten.pms.project.service.dto.ProjectSummary;
 import kr.proten.pms.project.service.dto.UpdateProgressCommand;
 import kr.proten.pms.project.service.entity.Engagement;
+import kr.proten.pms.project.service.entity.ProjectPhase;
 import kr.proten.pms.project.service.entity.ProjectRole;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -227,6 +229,32 @@ class MaintenanceHandoverIntegrationTest extends PostgresTestBase {
         assertThatExceptionOfType(ConflictException.class)
                 .isThrownBy(() -> projectLifecycleService.reopen(
                         PM_ID, handedOver.id(), handedOver.version()));
+    }
+
+    @Test
+    @DisplayName("§5 — 이관된 프로젝트는 어느 phase 탭에도 없다 (무필터 목록에는 남는다)")
+    void handedOverProjectLeavesBothPhaseTabs() {
+        // Given — 유지보수중을 만드는 입구는 이관뿐이다: 시드에는 그 상태가 0건이라
+        // "어느 그룹에도 들지 않는다"를 실물 행으로 증명할 자리가 여기밖에 없다
+        ProjectDetail completed = givenCompleted("D1탭이탈");
+        assertThat(idsOf(ProjectPhase.SOLUTION)).contains(completed.id());
+
+        // When
+        projectLifecycleService.handover(
+                PM_ID, completed.id(), spec("명화공업 탭"), completed.version());
+
+        // Then — 완료였을 때 있던 솔루션 탭에서 빠지고 영업 탭에도 들어가지 않는다
+        assertThat(idsOf(ProjectPhase.SOLUTION)).doesNotContain(completed.id());
+        assertThat(idsOf(ProjectPhase.SALES)).doesNotContain(completed.id());
+        // 사라진 것이 아니다 — 탭의 축에서만 빠진다(유지보수 탭의 원천은 계약이다)
+        assertThat(idsOf(null)).contains(completed.id());
+    }
+
+    private List<Long> idsOf(ProjectPhase phase) {
+        return projectQueryService.listVisible(PM_ID, phase, PageRequest.of(0, 200))
+                .getContent().stream()
+                .map(ProjectSummary::id)
+                .toList();
     }
 
     @Test

@@ -153,12 +153,18 @@ export interface OrgUnitView {
   deletable: boolean
 }
 
-/** GET /api/projects 항목 — 목록은 상세보다 필드가 적다(기간·솔루션 없음) */
+/**
+ * GET /api/projects 항목 — 목록은 상세보다 필드가 적다(기간·솔루션 없음).
+ *
+ * `phase`는 서버가 status에서 파생해 실어 준다(§5) — 화면이 status → phase 표를
+ * 자기가 갖지 않게 하려는 것이다. 유지보수중은 어느 그룹에도 들지 않아 null이다.
+ */
 export interface ProjectSummary {
   id: number
   client: string
   name: string
   status: ProjectStatus
+  phase: ProjectPhase | null
   progress: number
   managerId: number
   managerName: string | null

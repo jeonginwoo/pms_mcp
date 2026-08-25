@@ -320,7 +320,7 @@ class ProjectLifecycleIntegrationTest extends PostgresTestBase {
 
         projectCommandService.delete(PM_ID, created.id());
 
-        assertThat(projectQueryService.listVisible(PM_ID, PageRequest.of(0, 50)).getContent())
+        assertThat(projectQueryService.listVisible(PM_ID, null, PageRequest.of(0, 50)).getContent())
                 .extracting(ProjectSummary::id)
                 .doesNotContain(created.id());
         assertThatExceptionOfType(NotFoundException.class)

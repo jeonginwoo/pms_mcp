@@ -51,6 +51,7 @@ import type {
   PersonSummary,
   ProgressUpdateResult,
   ProjectDetail,
+  ProjectPhase,
   ProjectRole,
   ProjectSummary,
   SiteBody,
@@ -152,6 +153,13 @@ interface Store {
    * 매번 서버에 다시 물어야 한다(조회 시점 계산이라 캐시가 없다 — 2026-08-06).
    */
   loadUtilization: (query: UtilizationQuery) => Promise<Result<UtilizationView[]>>
+  /**
+   * phase 탭이 부르는 목록 (§7 `?phase=`) — 그 그룹의 **전량**을 서버에서 다시 받는다.
+   *
+   * 위 `projects`(무필터 전량)를 그대로 두고 따로 부르는 이유: 홈이 그 배열로 상태
+   * 분포를 그리므로 탭이 그것을 갈아 끼우면 홈의 수치가 탭을 따라 움직인다.
+   */
+  loadProjects: (phase: ProjectPhase) => Promise<Result<PageResponse<ProjectSummary>>>
   /**
    * 유지보수 조회 — 가동률과 같은 이유로 라우트 진입 시 부른다.
    * 전사 공개라 가시성 판정이 없고(D4-3) 화자가 바뀌어도 같은 답이 온다.
@@ -482,6 +490,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    */
   const loadUtilization = useCallback(
     (query: UtilizationQuery) => run(() => api.utilization(query), { refresh: false }), [run])
+  const loadProjects = useCallback(
+    (phase: ProjectPhase) => run(() => api.projects(phase), { refresh: false }), [run])
   const loadContracts = useCallback(
     (query: ContractQuery) => run(() => api.maintenanceContracts(query), { refresh: false }),
     [run])
@@ -659,6 +669,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // 조회 동작은 위에서 안정화한 것을 그대로 싣는다 — 여기서 즉석으로 만들면
     // store 값이 다시 만들어질 때마다 화면의 조회 effect가 함께 깨어난다
     loadUtilization,
+    loadProjects,
     loadContracts,
     loadContractDetail,
     loadIssues,
@@ -686,7 +697,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     projects, totalProjects, route, detail, contract, toast, loginError, submitLogin,
     enterAsCaller, logout, reload, openProject, closeProject, openContract, closeContract,
     showToast, run, runOrganization, runContract, notifications,
-    loadUtilization, loadContracts, loadContractDetail, loadIssues, loadAudit, loadProjectAudit,
+    loadUtilization, loadProjects, loadContracts, loadContractDetail, loadIssues, loadAudit,
+    loadProjectAudit,
     loadNotifications, markNotificationRead, loadNotifPrefs, updateNotifPrefs])
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>

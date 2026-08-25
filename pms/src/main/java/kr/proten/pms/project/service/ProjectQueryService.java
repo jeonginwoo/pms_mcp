@@ -3,6 +3,7 @@ package kr.proten.pms.project.service;
 import kr.proten.pms.audit.AuditRecord;
 import kr.proten.pms.project.service.dto.ProjectDetail;
 import kr.proten.pms.project.service.dto.ProjectSummary;
+import kr.proten.pms.project.service.entity.ProjectPhase;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -15,8 +16,17 @@ import org.springframework.data.domain.Pageable;
  */
 public interface ProjectQueryService {
 
-    /** 가시성 범위 내 목록 (AC A3-1) — 조직 범위와 본인 배정의 합집합이다. */
-    Page<ProjectSummary> listVisible(long callerPersonId, Pageable pageable);
+    /**
+     * 가시성 범위 내 목록 (AC A3-1) — 조직 범위와 본인 배정의 합집합이다.
+     *
+     * <p>{@code phase}는 선택이다(§7 {@code ?phase=}). null이면 그룹을 따지지 않으므로
+     * 유지보수중까지 전부 나오고, 값이 있으면 그 그룹의 상태들만 남는다 —
+     * <b>유지보수중은 어느 값으로도 나오지 않는다</b>(§5: 유지보수 탭의 원천은
+     * 프로젝트가 아니라 계약이다).
+     *
+     * <p>필터는 가시성을 넓히지도 좁히지도 않는다 — 판정이 먼저고 그룹이 나중이다.
+     */
+    Page<ProjectSummary> listVisible(long callerPersonId, ProjectPhase phase, Pageable pageable);
 
     /** 단건 조회 (AC A3-2·A3-3) — 배정과 파생 phase를 함께 담는다. */
     ProjectDetail getProject(long callerPersonId, long projectId);
