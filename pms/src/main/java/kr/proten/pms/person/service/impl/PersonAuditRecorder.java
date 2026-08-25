@@ -9,6 +9,7 @@ import kr.proten.pms.audit.AuditTrail;
 import kr.proten.pms.person.service.entity.Grade;
 import kr.proten.pms.person.service.entity.OrgUnit;
 import kr.proten.pms.person.service.entity.PermissionGroup;
+import kr.proten.pms.person.AccountContact;
 import kr.proten.pms.person.service.entity.Person;
 import org.springframework.stereotype.Component;
 
@@ -104,6 +105,33 @@ class PersonAuditRecorder {
     /** 인원 수정·소속 이동 (AC E2-2·E1-1) — 소속 이동도 §5 상태 전이가 아니라 UPDATE다(v2.1). */
     void personChanged(long actorId, Person person, Map<String, Object> before) {
         recordDiff(PERSON, person.getId(), actorId, before, snapshot(person));
+    }
+
+    /**
+     * 연락처 변경 (AC H1-2) — email·phone은 auth의 {@code users} 행이라
+     * {@link #snapshot(Person)}에 들어오지 않는다.
+     *
+     * <p><b>이것이 없으면 로그인 ID 변경이 흔적 없이 일어난다</b>(2026-08-25 리뷰가
+     * 잡았다): 이름을 그대로 두고 email만 바꾸면 person 스냅샷의 diff가 비어 감사
+     * 행이 <b>0건</b>이었다. AC H1-2가 요구한 "AuditLog UPDATE"가 성립하지 않았다.
+     *
+     * <p>entityType이 {@code Person}인 이유: 감사의 주어는 <b>사람</b>이고, 계정은
+     * 그 사람의 속성이다. 별 entityType을 두면 "이 사람에게 무슨 일이 있었나"를
+     * 두 번 조회해야 한다.
+     */
+    void contactChanged(long actorId, Person person, AccountContact before, AccountContact after) {
+        Map<String, Object> from = contactState(before);
+        Map<String, Object> to = contactState(after);
+
+        recordDiff(PERSON, person.getId(), actorId, from, to);
+    }
+
+    private static Map<String, Object> contactState(AccountContact contact) {
+        Map<String, Object> state = new LinkedHashMap<>();
+        state.put("email", contact.email());
+        state.put("phone", contact.phone());
+
+        return state;
     }
 
     /** 조직 개명 (AC E3-2). */

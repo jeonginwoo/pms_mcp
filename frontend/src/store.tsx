@@ -17,8 +17,10 @@ import {
   subscribeNotifications,
 } from './api'
 import type {
+  AccountView,
   AssignmentView,
   AuditRecord,
+  ChangePasswordBody,
   CommentBody,
   CommentView,
   ContractBody,
@@ -52,6 +54,7 @@ import type {
   ProjectRole,
   ProjectSummary,
   SiteBody,
+  UpdateProfileBody,
   SiteView,
   UpdateAssignmentBody,
   UpdatePersonBody,
@@ -184,6 +187,15 @@ interface Store {
   unreadNotifications: number
   loadNotifications: () => Promise<Result<PageResponse<NotificationView>>>
   markNotificationRead: (notificationId: number) => Promise<Result<null>>
+  /**
+   * 내 계정 (EPIC H) — 상세는 수정 폼을 되채우는 값이고, 프로필 수정은 이름·연락처를
+   * 한 번에 바꾼다(서버가 두 모듈을 한 트랜잭션으로 묶는다). 비밀번호는 응답이 없다.
+   *
+   * 프로필이 바뀌면 `me`도 다시 읽는다 — 사이드바가 그 이름을 보여 준다.
+   */
+  loadMyAccount: () => Promise<Result<AccountView>>
+  updateProfile: (body: UpdateProfileBody) => Promise<Result<AccountView>>
+  changePassword: (body: ChangePasswordBody) => Promise<Result<null>>
   loadNotifPrefs: () => Promise<Result<NotificationPreferences>>
   updateNotifPrefs: (enabled: Record<NotificationType, boolean>) =>
     Promise<Result<NotificationPreferences>>
@@ -656,6 +668,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     unreadNotifications: notifications.filter((notification) => !notification.read).length,
     loadNotifications,
     markNotificationRead,
+    loadMyAccount: () => run(() => api.myAccount(), { refresh: false }),
+    updateProfile: async (body) => {
+      const result = await run(() => api.updateProfile(body), { refresh: false })
+
+      // 사이드바가 이름을 보여 주므로 me를 다시 읽는다 — 안 읽으면 새로고침 전까지 옛 이름이다
+      if (result.ok) {
+        setMe(await api.me().catch(() => me))
+      }
+
+      return result
+    },
+    changePassword: (body) => run(() => api.changePassword(body), { refresh: false }),
     loadNotifPrefs,
     updateNotifPrefs,
   }), [phase, bootError, sessionMode, me, people, roster, orgUnits, grades, permissionGroups,
