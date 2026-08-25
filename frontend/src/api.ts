@@ -551,3 +551,81 @@ export const api = {
   closeAssignment: (assignmentId: number) =>
     request<null>(`/api/assignments/${assignmentId}`, { method: 'DELETE' }),
 }
+
+
+/**
+ * 알림 SSE 구독 (AC F1-4) — 열려 있는 동안 새 알림이 즉시 흘러온다.
+ *
+ * **`EventSource`는 헤더를 싣지 못한다**: 그래서 이 라우트만 `?access_token=` 쿼리
+ * 파라미터로 인증한다(PRD-pms §7). 토큰 모드면 access 토큰을, 인증 OFF 모드면
+ * personId를 나른다 — 서버의 두 리졸버가 그 둘에 대응한다.
+ *
+ * **재연결을 브라우저에 맡기지 않고 우리가 한다**(2026-08-25 리뷰 후 수정). 이유는
+ * 토큰이 URL에 굳어 있기 때문이다: access 토큰 수명은 1시간인데 서버 이미터는 30분마다
+ * 끊으므로, 브라우저의 자동 재연결은 **반드시 낡은 토큰으로** 붙는 순간이 온다.
+ * 그때 서버가 401을 주면 `EventSource`는 명세상 **영구 실패**하고(비-200은 재연결하지
+ * 않는다) 새로고침 전까지 알림이 끊긴다. 그래서 직접 닫고, **그 시점의 세션에서 토큰을
+ * 다시 읽어** 새 연결을 만든다 — 갱신된 토큰이 자연히 실린다.
+ *
+ * **연결될 때마다 `onConnect`가 불린다**: 끊겨 있던 동안의 것은 서버가 재생하지 않으므로
+ * (그 설계의 근거는 서버 컨트롤러 주석) 화면이 목록을 다시 읽어 메운다 — AC F1-4의
+ * "미연결이면 재연결·재조회 시 반영" 그대로다.
+ *
+ * @returns 구독을 끊는 함수 — 컴포넌트가 사라질 때 반드시 불러야 한다
+ */
+export function subscribeNotifications(
+    onNotification: (view: NotificationView) => void,
+    onConnect: () => void): () => void {
+  let source: EventSource | null = null
+  let retry: ReturnType<typeof setTimeout> | null = null
+  let closed = false
+  // 붙자마자 끊기는 상황에서 재연결 폭풍이 되지 않게 물러난다
+  let backoffMs = 1000
+
+  const connect = () => {
+    if (closed || !session) {
+      return
+    }
+
+    // 토큰을 **연결할 때마다** 읽는다 — 굳혀 잡으면 갱신된 토큰이 실리지 않는다
+    const proof = session.mode === 'token' ? session.accessToken : String(session.personId)
+    source = new EventSource(`/api/notifications/stream?access_token=${encodeURIComponent(proof)}`)
+
+    source.addEventListener('open', () => {
+      backoffMs = 1000
+      onConnect()
+    })
+
+    source.addEventListener('notification', (event) => {
+      try {
+        onNotification(JSON.parse((event as MessageEvent).data) as NotificationView)
+      } catch {
+        // 파싱 실패는 흘려보낸다 — 정본은 목록이고 다음 조회가 답한다
+      }
+    })
+
+    source.addEventListener('error', () => {
+      // 401이든 네트워크든 여기로 온다. 브라우저의 자동 재연결에 맡기지 않고
+      // 닫은 뒤 새 토큰으로 다시 붙는다
+      source?.close()
+      source = null
+
+      if (!closed) {
+        retry = setTimeout(connect, backoffMs)
+        backoffMs = Math.min(backoffMs * 2, 60_000)
+      }
+    })
+  }
+
+  connect()
+
+  return () => {
+    closed = true
+
+    if (retry !== null) {
+      clearTimeout(retry)
+    }
+
+    source?.close()
+  }
+}

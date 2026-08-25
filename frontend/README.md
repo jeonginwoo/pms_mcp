@@ -76,7 +76,8 @@ npm install && npm run dev                          # 이 앱 :5173
 | 조직 목록·추가·개명·삭제 | `GET`·`POST`·`PUT`·`DELETE /api/org-units` | E3-1·E3-2 · E3-3 빈 노드만(관리자만) |
 | 직급 관리 | `GET`·`POST`·`PUT`·`DELETE /api/grades` | E4 — 계수는 보정 가동률 가중치 · 0명일 때만 삭제 |
 | 권한 그룹 관리 | `GET`·`POST`·`PUT`·`DELETE /api/permission-groups` | E5 — 가시성 select + 기능 토글 4종 · **관리자 그룹은 버튼 잠금**(자기 잠금 방지) |
-| 알림 벨·읽음 | `GET /api/notifications` · `PATCH /{id}/read` | F1-3 — 미읽음 뱃지 · 벨을 열 때 재조회 |
+| 알림 벨·읽음 | `GET /api/notifications` · `PATCH /{id}/read` | F1-3 — 미읽음 뱃지 · 부팅 로드 + SSE 재연결 시 재조회(벨 열기 재조회는 2026-08-25에 없앴다) |
+| 알림 SSE 구독 | `GET /api/notifications/stream` | F1-4 — 부팅 로드가 목록을 채우고 그 뒤로는 스트림으로 흘러든다. **벨 열 때 재조회를 없앴다**. 재연결은 브라우저가 하고 끊겨 있던 동안의 것은 서버가 `Last-Event-ID`로 재생한다 |
 | 알림 설정 | `GET`·`PUT /api/me/notif-prefs` | H1-4 — 유형 **6종** on/off(전체 교체) · 토글은 서버 응답의 유형 전체를 그리므로 유형이 늘면 칸이 저절로 는다 |
 | 유지보수 계약 등록·수정 | `POST`·`PUT /api/maintenance/contracts[/{id}]` | D2-1·D2-2 — **"계약 관리" 플래그**만 · 삭제 없음(종료는 상태로) |
 | 사이트 등록·수정 + 연락처 | `POST /contracts/{id}/sites` · `PUT /api/maintenance/sites/{id}` | D2-4 — 연락처는 **전체 교체**, 원문(raw)은 서버가 조각으로 조립 |
@@ -118,9 +119,6 @@ npm install && npm run dev                          # 이 앱 :5173
 ## 아직 없는 것 (서버에 없어서)
 
 - **AI 어시스턴트 패널** — 챗 BFF(`/api/chat`) 대기.
-- **알림 SSE 즉시 갱신** (F1-4) — 라우트가 없어 벨은 **부팅 때와 벨을 열 때** 다시
-  읽는다. 폴링은 두지 않았다(44명 규모에 끊임없는 요청이 되고, SSE가 할 일을 어설프게
-  흉내 낸다). 스트림이 열리면 `NotificationBell`의 그 자리가 구독으로 바뀐다.
 - **EPIC D는 화면까지 전부 붙었다**(2026-08-25) — 계약·사이트
   쓰기(D2)·이슈 쓰기(D3)·이관(D1)까지. 이관은 되돌릴 수 없는 행위라 폼이 그것을 명시한다.
 - **프로젝트별 권한(A8)** — 서버 라우트 대기. 역할 지정(A6-3)은 2026-08-24에 붙었다.
@@ -160,3 +158,16 @@ npm run build        # 타입 검사 + 프로덕션 번들
 
 Vitest 단위 테스트는 아직 없다 — `npm test`는 지금 타입 검사에 연결돼 있고,
 로직(파서·상태 전이)이 생기면 그때 테스트를 붙인다(conventions §5).
+
+## 배포 요구 — SSE 토큰 마스킹 (F1-4, 2026-08-25)
+
+`GET /api/notifications/stream`은 **쿼리 파라미터로 인증한다**(`?access_token=`).
+EventSource가 커스텀 헤더를 싣지 못해서이고, PRD-pms §7이 그렇게 정했다.
+
+그래서 **역방향 프록시의 액세스 로그 포맷에서 `access_token`을 마스킹해야 한다**
+(구현 노트 §6). 앱은 그 값을 스스로 로그에 남기지 않는 것까지만 책임진다 — 예외
+문구에도 토큰이 들어가지 않는다. 마스킹 없이 그대로 두면 **유효한 access 토큰이
+로그 파일에 평문으로 쌓인다.**
+
+같은 location에 `proxy_buffering off`도 필요하다 — 버퍼링되면 "즉시 푸시"가 죽는다.
+앱이 `X-Accel-Buffering: no`를 함께 내보내므로 Nginx는 그것만으로도 대개 통과한다.

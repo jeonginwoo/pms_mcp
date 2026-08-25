@@ -54,6 +54,10 @@ public interface NotificationService {
      */
     int withdrawUnread(String refType, long refId, NotificationType type);
 
+
+
+
+
     /** 내 알림 설정 (AC H1-4) — 유형 전체를 담는다(끈 것만 false). */
     NotificationPreferences myPreferences(long callerPersonId);
 
