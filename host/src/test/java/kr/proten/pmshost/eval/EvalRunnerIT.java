@@ -3,6 +3,8 @@ package kr.proten.pmshost.eval;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.security.MessageDigest;
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -297,9 +299,17 @@ class EvalRunnerIT {
         StringBuilder sb = new StringBuilder();
         sb.append("# eval 실행 기록 — ").append(runId).append("\n\n");
         sb.append("| 항목 | 값 |\n|---|---|\n");
-        sb.append("| 실행 케이스 | ").append(records.size()).append(" / 36 |\n");
+        long broken = records.stream().filter(EvalRunnerIT::isBroken).count();
+        sb.append("| 실행 케이스 | ").append(records.size() - broken).append(" / 36");
+        if (broken > 0) {
+            // 시도 수만 적으면 끊긴 회차가 온전한 회차처럼 보인다 — 2026-08-25 크레딧
+            // 소진으로 16건이 빈 응답이 됐는데 머리표는 36/36이었다
+            sb.append(" — **").append(broken).append("건 손상(오류·빈 응답). 게이트 입력이 될 수 없다**");
+        }
+        sb.append(" |\n");
         sb.append("| 모델 | `").append(model).append("` |\n");
-        sb.append("| 시스템 프롬프트 | v0.2 (지문 `").append(promptFingerprint()).append("`) |\n");
+        sb.append("| 시스템 프롬프트 | ").append(promptVersion())
+                .append(" (지문 `").append(promptFingerprint()).append("`) |\n");
         sb.append("| pms | ").append(PMS).append(" |\n");
         sb.append("| 기준일 | ").append(java.time.LocalDate.now(clock)).append(" |\n");
         sb.append("| 기대값 정본 | `docs/evals/eval-cases.md` · `docs/evals/seed-anchor-map.md` |\n\n");
@@ -362,6 +372,37 @@ class EvalRunnerIT {
         }
 
         return String.join(" → ", rendered);
+    }
+
+    /** 오류로 끝났거나 답이 한 턴도 나오지 않은 케이스 — 채점 대상이 아니다 */
+    @SuppressWarnings("unchecked")
+    private static boolean isBroken(Map<String, Object> record) {
+        if (record.get("error") != null) {
+            return true;
+        }
+        var turns = (List<Map<String, Object>>) record.get("turns");
+        if (turns == null) {
+            return true;
+        }
+
+        // 주입 표시 턴(`{n, injected}`)은 발화도 응답도 없는 것이 정상이다 — 이것을
+        // 손상으로 세면 주입이 걸린 케이스가 전부 손상으로 잡힌다(D-03·C-04·H-01)
+        return turns.stream()
+                .filter(turn -> turn.get("user") != null)
+                .anyMatch(turn -> ((String) turn.getOrDefault("reply", "")).isBlank());
+    }
+
+    /**
+     * 프롬프트 <b>버전 라벨</b>은 정본(구현_노트 §4-1 머리)에서 읽는다 — 라벨을 코드에
+     * 박아 두면 프롬프트를 고쳐도 라벨이 따라오지 않는다. 실제로 2026-08-25 v0.3 회차가
+     * "v0.2"로 기록됐다(지문만 달라져 있었다). 지문이 진실이고 라벨은 사람이 읽는 이름이라,
+     * 둘이 갈리면 기록을 믿을 수 없게 된다.
+     */
+    private static String promptVersion() throws Exception {
+        String doc = java.nio.file.Files.readString(Path.of("..", "docs", "구현_노트.md"));
+        Matcher m = Pattern.compile("### 4-1\\.\\s*전문\\s*(v[0-9.]+)").matcher(doc);
+
+        return m.find() ? m.group(1) : "(버전 미상 — 구현_노트 §4-1 머리 확인)";
     }
 
     /** 프롬프트 1자 변경도 드러나는 짧은 지문 (회귀 규칙의 실체) */

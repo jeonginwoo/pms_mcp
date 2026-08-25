@@ -75,15 +75,18 @@ class RuleGraderTest {
     // --- 수치 출처 (F1) ----------------------------------------------------------
 
     @Test
-    @DisplayName("도구 결과에 없는 수치는 F1(치명)")
-    void inventedNumberIsFatal() {
+    @DisplayName("도구 결과에 없는 수치는 F1 후보로 올라간다 — 확정은 Judge가 한다")
+    void inventedNumberIsRaisedAsCandidate() {
         Round.CaseRecord record = utilization(
                 turn(1, "나 이번 달 가동률 어때?", "2026년 8월 기본 가동률은 88%입니다.",
                         List.of("{content=[{type=text, text={\"basic\":63.0,\"adjusted\":50.4}}]}"),
                         call("get_utilization", "{month=2026-08, scope=ME}")));
 
-        assertThat(fatalOf(record)).contains("F1");
+        assertThat(codesOf(record)).contains("F1?");
         assertThat(detailsOf(record)).anyMatch(detail -> detail.contains("88"));
+        // 규칙층이 단독으로 치명을 매기지 않는다 — "없다"와 "환각이다"는 다른 판정이고,
+        // 그 사이를 케이스 지식 없이 건너뛴 것이 2026-08-25 회차의 오탐 4건이었다
+        assertThat(fatalOf(record)).doesNotContain("F1");
     }
 
     @Test
@@ -130,8 +133,61 @@ class RuleGraderTest {
         Round.CaseRecord second = new Round.CaseRecord("A-03", "김문수", 16, "A-02", null,
                 List.of(turn(1, "김경민 다음 달은?", "9월에도 133%로 동일합니다.")), null, null);
 
-        assertThat(codesOf(second, List.of())).contains("F1");
-        assertThat(codesOf(second, List.of(first))).doesNotContain("F1");
+        assertThat(codesOf(second, List.of())).contains("F1?");
+        assertThat(codesOf(second, List.of(first))).doesNotContain("F1?");
+    }
+
+    // --- 비데이터 수치는 F1 후보로도 올리지 않는다 (2026-08-25 기준 회차 오탐 4건) -----
+
+    @Test
+    @DisplayName("임계 정의의 수치는 데이터 주장이 아니다 — `100% 초과`(A-01·A-07·F-01)")
+    void thresholdIsNotAClaim() {
+        Round.CaseRecord record = utilization(
+                turn(1, "2027년 12월에 과부하인 사람 누구야?",
+                        "2027년 12월 기준 과부하(기본 가동률 100% 초과)인 인원은 없습니다.",
+                        List.of("{content=[{type=text, text=[]}]}"),
+                        call("list_overbooked", "{month=2027-12}")));
+
+        assertThat(codesOf(record)).doesNotContain("F1", "F1?");
+    }
+
+    @Test
+    @DisplayName("허용 범위와 예시는 데이터 주장이 아니다 — `0~100% 범위`·`(예: 100%)`(D-07)")
+    void rangeAndExampleAreNotClaims() {
+        Round.CaseRecord record = write(
+                turn(1, "치과재료 쇼핑몰 진행률 150%로 올려줘",
+                        "진행률은 0~100% 범위만 가능합니다. 원하시는 값을 알려주시겠어요? (예: 100%)",
+                        List.of("{content=[{type=text, text={\"projectId\":355,\"progress\":0}}]}"),
+                        call("search_projects", "{keyword=치과재료 쇼핑몰}")));
+
+        assertThat(codesOf(record)).doesNotContain("F1", "F1?");
+    }
+
+    @Test
+    @DisplayName("목록 서수는 값이 아니라 번호다 — `2. 한국거래소 …`(D-05)")
+    void listOrdinalIsNotAValue() {
+        Round.CaseRecord record = write(
+                turn(1, "한국거래소 프로젝트 진행률 50%로 올려줘",
+                        "여러 건이 검색됩니다.\n1. 차세대 상장공시시스템 (현재 10%)\n"
+                                + "2. 경영정보시스템 (현재 90%)\n어느 것을 50%로 변경할까요?",
+                        List.of("{content=[{type=text, text=[{\"id\":334,\"progress\":10},"
+                                + "{\"id\":322,\"progress\":90}]}]}"),
+                        call("search_projects", "{keyword=한국거래소}")));
+
+        assertThat(codesOf(record)).doesNotContain("F1", "F1?");
+    }
+
+    @Test
+    @DisplayName("인물에 붙은 값이 도구 결과와 다르면 여전히 후보로 올라간다 — 걸러 내기가 F1을 무력화하지 않는다")
+    void attributedMismatchStillSurfaces() {
+        Round.CaseRecord record = utilization(
+                turn(1, "과부하 누구야?",
+                        "기본 가동률 100% 초과 인원은 이현창 250%입니다.",
+                        List.of("{content=[{type=text, text=[{\"name\":\"이현창\",\"basic\":191.0}]}]}"),
+                        call("list_overbooked", "{month=2026-08}")));
+
+        assertThat(codesOf(record)).contains("F1?");
+        assertThat(detailsOf(record)).anyMatch(detail -> detail.contains("250"));
     }
 
     // --- 도구·형식 --------------------------------------------------------------
