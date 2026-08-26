@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import kr.proten.pms.common.exception.ConflictException;
 import kr.proten.pms.common.exception.ErrorCode;
@@ -19,6 +20,7 @@ import kr.proten.pms.common.exception.UnprocessableException;
 import kr.proten.pms.common.exception.ValidationException;
 import kr.proten.pms.person.OrgPermission;
 import kr.proten.pms.person.OrgPermissionService;
+import kr.proten.pms.person.ProjectCountPort;
 import kr.proten.pms.person.repository.OrgUnitRepository;
 import kr.proten.pms.person.repository.PersonRepository;
 import kr.proten.pms.person.service.dto.OrgUnitView;
@@ -41,11 +43,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class OrgUnitServiceImplTest {
     private static final long ADMIN_ID = 1L;
     private static final long EMPTY_UNIT_ID = 99L;
+    // 해산한 팀 — 활성 인원은 0인데 퇴사한 PM이 맡던 프로젝트가 남아 있다 (E3-3)
+    private static final long DISBANDED_UNIT_ID = 98L;
+    private static final long RETIRED_PM_ID = 103L;
 
     @Mock
     private OrgUnitRepository orgUnitRepository;
     @Mock
     private PersonRepository personRepository;
+    @Mock
+    private ProjectCountPort projectCountPort;
     @Mock
     private OrgPermissionService orgPermissionService;
     @Mock
@@ -58,33 +65,41 @@ class OrgUnitServiceImplTest {
         service = new OrgUnitServiceImpl(
                 orgUnitRepository,
                 personRepository,
+                projectCountPort,
                 new OrgManagePermission(orgPermissionService),
                 personAuditRecorder);
     }
 
     @Test
-    @DisplayName("목록 — 노드별 소속 인원·하위 노드 수와 삭제 가능 여부가 함께 온다")
+    @DisplayName("목록 — 노드별 소속 인원·프로젝트·하위 노드 수와 삭제 가능 여부가 함께 온다")
     void list_carriesCountsAndDeletableFlag() {
-        // Given
+        // Given — 프로젝트 수는 PM 소속 노드로 접힌다(§12): 101이 SI팀이라 3건이 SI팀에,
+        // 퇴사한 103이 해산팀이라 14건이 해산팀에 걸린다. 해산팀은 활성 인원이 0이지만
+        // 프로젝트가 남아 삭제할 수 없다 — 인원 수와 프로젝트 수의 기준이 다른 자리다
         givenManageOrg(true);
         when(orgUnitRepository.findAll()).thenReturn(List.of(
                 OrgUnit.of(PersonFixtures.COMPANY_ID, null, "프로텐"),
                 OrgUnit.of(PersonFixtures.SI_TEAM_ID, PersonFixtures.COMPANY_ID, "SI팀"),
-                OrgUnit.of(EMPTY_UNIT_ID, PersonFixtures.COMPANY_ID, "빈팀")));
-        when(personRepository.findByActiveTrue()).thenReturn(List.of(
+                OrgUnit.of(EMPTY_UNIT_ID, PersonFixtures.COMPANY_ID, "빈팀"),
+                OrgUnit.of(DISBANDED_UNIT_ID, PersonFixtures.COMPANY_ID, "해산팀")));
+        when(personRepository.findAll()).thenReturn(List.of(
                 PersonFixtures.person(101L, "가", PersonFixtures.SI_TEAM_ID, 4L),
-                PersonFixtures.person(102L, "나", PersonFixtures.SI_TEAM_ID, 4L)));
+                PersonFixtures.person(102L, "나", PersonFixtures.SI_TEAM_ID, 4L),
+                PersonFixtures.inactive(RETIRED_PM_ID, "다", DISBANDED_UNIT_ID, 4L)));
+        when(projectCountPort.countByManager()).thenReturn(Map.of(101L, 3L, RETIRED_PM_ID, 14L));
 
         // When
         List<OrgUnitView> views = service.list(ADMIN_ID);
 
         // Then
         assertThat(views).extracting(OrgUnitView::name, OrgUnitView::memberCount,
-                        OrgUnitView::childCount, OrgUnitView::deletable)
+                        OrgUnitView::childCount, OrgUnitView::projectCount, OrgUnitView::deletable)
                 .containsExactly(
-                        Tuple.tuple("프로텐", 0L, 2L, false),
-                        Tuple.tuple("SI팀", 2L, 0L, false),
-                        Tuple.tuple("빈팀", 0L, 0L, true));
+                        Tuple.tuple("프로텐", 0L, 3L, 0L, false),
+                        Tuple.tuple("SI팀", 2L, 0L, 3L, false),
+                        // 정렬은 노드 id순이라 해산팀(98)이 빈팀(99)보다 앞이다
+                        Tuple.tuple("해산팀", 0L, 0L, 14L, false),
+                        Tuple.tuple("빈팀", 0L, 0L, 0L, true));
     }
 
     @Test
@@ -200,6 +215,31 @@ class OrgUnitServiceImplTest {
         // When · Then
         assertThatExceptionOfType(ConflictException.class)
                 .isThrownBy(() -> service.delete(ADMIN_ID, PersonFixtures.COMPANY_ID));
+    }
+
+    @Test
+    @DisplayName("E3-3 — 활성 인원이 0이어도 프로젝트가 남았으면 409 IN_USE (2026-08-26)")
+    void delete_unitWithProjectsOfRetiredManager_isConflict() {
+        // Given — 퇴사 처리(E2-3)된 PM은 memberCount에서 빠지지만 orgUnitId도 맡은
+        // 프로젝트도 그대로다. 이 검사가 없으면 그 노드가 지워지고, 스키마에 FK가 없어
+        // DB도 막지 않으므로 사라진 노드를 가리키는 참조만 남는다
+        givenManageOrg(true);
+        OrgUnit target = OrgUnit.of(DISBANDED_UNIT_ID, PersonFixtures.COMPANY_ID, "해산팀");
+        when(orgUnitRepository.findById(DISBANDED_UNIT_ID)).thenReturn(Optional.of(target));
+        when(personRepository.countByOrgUnitIdAndActiveTrue(DISBANDED_UNIT_ID)).thenReturn(0L);
+        when(orgUnitRepository.countByParentId(DISBANDED_UNIT_ID)).thenReturn(0L);
+        when(personRepository.findByOrgUnitId(DISBANDED_UNIT_ID)).thenReturn(List.of(
+                PersonFixtures.inactive(RETIRED_PM_ID, "다", DISBANDED_UNIT_ID, 4L)));
+        when(projectCountPort.countByManager()).thenReturn(Map.of(RETIRED_PM_ID, 14L));
+
+        // When · Then
+        assertThatExceptionOfType(ConflictException.class)
+                .isThrownBy(() -> service.delete(ADMIN_ID, DISBANDED_UNIT_ID))
+                .satisfies(thrown -> {
+                    assertThat(thrown.code()).isEqualTo(ErrorCode.IN_USE);
+                    assertThat(thrown.getMessage()).contains("프로젝트 14건");
+                });
+        verify(orgUnitRepository, never()).delete(any());
     }
 
     @Test

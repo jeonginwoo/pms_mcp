@@ -66,6 +66,20 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
             """)
     List<Project> findCompletionOverdue(@Param("since") Instant since);
 
+    /**
+     * PM별 프로젝트 수 — 조직 트리의 "노드별 프로젝트 수"가 이것을 PM 소속으로 접는다
+     * (PRD-pms §12 · {@code ProjectCountPort}).
+     *
+     * <p>기준은 <b>삭제되지 않음</b> 하나다. 상태로 더 거르지 않는 이유는 그 수를
+     * 화면 표시와 E3-3 삭제 판정이 함께 읽기 때문이다 — 여기서 갈라 두면 화면이
+     * 보여 준 수와 서버가 막는 수가 달라진다(2026-08-26 사용자 결정).
+     *
+     * <p>382건을 올려 메모리에서 세지 않는다(conventions §6) — 묶음은 DB가 한다.
+     */
+    @Query("select p.managerId, count(p) from Project p "
+            + "where p.deleted = false group by p.managerId")
+    List<Object[]> countByManager();
+
     Optional<Project> findByIdAndDeletedFalse(Long id);
 
     /** 중복 판정 (AC A1-2) — soft 삭제된 프로젝트는 대상에서 빠진다. */

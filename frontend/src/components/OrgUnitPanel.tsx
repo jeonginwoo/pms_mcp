@@ -121,7 +121,7 @@ export default function OrgUnitPanel() {
     setError({ code: result.error.code, message: result.error.message })
   }
 
-  /** 노드 뒤에 붙는 요약 — 회사는 그 사실만, 그 아래는 하위·인원 수를 센다. */
+  /** 노드 뒤에 붙는 요약 — 회사는 그 사실만, 그 아래는 하위·인원·프로젝트 수를 센다. */
   const metaOf = (unit: OrgUnitView, depth: number): string => {
     if (depth === 0) {
       return '회사'
@@ -134,6 +134,11 @@ export default function OrgUnitPanel() {
     }
 
     parts.push('인원 ' + unit.memberCount)
+    // 프로젝트는 그 노드가 PM 소속 노드인 것만 센다(직속 · 부록 A). 0건이면 적지
+    // 않는다 — 인원과 달리 대부분의 노드가 0이라 매 줄에 "프로젝트 0"이 붙는다
+    if (unit.projectCount > 0) {
+      parts.push('프로젝트 ' + unit.projectCount)
+    }
 
     return parts.join(' · ')
   }
@@ -213,7 +218,8 @@ export default function OrgUnitPanel() {
                   <button className="btn btn-danger-ghost btn-sm" disabled={!unit.deletable}
                     title={unit.deletable
                       ? '빈 노드 삭제'
-                      : `소속 인원 ${unit.memberCount}명 · 하위 조직 ${unit.childCount}개가 있어 삭제할 수 없습니다`}
+                      : `소속 인원 ${unit.memberCount}명 · 프로젝트 ${unit.projectCount}건 · `
+                        + `하위 조직 ${unit.childCount}개가 있어 삭제할 수 없습니다`}
                     style={{ opacity: unit.deletable ? 1 : .35 }}
                     onClick={() => { setPending(unit.id); setError(null) }}>
                     삭제

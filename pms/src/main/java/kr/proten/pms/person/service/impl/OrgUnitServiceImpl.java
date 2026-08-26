@@ -1,6 +1,7 @@
 package kr.proten.pms.person.service.impl;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -10,6 +11,7 @@ import kr.proten.pms.common.exception.NotFoundException;
 import kr.proten.pms.common.exception.NotImplementedException;
 import kr.proten.pms.common.exception.UnprocessableException;
 import kr.proten.pms.common.exception.ValidationException;
+import kr.proten.pms.person.ProjectCountPort;
 import kr.proten.pms.person.repository.OrgUnitRepository;
 import kr.proten.pms.person.repository.PersonRepository;
 import kr.proten.pms.person.service.OrgUnitService;
@@ -22,48 +24,65 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * 조직 트리 관리 유스케이스 — AC E3-3.
  *
- * 삭제 판정은 "빈 노드인가" 하나다: 소속 인원(활성)이나 하위 노드가 있으면 409다.
- * 프로젝트는 조직 노드를 참조하지 않으므로(§4 필드 목록 — 프로젝트의 조직 귀속은
- * 배정 인원으로 파생된다) 검사 대상이 아니다.
+ * 삭제 판정은 "빈 노드인가" 하나이고 보는 것은 셋이다: 소속 인원(활성)·하위 노드·
+ * 그 노드가 PM 소속 노드인 프로젝트.
+ *
+ * **프로젝트가 판정에 들어온 것은 2026-08-26이다**(사용자 결정). 그전에는 "프로젝트는
+ * 조직 노드를 참조하지 않으므로(§4 — 조직 귀속은 배정 인원으로 파생된다) 검사 대상이
+ * 아니다"가 근거였는데, 그 문장은 **셀 방법이 없다**는 뜻이었지 세지 않기로 했다는
+ * 뜻이 아니었다. `ProjectCountPort`가 PM → 소속 노드로 접는 길을 놓으면서 근거가
+ * 사라졌고, AC E3-3의 문면("소속 인원·**프로젝트**·하위 조직")이 그대로 성립한다.
+ *
+ * 화면 표시와 삭제 판정은 **같은 수**를 읽는다(`projectCountsByOrgUnit` 한 곳) —
+ * 갈라 두면 화면이 "프로젝트 14"라고 적어 둔 노드에서 삭제가 성공한다.
  */
 @Service
 @Transactional
 public class OrgUnitServiceImpl implements OrgUnitService {
     private final OrgUnitRepository orgUnitRepository;
     private final PersonRepository personRepository;
+    private final ProjectCountPort projectCountPort;
     private final OrgManagePermission orgManagePermission;
     private final PersonAuditRecorder personAuditRecorder;
 
     public OrgUnitServiceImpl(
             OrgUnitRepository orgUnitRepository,
             PersonRepository personRepository,
+            ProjectCountPort projectCountPort,
             OrgManagePermission orgManagePermission,
             PersonAuditRecorder personAuditRecorder) {
         this.orgUnitRepository = orgUnitRepository;
         this.personRepository = personRepository;
+        this.projectCountPort = projectCountPort;
         this.orgManagePermission = orgManagePermission;
         this.personAuditRecorder = personAuditRecorder;
     }
 
     /**
-     * ASSUMPTION: 노드·인원을 한 번에 올려 메모리에서 센다 — 조직 17노드·인원 44명
+     * ASSUMPTION: 노드·인원을 한 번에 올려 메모리에서 센다 — 조직 18노드·인원 44명
      * 규모의 참조 데이터이고(PersonRefFactory가 같은 이유로 같은 선택을 했다) 노드마다
      * count 질의를 내면 노드 수만큼 왕복한다. 수백 노드가 되면 그룹 질의로 바꾼다.
+     *
+     * 인원 목록은 **비활성까지** 올린다 — 인원 수는 활성만 세고 프로젝트 수는 퇴사한
+     * PM의 것도 세야 해서 기준이 다르다. 그 두 수 때문에 목록을 두 번 올리지 않는다.
      */
     @Transactional(readOnly = true)
     public List<OrgUnitView> list(long callerPersonId) {
         orgManagePermission.require(callerPersonId);
 
         List<OrgUnit> units = orgUnitRepository.findAll();
-        Map<Long, Long> memberCounts = personRepository.findByActiveTrue().stream()
+        List<Person> people = personRepository.findAll();
+        Map<Long, Long> memberCounts = people.stream()
+                .filter(Person::isActive)
                 .collect(Collectors.groupingBy(Person::getOrgUnitId, Collectors.counting()));
         Map<Long, Long> childCounts = units.stream()
                 .filter(unit -> !unit.isRoot())
                 .collect(Collectors.groupingBy(OrgUnit::getParentId, Collectors.counting()));
+        Map<Long, Long> projectCounts = projectCountsByOrgUnit(people);
 
         return units.stream()
                 .sorted(Comparator.comparing(OrgUnit::getId))
-                .map(unit -> toView(unit, memberCounts, childCounts))
+                .map(unit -> toView(unit, memberCounts, childCounts, projectCounts))
                 .toList();
     }
 
@@ -81,7 +100,7 @@ public class OrgUnitServiceImpl implements OrgUnitService {
                 OrgUnit.of(orgUnitRepository.nextId(), parentId, name.trim()));
         personAuditRecorder.orgUnitCreated(callerPersonId, saved);
 
-        return new OrgUnitView(saved.getId(), saved.getParentId(), saved.getName(), 0, 0, true);
+        return new OrgUnitView(saved.getId(), saved.getParentId(), saved.getName(), 0, 0, 0, true);
     }
 
     /**
@@ -110,7 +129,8 @@ public class OrgUnitServiceImpl implements OrgUnitService {
 
         // 소속 인원·프로젝트는 orgUnitId로 참조하므로 표시가 저절로 따라온다(E3-2).
         // 개수는 목록 조회가 채우는 값이라 단건 응답에서는 0이다 — 생성(E3-1)과 같은 형태.
-        return new OrgUnitView(target.getId(), target.getParentId(), target.getName(), 0, 0, false);
+        return new OrgUnitView(
+                target.getId(), target.getParentId(), target.getName(), 0, 0, 0, false);
     }
 
     /**
@@ -144,7 +164,8 @@ public class OrgUnitServiceImpl implements OrgUnitService {
         personAuditRecorder.orgUnitMoved(callerPersonId, target, before);
 
         // 개수는 목록 조회가 채우는 값이라 단건 응답에서는 0이다 — 생성·개명과 같은 형태
-        return new OrgUnitView(target.getId(), target.getParentId(), target.getName(), 0, 0, false);
+        return new OrgUnitView(
+                target.getId(), target.getParentId(), target.getName(), 0, 0, 0, false);
     }
 
     public void delete(long callerPersonId, long orgUnitId) {
@@ -160,12 +181,43 @@ public class OrgUnitServiceImpl implements OrgUnitService {
     private OrgUnitView toView(
             OrgUnit unit,
             Map<Long, Long> memberCounts,
-            Map<Long, Long> childCounts) {
+            Map<Long, Long> childCounts,
+            Map<Long, Long> projectCounts) {
         long members = memberCounts.getOrDefault(unit.getId(), 0L);
         long children = childCounts.getOrDefault(unit.getId(), 0L);
+        long projects = projectCounts.getOrDefault(unit.getId(), 0L);
 
         return new OrgUnitView(unit.getId(), unit.getParentId(), unit.getName(), members, children,
-                members == 0 && children == 0);
+                projects, members == 0 && children == 0 && projects == 0);
+    }
+
+    /**
+     * 인원 목록을 PM 소속 노드별 프로젝트 수로 접는다 — 이 규칙이 사는 유일한 자리다
+     * (PRD-pms §12 정의: "그 노드가 PM 소속 노드인, 삭제되지 않은 프로젝트 수").
+     *
+     * 접는 쪽이 person인 이유는 {@link ProjectCountPort}의 javadoc에 있다: "누가 어느
+     * 노드에 속하는가"는 person의 지식이라, 노드별로 받아 오면 같은 규칙이 project에도
+     * 생긴다.
+     *
+     * 목록 조회는 전원을, 삭제 판정은 그 노드 인원만을 넘긴다 — **규칙은 하나이고
+     * 범위만 다르다**. 프로젝트가 0건인 PM은 맵에 키를 만들지 않으므로, 인원만 있고
+     * 프로젝트가 없는 노드는 여기서 키 없이 빠진다(호출자가 0으로 읽는다).
+     */
+    private Map<Long, Long> projectCountsByOrgUnit(List<Person> people) {
+        if (people.isEmpty()) {
+            // 인원이 없으면 PM도 없다 — 빈 노드 삭제(E3-3의 흔한 갈래)에서 질의를 아낀다
+            return Map.of();
+        }
+        Map<Long, Long> byManager = projectCountPort.countByManager();
+        Map<Long, Long> byOrgUnit = new HashMap<>();
+
+        for (Person person : people) {
+            long managed = byManager.getOrDefault(person.getId(), 0L);
+            if (managed > 0) {
+                byOrgUnit.merge(person.getOrgUnitId(), managed, Long::sum);
+            }
+        }
+        return byOrgUnit;
     }
 
     private void requireText(String name) {
@@ -225,14 +277,27 @@ public class OrgUnitServiceImpl implements OrgUnitService {
         }
     }
 
+    /**
+     * AC E3-3 — 소속 인원·프로젝트·하위 조직 중 하나라도 있으면 409다.
+     *
+     * 프로젝트를 세는 기준은 목록 조회와 같다(`projectCountsByOrgUnit`). 여기서만
+     * "진행 중인 것만" 같은 조건을 더하면 화면이 보여 준 수와 막는 수가 갈린다.
+     *
+     * 인원은 활성만, 프로젝트는 **비활성 PM의 것까지** 센다 — 어긋나 보이지만 이것이
+     * 정확히 이 검사가 필요한 이유다: 퇴사 처리된 PM만 남은 노드는 인원 0으로 보이고
+     * 그동안 삭제됐다. 스키마에 FK가 없어(V1~V16) DB도 막지 않으므로, 지워진 노드를
+     * 가리키는 `org_unit_id`와 그를 통한 프로젝트 귀속이 그대로 남았다.
+     */
     private void requireEmpty(long orgUnitId) {
         long members = personRepository.countByOrgUnitIdAndActiveTrue(orgUnitId);
         long children = orgUnitRepository.countByParentId(orgUnitId);
+        long projects = projectCountsByOrgUnit(personRepository.findByOrgUnitId(orgUnitId))
+                .getOrDefault(orgUnitId, 0L);
 
-        if (members > 0 || children > 0) {
+        if (members > 0 || children > 0 || projects > 0) {
             throw new ConflictException(ErrorCode.IN_USE,
-                    "소속 인원 %d명·하위 조직 %d개가 있어 삭제할 수 없습니다".formatted(
-                            members, children));
+                    "소속 인원 %d명·프로젝트 %d건·하위 조직 %d개가 있어 삭제할 수 없습니다"
+                            .formatted(members, projects, children));
         }
     }
 }

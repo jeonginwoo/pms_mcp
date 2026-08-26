@@ -150,13 +150,20 @@ export interface CreateOrgUnitBody {
   name: string
 }
 
-/** GET /api/org-units — 조직 노드 (deletable은 서버가 판정한 E3-3 결과) */
+/**
+ * GET /api/org-units — 조직 노드 (deletable은 서버가 판정한 E3-3 결과)
+ *
+ * `projectCount`는 그 노드가 **PM 소속 노드**인 삭제되지 않은 프로젝트 수다 —
+ * 직속 기준이라 하위 노드의 것은 들어오지 않는다(인원 수와 읽는 방향이 같다).
+ * `deletable`이 이 수를 함께 보므로 화면이 따로 판정하지 않는다.
+ */
 export interface OrgUnitView {
   id: number
   parentId: number | null
   name: string
   memberCount: number
   childCount: number
+  projectCount: number
   deletable: boolean
 }
 
