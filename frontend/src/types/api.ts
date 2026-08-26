@@ -381,6 +381,8 @@ export interface CommentView {
   author: PersonRef | null
   content: string
   createdAt: string
+  /** 마지막 수정 시각 — null이면 한 번도 고치지 않았다 (D3-7). 화면이 "수정됨"을 그린다 */
+  updatedAt: string | null
 }
 
 /** GET /api/maintenance/issues 항목 (D3-4) — 계약에 연결되지 않은 이슈가 있어 전부 nullable */
@@ -393,6 +395,10 @@ export interface IssueView {
   /** 열거 이름 — 처리 화면이 다음 상태를 계산하는 값이다(ContractDetail.statusCode 선례) */
   statusCode: IssueStatus
   title: string
+  /** 본문 (D3-5, 2026-08-26 신설) — 시드 이슈는 없다. 제목만 있는 이슈가 정상이다 */
+  content: string | null
+  /** 등록자 (D3-5) — 정정·삭제 권한이 이 값을 본다. 시드 이슈는 null이다 */
+  reporterId: number | null
   receivedAt: string | null
   completedAt: string | null
   assignee: PersonRef | null
@@ -662,6 +668,8 @@ export interface IssueBody {
   siteId: number
   type: IssueType
   title: string
+  /** 본문 — 선택이다 (2026-08-26 신설) */
+  content?: string | null
 }
 
 /**
@@ -673,6 +681,14 @@ export interface IssueBody {
 export interface IssueEditBody {
   status?: IssueStatus | null
   assigneeId?: number | null
+  /**
+   * 정정 3종 (D3-5, 2026-08-26 신설) — **이 칸이 실리면 서버 관문이 걸린다**
+   * (등록자·담당자·"계약 관리" 플래그). 상태·담당만 보내는 요청은 전원이 할 수 있다.
+   * 본문을 지우는 것은 빈 문자열이고 null은 "그대로"다.
+   */
+  type?: IssueType | null
+  title?: string | null
+  content?: string | null
   version: number
 }
 

@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import kr.proten.pms.common.exception.ErrorCode;
+import kr.proten.pms.common.exception.ForbiddenException;
 import kr.proten.pms.common.exception.NotFoundException;
 import kr.proten.pms.common.exception.UnprocessableException;
 import kr.proten.pms.common.exception.ValidationException;
@@ -56,6 +57,7 @@ class IssueCommandServiceImpl implements IssueCommandService {
     private final MaintenanceViewFactory viewFactory;
     private final PersonDirectoryService personDirectoryService;
     private final MaintenanceAuditRecorder auditRecorder;
+    private final IssueWriteGuard issueWriteGuard;
     private final Clock clock;
     private final ApplicationEventPublisher events;
 
@@ -67,6 +69,7 @@ class IssueCommandServiceImpl implements IssueCommandService {
             MaintenanceViewFactory viewFactory,
             PersonDirectoryService personDirectoryService,
             MaintenanceAuditRecorder auditRecorder,
+            IssueWriteGuard issueWriteGuard,
             Clock clock,
             ApplicationEventPublisher events) {
         this.issueRepository = issueRepository;
@@ -76,6 +79,7 @@ class IssueCommandServiceImpl implements IssueCommandService {
         this.viewFactory = viewFactory;
         this.personDirectoryService = personDirectoryService;
         this.auditRecorder = auditRecorder;
+        this.issueWriteGuard = issueWriteGuard;
         this.clock = clock;
         this.events = events;
     }
@@ -99,8 +103,12 @@ class IssueCommandServiceImpl implements IssueCommandService {
                 site.getId(),
                 command.type(),
                 command.title().trim(),
+                // 본문은 선택이다 — 시드 267건이 본문 없이 살아 있고 그것이 정상이다
+                blankToNull(command.content()),
                 IssueStatus.RECEIVED,
                 site.getEngineerId(),
+                // 등록자를 남긴다 (2026-08-26) — 정정 권한이 이 값을 본다
+                callerPersonId,
                 today(),
                 null)));
         auditRecorder.issueCreated(callerPersonId, issue);
@@ -112,18 +120,35 @@ class IssueCommandServiceImpl implements IssueCommandService {
     }
 
     /**
-     * 이슈 처리 (AC D3-2) — 상태 전이·담당 재배정.
+     * 이슈 처리·정정 (AC D3-2 상태·담당 + AC D3-5 제목·유형·본문 — 2026-08-26).
      *
      * <p>락을 입력 검사보다 먼저 보는 것은 계약 쓰기와 같은 이유다: "다른 사람이 이미
      * 바꿨다"는 내 입력이 옳은지와 무관한 사실이다.
+     *
+     * <p><b>관문이 조건부다</b>: 상태 전이·재배정은 US-D3대로 로그인 사용자 전체가 하고
+     * <b>제목·유형·본문 정정에만</b> {@link IssueWriteGuard}가 걸린다. 갈라야 하는 것은
+     * <b>행위</b>다 — 처리는 현장의 일이고 정정은 남이 쓴 글을 고치는 일이다. 라우트를
+     * 둘로 쪼개지 않은 이유는 "상태와 제목을 한 번에" 요청이 두 왕복이 되고 락도 두 번
+     * 돌기 때문이다.
      */
     @Override
     public IssueView process(
             long callerPersonId, long issueId, IssueEditCommand command, long version) {
         MaintenanceIssue issue =
-                issueRepository.findById(issueId).orElseThrow(NotFoundException::new);
+                issueRepository.findActiveById(issueId).orElseThrow(NotFoundException::new);
         issue.requireVersion(version);
+
+        if (command.isEmpty()) {
+            throw new ValidationException("바꿀 내용이 없습니다", "status");
+        }
+
+        // 정정 칸이 실려 있으면 그 관문을 먼저 지난다 — 권한은 입력·참조보다 앞이다
+        if (isCorrection(command)) {
+            issueWriteGuard.require(callerPersonId, issue);
+        }
+
         requirePerson(command.assigneeId(), "assigneeId");
+        requireEditableTitle(command.title());
         // 바꾸기 직전에 떠 둔다 — 바뀐 필드만 이력에 남는다
         Map<String, Object> before = auditRecorder.snapshot(issue);
 
@@ -135,6 +160,8 @@ class IssueCommandServiceImpl implements IssueCommandService {
             issue.reassign(command.assigneeId());
         }
 
+        issue.edit(command.type(), trimOrNull(command.title()), command.content());
+
         // flush 해야 응답의 version이 커밋 뒤의 값이 된다 — 안 하면 호출자가 그 값으로
         // 다시 수정하려다 409를 받는다(계약·사이트가 같은 이유로 saveAndFlush)
         MaintenanceIssue saved = issueRepository.saveAndFlush(issue);
@@ -144,26 +171,124 @@ class IssueCommandServiceImpl implements IssueCommandService {
     }
 
     /**
-     * 코멘트 추가 (AC D3-3) — append-only.
+     * 이슈 삭제 (AC D3-6 — 2026-08-26 신설). <b>soft 삭제</b>다: 프로젝트 A4 선례이고,
+     * 행을 지우면 코멘트·감사가 가리키는 대상이 사라진다.
+     *
+     * <p>version을 받는 이유는 처리와 같다 — 남이 방금 상태를 옮긴 이슈를 모르고 지우는
+     * 일을 막는다. 되돌리기 경로는 없다(AC에 요구가 없다).
+     */
+    @Override
+    public void delete(long callerPersonId, long issueId, long version) {
+        MaintenanceIssue issue =
+                issueRepository.findActiveById(issueId).orElseThrow(NotFoundException::new);
+        issue.requireVersion(version);
+        issueWriteGuard.require(callerPersonId, issue);
+
+        Map<String, Object> before = auditRecorder.snapshot(issue);
+        issue.delete();
+        auditRecorder.issueChanged(callerPersonId, issueRepository.saveAndFlush(issue), before);
+    }
+
+    /**
+     * 코멘트 추가 (AC D3-3).
      *
      * <p><b>감사 행을 남기지 않는다</b>: 코멘트 자체가 "누가 언제 무엇을 적었나"를
-     * 담은 불변 기록이라, 감사에 또 남기면 같은 사실이 두 표에 두 벌 생긴다.
+     * 담은 기록이라, 감사에 또 남기면 같은 사실이 두 표에 두 벌 생긴다.
      * 감사가 답하는 질문(무엇이 바뀌었나)에 코멘트는 해당하지 않는다 — 이슈는
      * 바뀌지 않았고 사실이 하나 쌓였다.
      */
     @Override
     public CommentView addComment(long callerPersonId, long issueId, String content) {
-        if (!issueRepository.existsById(issueId)) {
-            throw new NotFoundException();
-        }
+        requireActiveIssue(issueId);
 
         String text = required(content, "코멘트 내용은 필수입니다", "content");
         IssueComment comment = commentRepository.save(
                 IssueComment.of(issueId, callerPersonId, text, Instant.now(clock)));
 
+        return viewOf(comment);
+    }
+
+    /**
+     * 코멘트 수정 (AC D3-7 — 2026-08-26 신설) — <b>작성자 본인만</b>.
+     *
+     * <p>append-only 폐기의 범위가 여기까지다(사용자 결정): 남의 이력을 고치는 길은
+     * 열지 않는다. 판정을 엔티티에 물어보는 이유는 그 규칙이 코멘트의 성질이라서다.
+     *
+     * <p>이슈가 삭제됐으면 404다 — 그 이슈의 코멘트는 화면에 나올 자리가 없다.
+     */
+    @Override
+    public CommentView editComment(long callerPersonId, long commentId, String content) {
+        IssueComment comment = requireOwnComment(callerPersonId, commentId);
+        String text = required(content, "코멘트 내용은 필수입니다", "content");
+
+        comment.rewrite(text, Instant.now(clock));
+
+        return viewOf(commentRepository.saveAndFlush(comment));
+    }
+
+    /**
+     * 코멘트 삭제 (AC D3-7 — 2026-08-26 신설) — <b>작성자 본인만</b>, 행을 지운다.
+     *
+     * <p>tombstone(삭제 표시)안은 미채택이다(사용자 결정). 이슈 삭제와 방식이 다른 것은
+     * 가리키는 것이 없기 때문이다 — 코멘트를 참조하는 표가 없다.
+     */
+    @Override
+    public void deleteComment(long callerPersonId, long commentId) {
+        commentRepository.delete(requireOwnComment(callerPersonId, commentId));
+    }
+
+    /**
+     * 내 코멘트인가 — 아니면 403이고, 없거나 삭제된 이슈의 것이면 404다.
+     *
+     * <p>순서가 규칙이다: 존재(404)를 권한(403)보다 먼저 본다. 뒤집으면 남의 코멘트
+     * id를 넣어 보며 "있다/없다"를 403과 404로 헤아릴 수 있다.
+     */
+    private IssueComment requireOwnComment(long callerPersonId, long commentId) {
+        IssueComment comment =
+                commentRepository.findById(commentId).orElseThrow(NotFoundException::new);
+        requireActiveIssue(comment.getIssueId());
+
+        if (!comment.isAuthoredBy(callerPersonId)) {
+            throw new ForbiddenException("자기가 남긴 코멘트만 수정·삭제할 수 있습니다");
+        }
+
+        return comment;
+    }
+
+    /** 살아 있는 이슈인가 — 삭제와 부재는 같은 404다(AC D3-6). */
+    private void requireActiveIssue(long issueId) {
+        if (issueRepository.findActiveById(issueId).isEmpty()) {
+            throw new NotFoundException();
+        }
+    }
+
+    private CommentView viewOf(IssueComment comment) {
         return new CommentView(
-                comment.getId(), authorRef(callerPersonId), comment.getContent(),
-                comment.getCreatedAt());
+                comment.getId(),
+                authorRef(comment.getAuthorId()),
+                comment.getContent(),
+                comment.getCreatedAt(),
+                comment.getUpdatedAt());
+    }
+
+    /** 정정 칸(제목·유형·본문)이 실려 있는가 — 관문이 이 판정으로 갈린다. */
+    private boolean isCorrection(IssueEditCommand command) {
+        return command.type() != null || command.title() != null || command.content() != null;
+    }
+
+    /** 제목은 있으면 비어 있지 않아야 한다 — null은 "그대로"이고 공백은 오류다. */
+    private void requireEditableTitle(String title) {
+        if (title != null && title.isBlank()) {
+            throw new ValidationException("제목은 비울 수 없습니다", "title");
+        }
+    }
+
+    private String trimOrNull(String value) {
+        return value == null ? null : value.trim();
+    }
+
+    private String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 
     /**

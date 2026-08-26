@@ -219,6 +219,14 @@ export const ISSUE_TYPE_LABEL: Record<IssueType, string> = {
 }
 
 /**
+ * 라벨 → 열거 (D3-5 정정 폼 — 2026-08-26). `IssueView.type`이 한국어 라벨이라
+ * 수정 폼의 select를 채우려면 되돌려야 한다. 위 표에서 파생하므로 사본이 아니다.
+ */
+export const ISSUE_TYPE_OF: Record<string, IssueType> = Object.fromEntries(
+  Object.entries(ISSUE_TYPE_LABEL).map(([value, label]) => [label, value as IssueType]),
+) as Record<string, IssueType>
+
+/**
  * 그 상태에서 갈 수 있는 다음 상태 (AC D3-2) — **서버 `IssueStatus.canTransitionTo`의
  * 사본**이다. 화면이 이 표를 갖는 이유는 버튼을 그리려면 눌러 보기 전에 알아야
  * 하기 때문이고, 정본은 서버다: 여기서 허용한 전이도 서버가 409로 거절할 수 있고

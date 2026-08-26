@@ -135,7 +135,7 @@ class MaintenanceIssueWritesIntegrationTest extends PostgresTestBase {
 
         // When
         IssueView created = issueCommandService.register(
-                MEMBER_ID, new IssueCommand(siteId, IssueType.INQUIRY, "D3팀원이 올린 문의"));
+                MEMBER_ID, new IssueCommand(siteId, IssueType.INQUIRY, "D3팀원이 올린 문의", null));
 
         // Then — US-D3은 로그인 사용자 전체다
         assertThat(created.id()).isPositive();
@@ -220,7 +220,7 @@ class MaintenanceIssueWritesIntegrationTest extends PostgresTestBase {
         // When
         IssueView updated = issueCommandService.process(
                 MANAGER_ID, created.id(),
-                new IssueEditCommand(IssueStatus.IN_PROGRESS, null), created.version());
+                IssueEditCommand.ofProcess(IssueStatus.IN_PROGRESS, null), created.version());
 
         // Then — 두 칸 오르면 더러워진 세션에 질의한 것이다(conventions §4의 실측 사고)
         assertThat(updated.version()).isEqualTo(1L);
@@ -228,7 +228,7 @@ class MaintenanceIssueWritesIntegrationTest extends PostgresTestBase {
         assertThatExceptionOfType(StaleVersionException.class)
                 .isThrownBy(() -> issueCommandService.process(
                         MANAGER_ID, created.id(),
-                        new IssueEditCommand(IssueStatus.DONE, null), created.version()));
+                        IssueEditCommand.ofProcess(IssueStatus.DONE, null), created.version()));
     }
 
     @Test
@@ -237,18 +237,18 @@ class MaintenanceIssueWritesIntegrationTest extends PostgresTestBase {
         // Given
         IssueView created = register(siteOf("D3완료", ENGINEER_ID), "D3완료대상");
         IssueView inProgress = issueCommandService.process(MANAGER_ID, created.id(),
-                new IssueEditCommand(IssueStatus.IN_PROGRESS, null), created.version());
+                IssueEditCommand.ofProcess(IssueStatus.IN_PROGRESS, null), created.version());
 
         // When
         IssueView done = issueCommandService.process(MANAGER_ID, created.id(),
-                new IssueEditCommand(IssueStatus.DONE, null), inProgress.version());
+                IssueEditCommand.ofProcess(IssueStatus.DONE, null), inProgress.version());
 
         // Then
         assertThat(done.completedAt()).isEqualTo(LocalDate.now());
 
         // When — 재개
         IssueView reopened = issueCommandService.process(MANAGER_ID, created.id(),
-                new IssueEditCommand(IssueStatus.IN_PROGRESS, null), done.version());
+                IssueEditCommand.ofProcess(IssueStatus.IN_PROGRESS, null), done.version());
 
         // Then
         assertThat(reopened.completedAt()).isNull();
@@ -262,7 +262,7 @@ class MaintenanceIssueWritesIntegrationTest extends PostgresTestBase {
 
         // When
         IssueView reassigned = issueCommandService.process(MANAGER_ID, created.id(),
-                new IssueEditCommand(null, MEMBER_ID), created.version());
+                IssueEditCommand.ofProcess(null, MEMBER_ID), created.version());
 
         // Then
         assertThat(reassigned.assignee().name()).isEqualTo("D3팀원");
@@ -338,7 +338,7 @@ class MaintenanceIssueWritesIntegrationTest extends PostgresTestBase {
 
     private IssueView register(long siteId, String title) {
         return issueCommandService.register(
-                MANAGER_ID, new IssueCommand(siteId, IssueType.INCIDENT, title));
+                MANAGER_ID, new IssueCommand(siteId, IssueType.INCIDENT, title, null));
     }
 
     private List<Long> issuesOf(IssueQuery query) {

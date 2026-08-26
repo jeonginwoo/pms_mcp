@@ -266,8 +266,13 @@ class MaintenanceSeedLoader implements ApplicationRunner {
                     siteId,
                     issue.typeValue(),
                     issue.title(),
+                    // 본문·등록자는 시드에 없다 (2026-08-26 신설분) — 구 게시판이
+                    // 내용도 작성자도 남기지 않았고, 그래서 이 이슈들의 정정은
+                    // 담당자나 "계약 관리" 권한자가 든다(IssueWriteGuard)
+                    null,
                     issue.statusValue(),
                     issue.engineerId(),
+                    null,
                     SeedContract.lenientDate(issue.date()),
                     issue.statusValue() == IssueStatus.DONE
                             ? SeedContract.lenientDate(issue.date())

@@ -85,6 +85,8 @@ class IssueCommandTest {
     @Mock
     private MaintenanceAuditRecorder auditRecorder;
     @Mock
+    private IssueWriteGuard issueWriteGuard;
+    @Mock
     private ApplicationEventPublisher events;
 
     private IssueCommandServiceImpl service;
@@ -107,6 +109,7 @@ class IssueCommandTest {
                 viewFactory,
                 personDirectoryService,
                 auditRecorder,
+                issueWriteGuard,
                 Clock.fixed(TODAY.atStartOfDay(ZoneId.systemDefault()).toInstant(),
                         ZoneId.systemDefault()),
                 events);
@@ -119,7 +122,7 @@ class IssueCommandTest {
         // When · Then
         assertThatExceptionOfType(ValidationException.class)
                 .isThrownBy(() -> service.register(
-                        CALLER_ID, new IssueCommand(999L, IssueType.INCIDENT, " ")))
+                        CALLER_ID, new IssueCommand(999L, IssueType.INCIDENT, " ", null)))
                 .satisfies(thrown -> assertThat(thrown.field()).isEqualTo("title"));
         // 참조 조회까지 가지 않았다 — 계약 쓰기와 같은 순서(400 → 422)
         verify(siteRepository, never()).findById(anyLong());
@@ -155,7 +158,7 @@ class IssueCommandTest {
 
         // When
         service.register(CALLER_ID, new IssueCommand(SITE_ID, IssueType.INCIDENT,
-                "  로그인 지연  "));
+                "  로그인 지연  ", null));
 
         // Then
         assertThat(captureSaved().getTitle()).isEqualTo("로그인 지연");
@@ -183,10 +186,10 @@ class IssueCommandTest {
 
         // When · Then — 지정이 없는 것과 지정이 틀린 것은 다른 오류다
         assertThatExceptionOfType(ValidationException.class).isThrownBy(() ->
-                service.register(CALLER_ID, new IssueCommand(null, IssueType.INCIDENT, "제목")));
+                service.register(CALLER_ID, new IssueCommand(null, IssueType.INCIDENT, "제목", null)));
         assertThatExceptionOfType(UnprocessableException.class)
                 .isThrownBy(() -> service.register(
-                        CALLER_ID, new IssueCommand(999L, IssueType.INCIDENT, "제목")))
+                        CALLER_ID, new IssueCommand(999L, IssueType.INCIDENT, "제목", null)))
                 .satisfies(thrown ->
                         assertThat(thrown.code()).isEqualTo(ErrorCode.REF_NOT_FOUND));
         verify(issueRepository, never()).save(any());
@@ -201,9 +204,9 @@ class IssueCommandTest {
 
         // When · Then
         assertThatExceptionOfType(ValidationException.class).isThrownBy(() ->
-                service.register(CALLER_ID, new IssueCommand(SITE_ID, null, "제목")));
+                service.register(CALLER_ID, new IssueCommand(SITE_ID, null, "제목", null)));
         assertThatExceptionOfType(ValidationException.class).isThrownBy(() ->
-                service.register(CALLER_ID, new IssueCommand(SITE_ID, IssueType.INCIDENT, " ")));
+                service.register(CALLER_ID, new IssueCommand(SITE_ID, IssueType.INCIDENT, " ", null)));
         verify(issueRepository, never()).save(any());
     }
 
@@ -249,7 +252,7 @@ class IssueCommandTest {
     void processWalksTheForwardFlowAndStampsCompletion() {
         // Given
         MaintenanceIssue issue = issue(IssueStatus.RECEIVED);
-        when(issueRepository.findById(ISSUE_ID)).thenReturn(Optional.of(issue));
+        when(issueRepository.findActiveById(ISSUE_ID)).thenReturn(Optional.of(issue));
 
         // When
         service.process(CALLER_ID, ISSUE_ID, status(IssueStatus.IN_PROGRESS), 0L);
@@ -266,7 +269,7 @@ class IssueCommandTest {
     void processMaySkipAwaitingClient() {
         // Given
         MaintenanceIssue issue = issue(IssueStatus.IN_PROGRESS);
-        when(issueRepository.findById(ISSUE_ID)).thenReturn(Optional.of(issue));
+        when(issueRepository.findActiveById(ISSUE_ID)).thenReturn(Optional.of(issue));
 
         // When
         service.process(CALLER_ID, ISSUE_ID, status(IssueStatus.DONE), 0L);
@@ -281,7 +284,7 @@ class IssueCommandTest {
         // Given
         MaintenanceIssue issue = issue(IssueStatus.DONE);
         ReflectionTestUtils.setField(issue, "completedAt", TODAY.minusDays(3));
-        when(issueRepository.findById(ISSUE_ID)).thenReturn(Optional.of(issue));
+        when(issueRepository.findActiveById(ISSUE_ID)).thenReturn(Optional.of(issue));
 
         // When
         service.process(CALLER_ID, ISSUE_ID, status(IssueStatus.IN_PROGRESS), 0L);
@@ -296,7 +299,7 @@ class IssueCommandTest {
     void processRejectsTransitionsOutsideTheFlow() {
         // Given — 접수에서 완료로 건너뛰기
         MaintenanceIssue issue = issue(IssueStatus.RECEIVED);
-        when(issueRepository.findById(ISSUE_ID)).thenReturn(Optional.of(issue));
+        when(issueRepository.findActiveById(ISSUE_ID)).thenReturn(Optional.of(issue));
 
         // When · Then
         assertThatExceptionOfType(ConflictException.class)
@@ -313,10 +316,10 @@ class IssueCommandTest {
     void processChangesOnlyWhatWasSent() {
         // Given
         MaintenanceIssue issue = issue(IssueStatus.IN_PROGRESS);
-        when(issueRepository.findById(ISSUE_ID)).thenReturn(Optional.of(issue));
+        when(issueRepository.findActiveById(ISSUE_ID)).thenReturn(Optional.of(issue));
 
         // When
-        service.process(CALLER_ID, ISSUE_ID, new IssueEditCommand(null, OTHER_PERSON_ID), 0L);
+        service.process(CALLER_ID, ISSUE_ID, IssueEditCommand.ofProcess(null, OTHER_PERSON_ID), 0L);
 
         // Then
         assertThat(issue.getAssigneeId()).isEqualTo(OTHER_PERSON_ID);
@@ -328,7 +331,7 @@ class IssueCommandTest {
     void processKeepsAssigneeWhenNotSent() {
         // Given
         MaintenanceIssue issue = issue(IssueStatus.RECEIVED);
-        when(issueRepository.findById(ISSUE_ID)).thenReturn(Optional.of(issue));
+        when(issueRepository.findActiveById(ISSUE_ID)).thenReturn(Optional.of(issue));
 
         // When
         service.process(CALLER_ID, ISSUE_ID, status(IssueStatus.IN_PROGRESS), 0L);
@@ -342,7 +345,7 @@ class IssueCommandTest {
     void processRejectsStaleVersionBeforeValidating() {
         // Given
         MaintenanceIssue issue = issue(IssueStatus.RECEIVED);
-        when(issueRepository.findById(ISSUE_ID)).thenReturn(Optional.of(issue));
+        when(issueRepository.findActiveById(ISSUE_ID)).thenReturn(Optional.of(issue));
 
         // When · Then
         assertThatExceptionOfType(StaleVersionException.class).isThrownBy(() ->
@@ -356,13 +359,13 @@ class IssueCommandTest {
     void processRejectsUnknownAssignee() {
         // Given
         MaintenanceIssue issue = issue(IssueStatus.RECEIVED);
-        when(issueRepository.findById(ISSUE_ID)).thenReturn(Optional.of(issue));
+        when(issueRepository.findActiveById(ISSUE_ID)).thenReturn(Optional.of(issue));
         when(personDirectoryService.existsActive(999L)).thenReturn(false);
 
         // When · Then
         assertThatExceptionOfType(UnprocessableException.class)
                 .isThrownBy(() -> service.process(
-                        CALLER_ID, ISSUE_ID, new IssueEditCommand(null, 999L), 0L))
+                        CALLER_ID, ISSUE_ID, IssueEditCommand.ofProcess(null, 999L), 0L))
                 .satisfies(thrown ->
                         assertThat(thrown.code()).isEqualTo(ErrorCode.REF_NOT_FOUND));
         assertThat(issue.getAssigneeId()).isEqualTo(ENGINEER_ID);
@@ -373,7 +376,7 @@ class IssueCommandTest {
     void processSnapshotsBeforeTheChange() {
         // Given
         MaintenanceIssue issue = issue(IssueStatus.RECEIVED);
-        when(issueRepository.findById(ISSUE_ID)).thenReturn(Optional.of(issue));
+        when(issueRepository.findActiveById(ISSUE_ID)).thenReturn(Optional.of(issue));
         when(auditRecorder.snapshot(issue))
                 .thenAnswer(invocation -> Map.of("status", issue.getStatus()));
 
@@ -390,7 +393,7 @@ class IssueCommandTest {
     @DisplayName("D3-2 — 없는 이슈는 404다")
     void processRejectsUnknownIssue() {
         // Given
-        when(issueRepository.findById(ISSUE_ID)).thenReturn(Optional.empty());
+        when(issueRepository.findActiveById(ISSUE_ID)).thenReturn(Optional.empty());
 
         // When · Then
         assertThatExceptionOfType(NotFoundException.class).isThrownBy(() ->
@@ -401,7 +404,7 @@ class IssueCommandTest {
     @DisplayName("D3-3 — 코멘트는 화자를 작성자로 남기고 감사 행은 만들지 않는다")
     void addCommentRecordsAuthorWithoutAuditRow() {
         // Given
-        when(issueRepository.existsById(ISSUE_ID)).thenReturn(true);
+        when(issueRepository.findActiveById(ISSUE_ID)).thenReturn(Optional.of(issue(IssueStatus.RECEIVED)));
         when(commentRepository.save(any())).thenAnswer(invocation -> {
             IssueComment comment = invocation.getArgument(0);
             ReflectionTestUtils.setField(comment, "id", 1L);
@@ -430,7 +433,7 @@ class IssueCommandTest {
     @DisplayName("D3-3 — 없는 이슈에는 코멘트를 달 수 없고, 빈 내용은 400이다")
     void addCommentRejectsUnknownIssueAndBlankContent() {
         // Given
-        when(issueRepository.existsById(ISSUE_ID)).thenReturn(false, true);
+        when(issueRepository.findActiveById(ISSUE_ID)).thenReturn(Optional.empty(), Optional.of(issue(IssueStatus.RECEIVED)));
 
         // When · Then
         assertThatExceptionOfType(NotFoundException.class)
@@ -448,11 +451,11 @@ class IssueCommandTest {
     }
 
     private static IssueCommand command() {
-        return new IssueCommand(SITE_ID, IssueType.INCIDENT, "로그인 지연");
+        return new IssueCommand(SITE_ID, IssueType.INCIDENT, "로그인 지연", null);
     }
 
     private static IssueEditCommand status(IssueStatus status) {
-        return new IssueEditCommand(status, null);
+        return IssueEditCommand.ofProcess(status, null);
     }
 
     /** 사이트 id는 DB가 만든다(IDENTITY) — 단위 테스트에서는 주입해 준다. */
@@ -466,11 +469,12 @@ class IssueCommandTest {
 
     private static MaintenanceIssue issue(IssueStatus status) {
         return MaintenanceIssue.of(new IssueProfile(ISSUE_ID, SITE_ID, IssueType.INCIDENT,
-                "로그인 지연", status, ENGINEER_ID, TODAY.minusDays(5), null));
+                "로그인 지연", null, status, ENGINEER_ID, CALLER_ID, TODAY.minusDays(5), null));
     }
 
     private static IssueView view() {
         return new IssueView(ISSUE_ID, "장애", "접수", IssueStatus.RECEIVED, "로그인 지연",
+                null, CALLER_ID,
                 TODAY, null, personRef(),
                 SITE_ID, "가천대길병원", CONTRACT_ID, "그룹웨어 유지보수", List.of(), 0L);
     }

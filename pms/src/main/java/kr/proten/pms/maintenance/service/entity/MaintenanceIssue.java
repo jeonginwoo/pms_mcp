@@ -35,11 +35,29 @@ public class MaintenanceIssue {
     private IssueType type;
     @Column(nullable = false)
     private String title;
+    /**
+     * 본문 (2026-08-26 신설) — null일 수 있다. 시드 267건은 본문 없이 적재됐고 그것이
+     * 정상이다: 빈 문자열로 채우면 "안 쓴 것"과 "지운 것"이 같아진다.
+     */
+    private String content;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private IssueStatus status;
     @Column(name = "assignee_id")
     private Long assigneeId;
+    /**
+     * 등록자 (2026-08-26 신설) — 수정·삭제 권한이 "등록자·담당자 + 계약 관리 플래그"라
+     * 이 컬럼이 없으면 그 판정 자체가 불가능하다(전에는 담당자만 있었다).
+     * 시드 이슈는 null이다 — 구 게시판이 작성자를 남기지 않았다.
+     */
+    @Column(name = "reporter_id")
+    private Long reporterId;
+    /**
+     * soft 삭제 (2026-08-26) — 프로젝트 A4 선례. hard delete면 코멘트·감사가 가리키는
+     * 대상이 사라진다.
+     */
+    @Column(nullable = false)
+    private boolean deleted;
     @Column(name = "received_at", nullable = false)
     private LocalDate receivedAt;
     @Column(name = "completed_at")
@@ -55,10 +73,13 @@ public class MaintenanceIssue {
         this.siteId = profile.siteId();
         this.type = profile.type();
         this.title = profile.title();
+        this.content = profile.content();
         this.status = profile.status();
         this.assigneeId = profile.assigneeId();
+        this.reporterId = profile.reporterId();
         this.receivedAt = profile.receivedAt();
         this.completedAt = profile.completedAt();
+        this.deleted = false;
     }
 
     public static MaintenanceIssue of(IssueProfile profile) {
@@ -104,6 +125,45 @@ public class MaintenanceIssue {
         this.assigneeId = assigneeId;
     }
 
+    /**
+     * 제목·유형·본문을 고친다 (AC D3-5 — 2026-08-26 신설).
+     *
+     * <p>착수 계기가 이것이다: 등록 경로는 있는데 <b>제목 오타를 고칠 방법이 없었다</b>.
+     *
+     * <p><b>null은 "그대로"다</b> — 상태·담당 재배정({@code IssueEditCommand})이 이미 그
+     * 규약을 쓰고 있어 한 요청에서 규약이 갈리지 않게 맞춘다. 그래서 <b>본문을 비우는
+     * 것은 빈 문자열</b>로 표현한다: 세 칸 중 어느 것도 안 보낸 요청이 나머지를 지우면
+     * 부분 수정이 불가능해진다.
+     *
+     * <p>사이트는 여기서 바꾸지 않는다 — 이슈가 어느 계약에 속하는지가 사이트에서
+     * 파생되므로(계약 링크·전사 조회의 원천) 옮기는 것은 정정이 아니라 이동이고,
+     * AC에 요구가 없다.
+     */
+    public void edit(IssueType type, String title, String content) {
+        if (type != null) {
+            this.type = type;
+        }
+
+        if (title != null) {
+            this.title = title;
+        }
+
+        if (content != null) {
+            // 빈 문자열은 "본문을 지운다"다 — null(그대로)과 구분해 null로 저장한다
+            this.content = content.isBlank() ? null : content;
+        }
+    }
+
+    /**
+     * soft 삭제 (AC D3-6 — 2026-08-26 신설). 되돌리기 경로는 두지 않는다 —
+     * AC에 요구가 없고, 프로젝트 삭제(A4)도 같다.
+     *
+     * <p>이미 삭제된 이슈는 조회 단계에서 404로 걸러지므로 여기 두 번 오지 않는다.
+     */
+    public void delete() {
+        this.deleted = true;
+    }
+
     public Long getId() {
         return id;
     }
@@ -120,12 +180,24 @@ public class MaintenanceIssue {
         return title;
     }
 
+    public String getContent() {
+        return content;
+    }
+
     public IssueStatus getStatus() {
         return status;
     }
 
     public Long getAssigneeId() {
         return assigneeId;
+    }
+
+    public Long getReporterId() {
+        return reporterId;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
     }
 
     public LocalDate getReceivedAt() {
