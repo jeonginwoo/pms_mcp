@@ -1,6 +1,8 @@
 package kr.proten.pms.project;
 
+import java.util.EnumSet;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * 프로젝트 상태 (PRD-pms §5): 계약대기 → 수주확정 → 진행중 → 완료 → 유지보수중.
@@ -13,6 +15,26 @@ public enum ProjectStatus {
     IN_PROGRESS("진행중"),
     COMPLETED("완료"),
     UNDER_MAINTENANCE("유지보수중");
+
+    /**
+     * 사람이 <b>아직 물려 있는</b> 상태 — 완료·유지보수중을 뺀 셋 (2026-08-26 신설).
+     *
+     * <p>이 집합이 생긴 이유는 실측이다: 완료 프로젝트의 배정이 {@code ACTIVE}로 살아
+     * 있다. 시드된 DB에서 ACTIVE 배정 462건 중 <b>384건(83%)이 완료 프로젝트</b>의
+     * 것이고, 한 사람은 128건 중 진행 중이 5건뿐이었다. 배정 종료(AC B2-1)는
+     * {@code DELETE /assignments/{id}}라는 <b>명시적 수동 행위</b>이고 완료 시 자동으로
+     * 종료하는 규칙은 어떤 AC에도 없다 — {@code AssignmentCountAdapter}의 옛 주석이
+     * "완료 시 이미 종료된다(B2-1)"고 적었던 것은 <b>사실이 아니었다</b>.
+     *
+     * <p>그래서 "물려 있는가"는 <b>배정 상태와 프로젝트 상태를 함께</b> 봐야 답이 된다
+     * (2026-08-26 사용자 결정 — 데이터를 고치는 대신 판정으로 거른다. 자동 종료를
+     * 만들면 B2-1과 종료 경로가 둘로 갈리고 재개(A7-3)에 되살리기 규칙이 붙는다).
+     *
+     * <p>여기 두는 것은 <b>묻는 쪽이 둘</b>이기 때문이다 — 이동 경고(E1-2)와 퇴사
+     * 처리(§12 ③). 각자 상태 목록을 적으면 한쪽만 고쳐질 때 두 화면이 다른 수를 낸다.
+     */
+    private static final Set<ProjectStatus> LIVE =
+            EnumSet.of(CONTRACT_PENDING, ORDER_CONFIRMED, IN_PROGRESS);
 
     // 화면·챗에 그대로 쓰는 한국어 표기 (상위 PRD 용어와 일치)
     private final String label;
@@ -43,5 +65,20 @@ public enum ProjectStatus {
     /** 정보 수정 경로로 target까지 갈 수 있는가 — 건너뛰기·역방향은 false다. */
     public boolean advancesTo(ProjectStatus target) {
         return next().filter(target::equals).isPresent();
+    }
+
+    /**
+     * 아직 사람이 물려 있는 상태인가 — 완료·유지보수중은 false다 ({@link #LIVE}).
+     *
+     * <p>질의에 넘길 목록이 필요하면 {@link #live()}를 쓴다. JPQL은 이 메서드를 부를
+     * 수 없어 집합을 파라미터로 받아야 하기 때문이고, 그래도 <b>정의는 여전히 한 곳</b>이다.
+     */
+    public boolean isLive() {
+        return LIVE.contains(this);
+    }
+
+    /** 질의 파라미터용 — 위 정의의 사본을 만들지 않는다. */
+    public static Set<ProjectStatus> live() {
+        return LIVE;
     }
 }

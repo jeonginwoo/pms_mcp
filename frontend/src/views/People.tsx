@@ -69,7 +69,11 @@ export default function People() {
 
     if (result.ok) {
       setError(null)
-      showToast(`${name}님을 삭제했습니다 (비활성 처리)`)
+      // 서버가 문구까지 만든다(E1-2 이동 경고와 같은 규율) — 무엇이 함께 끊겼는지
+      // 지금 이 화면에서 정리하는 사람이 봐야 후속 배정으로 이어진다
+      showToast(result.value.notice === null
+        ? `${name}님을 삭제했습니다 (비활성 처리)`
+        : `${name}님을 삭제했습니다 (비활성 처리) — ${result.value.notice}`)
 
       return
     }

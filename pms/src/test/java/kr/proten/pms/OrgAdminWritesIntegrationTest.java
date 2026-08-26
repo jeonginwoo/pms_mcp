@@ -252,9 +252,21 @@ class OrgAdminWritesIntegrationTest extends PostgresTestBase {
                 .containsEntry("parentId", (int) newDivisionId);
     }
 
+    /**
+     * §12 ③이 이 테스트의 주제를 바꿨다 (2026-08-26).
+     *
+     * <p>전에는 "퇴사자의 배정 행이 상세에 <b>남는다</b>"를 단정했는데, 이제 퇴사 처리가
+     * 진행 중 참여자 배정을 <b>함께 종료</b>하므로 그 행은 상세(ACTIVE만 싣는다)에서
+     * 빠지는 것이 맞다 — 그 사람은 더 이상 그 프로젝트에 물려 있지 않다.
+     *
+     * <p>원래 지키던 성질(<b>비활성 인원의 이름이 보존된다</b> — 화면이 {@code #605}를
+     * 그리지 않게)은 사라지지 않았다. 비활성 인원이 ACTIVE 배정을 여전히 들고 있는
+     * 경우가 남기 때문이다: <b>완료 프로젝트</b>의 배정은 퇴사가 끊지 않는다. 그 자리로
+     * 옮겨 {@code PersonRetirementIntegrationTest}가 잠근다.
+     */
     @Test
-    @DisplayName("E2-3 — 퇴사자의 배정은 이름을 잃지 않는다 (화면이 #id를 그리지 않게)")
-    void deactivatedPersonKeepsDisplayNameOnAssignments() {
+    @DisplayName("§12 ③ — 퇴사하면 진행 중 참여자 배정이 상세에서 빠진다")
+    void deactivationRemovesTheLeaverFromActiveAssignments() {
         ProjectDetail created = projectCommandService.create(ADMIN_ID, new CreateProjectCommand(
                 "(주)가온아이",
                 "E 퇴사자 배정 보존용 구축",
@@ -269,22 +281,16 @@ class OrgAdminWritesIntegrationTest extends PostgresTestBase {
 
         personService.deactivate(ADMIN_ID, LEAVER_ID);
 
-        AssignmentView leaver = projectQueryService.getProject(ADMIN_ID, created.id())
-                .assignments().stream()
-                .filter(assignment -> assignment.personId() == LEAVER_ID)
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("퇴사자의 배정 행이 사라졌다"));
+        List<AssignmentView> assignments =
+                projectQueryService.getProject(ADMIN_ID, created.id()).assignments();
 
-        // 배정은 남는다(B2-1) — 그러면 이름도 남아야 한다. 활성 필터를 든 조회는
-        // 이 자리를 null로 만들고 화면은 `#605`를 그렸다(2026-08-24 수정 전 거동)
-        assertThat(leaver.personName()).isEqualTo("E퇴사자");
-        assertThat(leaver.personActive()).isFalse();
-        // 재직자는 같은 응답에서 true다 — 플래그가 사람별로 갈린다
-        assertThat(projectQueryService.getProject(ADMIN_ID, created.id()).assignments().stream()
-                .filter(assignment -> assignment.personId() == ADMIN_ID)
-                .findFirst()
-                .orElseThrow()
-                .personActive()).isTrue();
+        // 살려 두면 퇴사자가 가동률 모집단에 남는다(C1-4)
+        assertThat(assignments).noneMatch(assignment -> assignment.personId() == LEAVER_ID);
+        // PM은 그대로다 — 끊는 것은 참여자 배정뿐이다
+        assertThat(assignments)
+                .filteredOn(assignment -> assignment.personId() == ADMIN_ID)
+                .singleElement()
+                .satisfies(assignment -> assertThat(assignment.personActive()).isTrue());
     }
 
     @Test

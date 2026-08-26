@@ -9,6 +9,7 @@ import kr.proten.pms.person.controller.dto.MoveOrgUnitRequest;
 import kr.proten.pms.person.controller.dto.UpdatePersonRequest;
 import kr.proten.pms.person.service.PersonService;
 import kr.proten.pms.person.service.dto.OrgUnitMoveResult;
+import kr.proten.pms.person.service.dto.PersonDeactivateResult;
 import kr.proten.pms.person.service.dto.PersonSummary;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -88,11 +89,15 @@ class PeopleController {
     /**
      * 인원 비활성 (AC E2-3) — 삭제가 아니라 soft 비활성이다(과거 배정·감사는 보존).
      * "사용자/조직/권한 관리" 플래그가 없으면 403, 시스템 계정·본인은 422다.
+     *
+     * <p>진행 중이던 참여자 배정을 함께 종료하고 <b>무엇이 끊겼는지 본문에 싣는다</b>
+     * (§12 ③ — 2026-08-26). PM으로 물려 있으면 409 IN_USE. AC의 "200 + {@code success:true}"는
+     * 그대로이고 {@code data}가 채워질 뿐이다.
      */
     @DeleteMapping("/{personId}")
-    ApiResponse<Void> deactivate(@CallerPersonId long callerPersonId, @PathVariable long personId) {
-        personService.deactivate(callerPersonId, personId);
-
-        return ApiResponse.ok();
+    ApiResponse<PersonDeactivateResult> deactivate(
+            @CallerPersonId long callerPersonId,
+            @PathVariable long personId) {
+        return ApiResponse.ok(personService.deactivate(callerPersonId, personId));
     }
 }

@@ -19,9 +19,12 @@ import kr.proten.pms.person.repository.PermissionGroupRepository;
 import kr.proten.pms.person.repository.PersonRepository;
 import kr.proten.pms.person.service.PersonService;
 import kr.proten.pms.person.AssignmentCountPort;
+import kr.proten.pms.person.AssignmentReleasePort;
+import kr.proten.pms.person.LiveAssignment;
 import kr.proten.pms.person.service.dto.AccountView;
 import kr.proten.pms.person.service.dto.CreatePersonCommand;
 import kr.proten.pms.person.service.dto.MeView;
+import kr.proten.pms.person.service.dto.PersonDeactivateResult;
 import kr.proten.pms.person.service.dto.PersonSummary;
 import kr.proten.pms.person.service.dto.OrgUnitMoveResult;
 import kr.proten.pms.person.service.dto.UpdatePersonCommand;
@@ -62,6 +65,7 @@ public class PersonServiceImpl implements PersonService {
     private final PersonRefFactory personRefFactory;
     private final PersonAuditRecorder personAuditRecorder;
     private final AssignmentCountPort assignmentCountPort;
+    private final AssignmentReleasePort assignmentReleasePort;
 
     public PersonServiceImpl(
             PersonRepository personRepository,
@@ -74,7 +78,8 @@ public class PersonServiceImpl implements PersonService {
             RequesterResolver requesterResolver,
             PersonRefFactory personRefFactory,
             PersonAuditRecorder personAuditRecorder,
-            AssignmentCountPort assignmentCountPort) {
+            AssignmentCountPort assignmentCountPort,
+            AssignmentReleasePort assignmentReleasePort) {
         this.personRepository = personRepository;
         this.orgUnitRepository = orgUnitRepository;
         this.gradeRepository = gradeRepository;
@@ -86,6 +91,7 @@ public class PersonServiceImpl implements PersonService {
         this.personRefFactory = personRefFactory;
         this.personAuditRecorder = personAuditRecorder;
         this.assignmentCountPort = assignmentCountPort;
+        this.assignmentReleasePort = assignmentReleasePort;
     }
 
     /** 가시성 범위 내 인원 목록 — 시스템 계정·비활성 인원은 제외한다. */
@@ -313,15 +319,73 @@ public class PersonServiceImpl implements PersonService {
         return OrgUnitMoveResult.of(personRefFactory.toSummary(saved), activeAssignments);
     }
 
-    public void deactivate(long callerPersonId, long personId) {
+    /**
+     * 인원 비활성 (AC E2-3 + PRD-pms §12 ③ — 2026-08-26 확장).
+     *
+     * <p>세 가지가 한 트랜잭션에서 일어난다: <b>PM 판정 → 참여자 배정 자동 종료 →
+     * 비활성</b>. 순서가 규칙이다 — PM으로 물려 있으면 <b>아무것도 하지 않고 409</b>로
+     * 거절한다. 그대로 비활성하면 프로젝트가 PM 공석이 되는데, A6-5는 "진행 중 프로젝트당
+     * role=PM 정확히 1행"을 요구하고 PM 교체(A6)는 <b>사람을 지정해야</b> 성립하므로
+     * 시스템이 대신 고를 수 없다. 그래서 §12 ③이 "교체를 요구한다"로 정했다.
+     *
+     * <p>참여자 배정을 종료하는 이유는 반대다: 대체자가 필요하면 새로 배정하면 되고,
+     * 살려 두면 <b>퇴사자가 가동률 모집단에 남는다</b>(C1-4).
+     *
+     * <p>판정은 여기서 하고 실행은 project가 한다 — 두 반쪽이 갈린 자리와 이유는
+     * {@link kr.proten.pms.person.AssignmentReleasePort}에 있다.
+     */
+    public PersonDeactivateResult deactivate(long callerPersonId, long personId) {
         orgManagePermission.require(callerPersonId);
 
         Person target = personRepository.findByIdAndActiveTrue(personId)
                 .orElseThrow(NotFoundException::new);
         requireDeactivatable(callerPersonId, target);
 
+        List<LiveAssignment> live = assignmentReleasePort.findLiveAssignments(personId);
+        requireNoManagerAssignments(live);
+
+        // 배정을 먼저 끊는다 — 비활성 뒤에 끊으면 그 사이에 실패했을 때 "비활성인데
+        // 배정이 살아 있는" 상태가 남는다(한 트랜잭션이라 롤백되지만, 읽는 순서가
+        // 곧 불변식의 순서다)
+        assignmentReleasePort.closeParticipantAssignments(callerPersonId, personId);
+
         target.deactivate();
-        personAuditRecorder.personDeactivated(callerPersonId, personRepository.saveAndFlush(target));
+        Person saved = personRepository.saveAndFlush(target);
+        personAuditRecorder.personDeactivated(callerPersonId, saved);
+
+        return PersonDeactivateResult.of(personRefFactory.toSummary(saved), live);
+    }
+
+    /**
+     * PM으로 물린 프로젝트가 있으면 409 IN_USE (§12 ③ — "교체를 요구한다").
+     *
+     * <p>목록을 <b>메시지에 담는다</b>: §7 오류 봉투는 {@code code·message·field·traceId}뿐이라
+     * 구조화된 목록을 실을 자리가 없고, E3-3의 조직 삭제 거절이 이미 같은 모양으로 답한다.
+     * 다만 <b>이름을 셋까지만 적는다</b> — 실측상 한 사람이 PM인 진행 중 프로젝트가
+     * 29건까지 나와서(2026-08-26), 전부 적으면 메시지가 화면을 넘긴다.
+     */
+    private void requireNoManagerAssignments(List<LiveAssignment> live) {
+        List<String> managed = live.stream()
+                .filter(LiveAssignment::manager)
+                .map(LiveAssignment::projectName)
+                .toList();
+
+        if (managed.isEmpty()) {
+            return;
+        }
+
+        throw new ConflictException(ErrorCode.IN_USE,
+                "PM으로 지정된 진행 중 프로젝트 %d건(%s)이 있습니다 — PM을 교체한 뒤 삭제하세요"
+                        .formatted(managed.size(), summarize(managed)));
+    }
+
+    /** 앞의 셋만 적고 나머지는 센다 — 목록이 길어도 문구가 읽히게. */
+    private String summarize(List<String> names) {
+        if (names.size() <= 3) {
+            return String.join(", ", names);
+        }
+
+        return "%s 외 %d건".formatted(String.join(", ", names.subList(0, 3)), names.size() - 3);
     }
 
     private void requireText(String value, String field) {

@@ -46,6 +46,7 @@ import type {
   PageResponse,
   PermissionGroupBody,
   PermissionGroupDetail,
+  PersonDeactivateResult,
   PersonSummary,
   ProgressUpdateResult,
   ProjectDetail,
@@ -365,8 +366,12 @@ export const api = {
   me: () => request<MeView>('/api/me'),
   people: () => request<PersonSummary[]>('/api/people'),
   person: (personId: number) => request<PersonSummary>(`/api/people/${personId}`),
+  /**
+   * 인원 삭제 = soft 비활성 (E2-3). 진행 중이던 참여자 배정을 함께 종료하고
+   * 무엇이 끊겼는지 돌려준다 — PM으로 물려 있으면 409 IN_USE다(§12 ③).
+   */
   deactivatePerson: (personId: number) =>
-    request<null>(`/api/people/${personId}`, { method: 'DELETE' }),
+    request<PersonDeactivateResult>(`/api/people/${personId}`, { method: 'DELETE' }),
 
   createPerson: (body: CreatePersonBody) =>
     request<PersonSummary>('/api/people', { method: 'POST', body: JSON.stringify(body) }),

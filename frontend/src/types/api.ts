@@ -570,6 +570,19 @@ export interface OrgUnitMoveResult {
   warning: string | null
 }
 
+/**
+ * DELETE /api/people/{id} 응답 (E2-3 + §12 ③).
+ * 진행 중이던 **참여자** 배정은 함께 종료되고 무엇이 끊겼는지 여기로 온다 —
+ * 살려 두면 퇴사자가 가동률 모집단에 남는다(C1-4).
+ * PM으로 물려 있으면 이 응답 대신 409 IN_USE다(PM 공석은 A6-5가 금지한다).
+ */
+export interface PersonDeactivateResult {
+  person: PersonSummary
+  closedAssignments: number
+  projects: string[]
+  notice: string | null
+}
+
 /** PUT /api/org-units/{id} (E3-2) — 개명. 같은 부모 밑 동명은 서버가 막지 않는다 */
 export interface RenameOrgUnitBody {
   name: string

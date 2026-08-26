@@ -5,6 +5,7 @@ import kr.proten.pms.person.service.dto.AccountView;
 import kr.proten.pms.person.service.dto.CreatePersonCommand;
 import kr.proten.pms.person.service.dto.MeView;
 import kr.proten.pms.person.service.dto.OrgUnitMoveResult;
+import kr.proten.pms.person.service.dto.PersonDeactivateResult;
 import kr.proten.pms.person.service.dto.PersonSummary;
 import kr.proten.pms.person.service.dto.UpdatePersonCommand;
 import kr.proten.pms.person.service.dto.UpdateProfileCommand;
@@ -71,6 +72,13 @@ public interface PersonService {
      */
     OrgUnitMoveResult moveOrgUnit(long callerPersonId, long personId, long orgUnitId);
 
-    /** 인원을 비활성한다 — 삭제가 아니라 soft 비활성이다 (AC E2-3). */
-    void deactivate(long callerPersonId, long personId);
+    /**
+     * 인원을 비활성한다 — 삭제가 아니라 soft 비활성이다 (AC E2-3).
+     *
+     * <p>진행 중이던 <b>참여자 배정을 함께 종료하고 무엇이 끊겼는지 돌려준다</b>
+     * (§12 ③ — 2026-08-26). PM으로 물려 있으면 아무것도 하지 않고 409 IN_USE다:
+     * PM 공석은 A6-5가 금지하고 교체 대상은 시스템이 고를 수 없다.
+     * 그래서 반환이 {@code void}가 아니라 {@link PersonDeactivateResult}다.
+     */
+    PersonDeactivateResult deactivate(long callerPersonId, long personId);
 }
