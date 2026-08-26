@@ -30,3 +30,18 @@ jobs:
         with:
           name: last-verify-log
           path: build/last-verify.log
+
+      # verify.sh runs gradle with `-q`, which swallows the failing test names —
+      # the log then says only "N tests completed, 1 failed". Added 2026-08-26 after
+      # a failure that reproduced on CI but not locally: without these reports the
+      # only way to find the test was to guess.
+      - name: upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            pms/build/test-results/test/**/*.xml
+            host/build/test-results/test/**/*.xml
+            pms-mcp-mock/build/test-results/test/**/*.xml
+          if-no-files-found: ignore
