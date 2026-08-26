@@ -61,7 +61,7 @@ class ScaffoldAuthorizationTest {
         // 이 테스트가 증명하는 것이고, null이 그 증명을 대신한다(가면 NPE로 실패한다)
         personService = new PersonServiceImpl(null, null, null, null, null, null,
                 orgManagePermission, null, null, null, null);
-        orgUnitService = new OrgUnitServiceImpl(null, null, orgManagePermission, null);
+        orgUnitService = new OrgUnitServiceImpl(null, null, null, orgManagePermission, null);
         gradeService = new GradeServiceImpl(null, null, orgManagePermission, null);
         permissionGroupService =
                 new PermissionGroupServiceImpl(null, null, orgManagePermission, null);

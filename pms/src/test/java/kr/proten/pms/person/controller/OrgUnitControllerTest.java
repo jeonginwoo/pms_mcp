@@ -35,19 +35,25 @@ class OrgUnitControllerTest {
     private OrgUnitService orgUnitService;
 
     @Test
-    @DisplayName("목록 — 노드별 인원 수·삭제 가능 여부가 그대로 나간다")
+    @DisplayName("목록 — 노드별 인원·프로젝트 수와 삭제 가능 여부가 그대로 나간다")
     void list_returnsUnitsWithCounts() throws Exception {
+        // 세 번째 노드는 인원도 하위 노드도 없는데 프로젝트만 있다 — 퇴사한 PM이 남긴
+        // 모양이고(부록 A 조직 트리 · §12), 화면이 그 수를 그릴 수 있어야 한다
         when(orgUnitService.list(1L)).thenReturn(List.of(
-                new OrgUnitView(1L, null, "(주)프로텐", 0, 6, false),
-                new OrgUnitView(99L, 1L, "빈팀", 0, 0, true)));
+                new OrgUnitView(1L, null, "(주)프로텐", 0, 6, 0, false),
+                new OrgUnitView(99L, 1L, "빈팀", 0, 0, 0, true),
+                new OrgUnitView(98L, 1L, "해산팀", 0, 0, 14, false)));
 
         mockMvc.perform(get("/api/org-units").header(CALLER_HEADER, "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.error").doesNotExist())
-                .andExpect(jsonPath("$.data.length()").value(2))
+                .andExpect(jsonPath("$.data.length()").value(3))
                 .andExpect(jsonPath("$.data[1].name").value("빈팀"))
-                .andExpect(jsonPath("$.data[1].deletable").value(true));
+                .andExpect(jsonPath("$.data[1].projectCount").value(0))
+                .andExpect(jsonPath("$.data[1].deletable").value(true))
+                .andExpect(jsonPath("$.data[2].projectCount").value(14))
+                .andExpect(jsonPath("$.data[2].deletable").value(false));
     }
 
     @Test

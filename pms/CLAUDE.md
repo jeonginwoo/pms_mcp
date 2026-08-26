@@ -73,6 +73,7 @@ log). `verify.sh`/CI only look at `pms/gradlew`, so `pms-old/` is not verified.
   | person | `PersonService` · `OrgUnitService` · `GradeService` · `PermissionGroupService` · `AuditViewService` | one per managed resource |
   | person (cross-module) | `PersonDirectoryService` · `OrgVisibilityService` · `OrgPermissionService` · `PersonLookupService` · `WorkforceDirectoryService` | **different consumers** — these earn the split |
   | project (cross-module) | `AssignmentDirectoryService` · `ProjectLookupService` · `ProgressCommandService` · **`HandoverPort`** | one more consumer set (resource · `/mcp`) — 2026-08-23. `HandoverPort` is the odd one out: an **inverted** port that project *defines and calls*, implemented by maintenance (D1, 2026-08-25) |
+  | person (inverted ports) | `AccountPort` (auth) · `AssignmentCountPort` (project) · **`ProjectCountPort`** (project, 2026-08-26) | person *defines*, the owner of the data *implements* — the direct call would be a cycle. **Each port answers one question**: widening one instead of adding the next would drag its consumer into a shape it does not need (conventions §5 ISP) |
   | resource (cross-module) | `UtilizationLookupService` | `/mcp` only — the web takes `?orgUnitId=`, chat takes a `UtilizationScope` (2026-08-24) |
   | maintenance | `MaintenanceQueryService` · `IssueQueryService` · `ContractCommandService` · `IssueCommandService` | **three axes, not two** — reads are company-wide and take no caller (D4-3); contract writes are gated on the "계약 관리" flag (D2-3); **issue writes take a caller but have no gate** (US-D3 = every logged-in user, 2026-08-24). Same read/write split, same reason, as audit's `AuditTrail` / `AuditQueryService` |
 
@@ -88,7 +89,7 @@ log). `verify.sh`/CI only look at `pms/gradlew`, so `pms-old/` is not verified.
   adopted 2026-08-22). Every sub-package (`controller/`, `service/`, `repository/`)
   is internal, so the files sitting *directly* in a module directory **are** the
   contract it offers, and that list is the boundary — measured 2026-08-26:
-  `person` 13 · `project` 13 · `audit` 6 · `maintenance` 7 · `resource` 5 ·
+  `person` 14 · `project` 13 · `audit` 6 · `maintenance` 7 · `resource` 5 ·
   **`notification` 0** (`ls <module>/*.java` is the measurement; four of these numbers
   had once gone stale while the file still said "measured", so re-measure rather than
   trust the line).
@@ -319,8 +320,12 @@ GET  /api/people              visible people (43 seeded, system account hidden) 
                               `PersonRef` stays narrow — `/mcp` shares it (구현_노트 §5)
 GET  /api/people/{id}          404 conceals both absence and out-of-visibility
 DELETE /api/people/{id}       200 {success:true}, soft deactivate — "사용자/조직/권한 관리" flag (E2-3)
-GET  /api/org-units           tree + counts + deletable, same flag
-DELETE /api/org-units/{id}    200 {success:true}, empty nodes only — 409 IN_USE otherwise (E3-3)
+GET  /api/org-units           tree + counts + deletable, same flag. `projectCount` counts
+                              projects whose **PM belongs to that node** — direct, not the
+                              subtree sum, and it comes over `ProjectCountPort` (2026-08-26)
+DELETE /api/org-units/{id}    200 {success:true}, empty nodes only — 409 IN_USE otherwise (E3-3).
+                              "Empty" is members ∪ children ∪ **projects**; the project half
+                              landed 2026-08-26 once there was a way to count them at all
 
 POST /api/people              201 + person — creates the login account too (E2-1)
 POST /api/org-units           201 + node — arbitrary depth, one company root (E3-1)
@@ -507,6 +512,17 @@ why `projectId` is a filter column filled even when `entityId` is an assignment.
   freshly seeded database, so the audit screens show nothing until someone writes.
   An older record claimed seeded rows exist as `source=WEB`; that is registered as
   needing confirmation in PRD-pms §12.
+
+- **`projects.json`'s `team`/`division` strings do not describe the seeded database**
+  (measured 2026-08-26). `managerId` binds by id to the *real* roster
+  (`seed_org_proten.sql`) while those strings came from the old anonymous roster
+  (`people.json`) — the README already says the two files put different people on the
+  same id, and the consequence is that **300 of 382 rows disagree**. So the org
+  distribution the app shows is not the one those strings suggest: PM-owned projects land
+  on 13 nodes led by `AI팀` 128, not on `AX솔루션사업부` 128. **Never derive an expected
+  value from `team`** — derive it from `managerId` → `people.org_unit_id`, the way
+  `ProjectSeedLoadIntegrationTest` anchors it. The prototype shows the other numbers
+  because it reads the mock data, and PRD-pms §12 had cited that reading as evidence.
 
 ## Domain events (new 2026-08-24 — read this before adding one)
 

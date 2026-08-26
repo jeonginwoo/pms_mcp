@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import kr.proten.pms.person.repository.PersonRepository;
+import kr.proten.pms.person.service.OrgUnitService;
+import kr.proten.pms.person.service.dto.OrgUnitView;
 import kr.proten.pms.person.service.entity.Person;
 import kr.proten.pms.project.ProjectStatus;
 import kr.proten.pms.project.repository.ProjectAssignmentRepository;
@@ -70,6 +72,8 @@ class ProjectSeedLoadIntegrationTest {
     private UtilizationQueryService utilizationQueryService;
     @Autowired
     private ProjectQueryService projectQueryService;
+    @Autowired
+    private OrgUnitService orgUnitService;
 
     @Test
     @DisplayName("부록 B — 프로젝트 382건이 상태 분포 그대로 적재된다")
@@ -209,6 +213,51 @@ class ProjectSeedLoadIntegrationTest {
         // 멱등을 이름 키로 판정하면 여기가 1건이 된다 — 실제로는 기간·PM이 다른 별건이다
         assertThat(tck).hasSize(2);
         assertThat(tck).extracting(Project::getManagerId).containsExactlyInAnyOrder(13L, 30L);
+    }
+
+    @Test
+    @DisplayName("부록 A 조직 트리 — 노드별 프로젝트 수는 PM 소속으로 접힌 382건의 분할이다")
+    void orgTreeProjectCountsPartitionTheSeed() {
+        Map<String, Long> byNode = orgUnitService.list(COMPANY_SCOPE_CALLER_ID).stream()
+                .filter(unit -> unit.projectCount() > 0)
+                .collect(Collectors.toMap(OrgUnitView::name, OrgUnitView::projectCount));
+
+        // 합이 정확히 382 — 한 프로젝트는 대표 PM 한 명을 통해 한 노드에만 걸린다.
+        // 배정으로 셌다면 여기가 382를 넘는다(한 프로젝트가 여러 노드에 동시에 선다)
+        assertThat(byNode.values().stream().mapToLong(Long::longValue).sum()).isEqualTo(382);
+
+        // **이 수는 `projects.json`의 `team` 필드가 아니다** (2026-08-26 실측):
+        // 그 필드는 구 익명 명부(`people.json`) 기준이고 `managerId`는 id로만 연결돼
+        // 실제 명부의 다른 사람을 가리킨다(`reference/seed/README.md`). 그래서 시드의
+        // `team` 카운트(AX솔루션사업부 128 …)와 실제 분포는 300건이 어긋난다 —
+        // PRD-pms §12가 근거로 든 "프로토타입 실측 11개 노드 일치"는 프로토타입의
+        // 목업 데이터에서 성립한 값이고 실 앱에서는 성립하지 않는다
+        assertThat(byNode).containsExactlyInAnyOrderEntriesOf(Map.ofEntries(
+                Map.entry("AI팀", 128L),
+                Map.entry("AX솔루션사업부", 55L),
+                Map.entry("AX솔루션개발1팀", 52L),
+                Map.entry("AX솔루션개발2팀", 48L),
+                Map.entry("CS사업팀", 40L),
+                Map.entry("AX기획마케팅팀", 20L),
+                Map.entry("MS개발팀", 14L),
+                Map.entry("관리•마케팅부", 9L),
+                Map.entry("AX영업팀", 8L),
+                Map.entry("경영관리팀", 4L),
+                Map.entry("AI기술연구소", 2L),
+                Map.entry("AX개발팀", 1L),
+                Map.entry("MS사업부", 1L)));
+    }
+
+    @Test
+    @DisplayName("AC E3-3 — 프로젝트가 걸린 노드는 실 시드에서 하나도 삭제 가능이 아니다")
+    void nodesCarryingProjectsAreNotDeletable() {
+        // 화면이 보여 주는 수와 삭제 판정이 **같은 수**를 읽는지가 이 단정의 전부다
+        // (2026-08-26 사용자 결정). 갈라 두면 "프로젝트 128"이라고 적힌 노드에
+        // 삭제 버튼이 켜진다
+        assertThat(orgUnitService.list(COMPANY_SCOPE_CALLER_ID))
+                .filteredOn(unit -> unit.projectCount() > 0)
+                .hasSize(13)
+                .allSatisfy(unit -> assertThat(unit.deletable()).isFalse());
     }
 
     private Set<Long> personIds() {

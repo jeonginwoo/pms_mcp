@@ -37,17 +37,27 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
     /** 표시 이름 해석용 — 퇴사자도 함께 낸다(`PersonDirectoryService#findRefs` 규약). */
     List<Person> findByIdInOrderByIdAsc(Collection<Long> ids);
 
-    /** 조직별 인원 집계용 — 참조 데이터 44행 규모라 한 번에 올린다(OrgUnitServiceImpl 주석). */
-    List<Person> findByActiveTrue();
-
     /** 이름으로 활성 인원 — 동명이인이면 여러 행이라 호출자가 유일성을 판정한다. */
     List<Person> findByNameAndActiveTrue(String name);
 
-    /** 조직 노드 삭제 가능 판정 (AC E3-3) — 빈 노드만 지울 수 있다. */
     /** 같은 조직의 활성 인원 (AC F1-1 수신자 후보 — 플래그 판정은 서비스가 한다). */
     List<Person> findByOrgUnitIdAndActiveTrue(Long orgUnitId);
 
+    /** 조직 노드 삭제 가능 판정 (AC E3-3) — 빈 노드만 지울 수 있다. */
     long countByOrgUnitIdAndActiveTrue(Long orgUnitId);
+
+    /**
+     * 같은 조직의 인원 — <b>비활성도 포함</b>한다 (2026-08-26 신설).
+     *
+     * <p>조직 트리의 프로젝트 수가 이것을 쓴다: 그 수의 정의가 "그 노드가 <b>PM 소속
+     * 노드</b>인 프로젝트"인데, 퇴사 처리(E2-3)된 PM도 {@code orgUnitId}는 그대로 두고
+     * 맡은 프로젝트도 그대로 남는다. 활성만 보면 <b>인원 0인데 프로젝트 N</b>인 노드가
+     * 그 N을 잃는다 — E3-3이 막아야 할 바로 그 경우를 못 보게 된다.
+     *
+     * <p>{@code existsByGradeId}·{@code countByGrade}가 비활성을 세는 것과 같은 기준이고
+     * 이유도 같다: 화면이 보여 준 수와 삭제 판정이 갈리면 안 된다.
+     */
+    List<Person> findByOrgUnitId(Long orgUnitId);
 
     /**
      * 이 직급을 쓰는 인원이 있는가 (AC E4-3 `409 IN_USE`).
