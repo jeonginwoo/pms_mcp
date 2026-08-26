@@ -48,6 +48,7 @@ import type {
   PageResponse,
   PermissionGroupBody,
   PermissionGroupDetail,
+  PersonDeactivateResult,
   PersonSummary,
   ProgressUpdateResult,
   ProjectDetail,
@@ -147,7 +148,11 @@ interface Store {
    * 화면은 그 경고를 오류가 아니라 안내로 보여 준다: 이동은 실제로 일어났다.
    */
   movePersonOrgUnit: (personId: number, orgUnitId: number) => Promise<Result<OrgUnitMoveResult>>
-  deactivatePerson: (personId: number) => Promise<Result<null>>
+  /**
+   * 인원 삭제 = soft 비활성 (E2-3). 참여자 배정이 함께 끊기므로 무엇이 끊겼는지가
+   * 응답에 실려 온다(§12 ③) — PM으로 물려 있으면 409라 여기 오지 않는다.
+   */
+  deactivatePerson: (personId: number) => Promise<Result<PersonDeactivateResult>>
   createOrgUnit: (body: CreateOrgUnitBody) => Promise<Result<OrgUnitView>>
   renameOrgUnit: (orgUnitId: number, name: string) => Promise<Result<OrgUnitView>>
   moveOrgUnitParent: (orgUnitId: number, parentId: number) => Promise<Result<OrgUnitView>>

@@ -2,6 +2,7 @@ package kr.proten.pms.resource.service.impl;
 
 import java.time.YearMonth;
 import java.util.List;
+import kr.proten.pms.person.PersonDirectoryService;
 import kr.proten.pms.project.AssignmentChanged;
 import kr.proten.pms.resource.OverbookingDetected;
 import kr.proten.pms.resource.service.dto.UtilizationQuery;
@@ -27,21 +28,36 @@ import org.springframework.stereotype.Component;
  *
  * <p>화자는 <b>대상 본인</b>이다 — 개인 지정 조회의 가시성 관문이 "자기 자신은 언제나
  * 보인다"이므로, 배정을 고친 사람의 가시성에 결과가 좌우되지 않는다.
+ *
+ * <p><b>그래서 비활성 인원은 건너뛴다</b>(2026-08-26 신설): 화자가 본인이므로
+ * {@code RequesterResolver}가 <b>활성 인원만</b> 찾고, 비활성이면 404를 던져 이 리스너가
+ * 통째로 실패한다. 퇴사 처리(E2-3 · §12 ③)가 그 조합을 <b>일상적으로</b> 만든다 —
+ * 참여자 배정을 종료하면서 같은 트랜잭션에서 사람을 비활성하는데, 커밋 후에 도착하는
+ * 이 리스너에게는 이미 비활성이다. 퇴사자에게 과부하 알림을 보낼 이유도 없다.
  */
 @Component
 class OverbookingDetector {
     private static final double THRESHOLD = 100.0;
 
     private final UtilizationCalculator calculator;
+    private final PersonDirectoryService personDirectoryService;
     private final ApplicationEventPublisher events;
 
-    OverbookingDetector(UtilizationCalculator calculator, ApplicationEventPublisher events) {
+    OverbookingDetector(
+            UtilizationCalculator calculator,
+            PersonDirectoryService personDirectoryService,
+            ApplicationEventPublisher events) {
         this.calculator = calculator;
+        this.personDirectoryService = personDirectoryService;
         this.events = events;
     }
 
     @ApplicationModuleListener
     void onAssignmentChanged(AssignmentChanged event) {
+        if (!personDirectoryService.existsActive(event.personId())) {
+            return;
+        }
+
         event.affectedMonths().forEach(month -> checkMonth(event.personId(), month));
     }
 

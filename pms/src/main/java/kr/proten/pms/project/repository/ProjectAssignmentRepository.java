@@ -4,7 +4,9 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import kr.proten.pms.person.LiveAssignment;
 import kr.proten.pms.project.MonthlyAssignment;
+import kr.proten.pms.project.ProjectStatus;
 import kr.proten.pms.project.service.entity.AssignmentStatus;
 import kr.proten.pms.project.service.entity.ProjectAssignment;
 import kr.proten.pms.project.service.entity.ProjectRole;
@@ -28,10 +30,71 @@ public interface ProjectAssignmentRepository extends JpaRepository<ProjectAssign
             ProjectRole role,
             AssignmentStatus status);
 
-    /** 중복 배정 판정 (AC B1-2) — 종료된 배정은 재배정을 막지 않는다. */
-    /** 이 사람의 살아 있는 배정 건수 (person `AssignmentCountPort` — 이동 경고 E1-2). */
-    long countByPersonIdAndStatus(Long personId, AssignmentStatus status);
+    /**
+     * 이 사람이 <b>지금 물려 있는</b> 배정 건수 (person `AssignmentCountPort` — 이동 경고 E1-2).
+     *
+     * <p><b>배정 상태만으로는 답이 되지 않는다</b>(2026-08-26 실측·수정): 완료 프로젝트의
+     * 배정이 {@code ACTIVE}로 남아 있어 — 462건 중 384건 — 옛 질의는 한 사람에게
+     * "진행 중인 배정 128건"이라 답했다(실제 5건). 프로젝트 상태를 함께 보는 이유는
+     * {@code ProjectStatus.LIVE}의 javadoc에 있다.
+     */
+    @Query("""
+            select count(a)
+            from ProjectAssignment a, Project p
+            where p.id = a.projectId
+              and a.personId = :personId
+              and a.status = :status
+              and p.status in :liveStatuses
+            """)
+    long countLiveByPerson(
+            @Param("personId") Long personId,
+            @Param("status") AssignmentStatus status,
+            @Param("liveStatuses") Collection<ProjectStatus> liveStatuses);
 
+    /**
+     * 이 사람이 지금 물려 있는 배정 — 퇴사 처리의 안내·판정 원천
+     * (person {@link kr.proten.pms.person.AssignmentReleasePort}).
+     *
+     * <p>위 건수 질의와 조건이 같고 <b>행을 싣는 것만 다르다</b>. 정렬을 질의가 정하는
+     * 이유는 안내 문구가 실행마다 달라지지 않게 하기 위해서다(감사 조회에서 정렬을
+     * 저장소 메서드 이름이 정한 것과 같은 규율).
+     */
+    @Query("""
+            select new kr.proten.pms.person.LiveAssignment(
+                    a.projectId, p.name, a.role = kr.proten.pms.project.service.entity.ProjectRole.PM)
+            from ProjectAssignment a, Project p
+            where p.id = a.projectId
+              and a.personId = :personId
+              and a.status = :status
+              and p.status in :liveStatuses
+            order by p.name asc
+            """)
+    List<LiveAssignment> findLiveByPerson(
+            @Param("personId") Long personId,
+            @Param("status") AssignmentStatus status,
+            @Param("liveStatuses") Collection<ProjectStatus> liveStatuses);
+
+    /**
+     * 이 사람이 지금 물려 있는 배정 행 — 종료 처리의 대상
+     * (person {@link kr.proten.pms.person.AssignmentReleasePort#closeParticipantAssignments}).
+     *
+     * <p>위 둘과 조건이 같지만 <b>엔티티를 싣는다</b>: 종료는 {@code close()}를 거쳐야
+     * 하고(AC B2-1의 endDate 당김이 거기 있다) 감사 스냅샷도 엔티티에서 뜬다.
+     */
+    @Query("""
+            select a
+            from ProjectAssignment a, Project p
+            where p.id = a.projectId
+              and a.personId = :personId
+              and a.status = :status
+              and p.status in :liveStatuses
+            """)
+    List<ProjectAssignment> findLiveEntitiesByPerson(
+            @Param("personId") Long personId,
+            @Param("status") AssignmentStatus status,
+            @Param("liveStatuses") Collection<ProjectStatus> liveStatuses);
+
+    /** 중복 배정 판정 (AC B1-2) — 종료된 배정은 재배정을 막지 않는다. */
     boolean existsByProjectIdAndPersonIdAndStatus(
             Long projectId,
             Long personId,

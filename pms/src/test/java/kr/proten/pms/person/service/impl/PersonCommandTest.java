@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 import kr.proten.pms.common.exception.ConflictException;
 import kr.proten.pms.common.exception.ErrorCode;
@@ -27,7 +28,9 @@ import kr.proten.pms.person.repository.GradeRepository;
 import kr.proten.pms.person.repository.OrgUnitRepository;
 import kr.proten.pms.person.repository.PermissionGroupRepository;
 import kr.proten.pms.person.repository.PersonRepository;
+import kr.proten.pms.person.LiveAssignment;
 import kr.proten.pms.person.service.dto.CreatePersonCommand;
+import kr.proten.pms.person.service.dto.PersonDeactivateResult;
 import kr.proten.pms.person.service.dto.UpdatePersonCommand;
 import kr.proten.pms.person.service.entity.Person;
 import kr.proten.pms.person.service.entity.PersonFixtures;
@@ -75,6 +78,8 @@ class PersonCommandTest {
     private RequesterResolver requesterResolver;
     @Mock
     private kr.proten.pms.person.AssignmentCountPort assignmentCountPort;
+    @Mock
+    private kr.proten.pms.person.AssignmentReleasePort assignmentReleasePort;
 
     private PersonServiceImpl service;
 
@@ -91,7 +96,8 @@ class PersonCommandTest {
                 requesterResolver,
                 personRefFactory,
                 personAuditRecorder,
-                assignmentCountPort);
+                assignmentCountPort,
+                assignmentReleasePort);
     }
 
     @Test
@@ -197,6 +203,7 @@ class PersonCommandTest {
         // Given
         givenManageOrg(true);
         Person target = givenActivePerson(TARGET_ID, "에스아이팀원");
+        when(assignmentReleasePort.findLiveAssignments(TARGET_ID)).thenReturn(List.of());
         when(personRepository.saveAndFlush(target)).thenReturn(target);
 
         // When
@@ -205,6 +212,95 @@ class PersonCommandTest {
         // Then
         assertThat(target.isActive()).isFalse();
         verify(personAuditRecorder).personDeactivated(ADMIN_ID, target);
+    }
+
+    @Test
+    @DisplayName("§12 ③ — 참여자 배정은 함께 종료하고 무엇이 끊겼는지 돌려준다")
+    void deactivate_closesParticipantAssignmentsAndReportsThem() {
+        // Given: 진행 중인 참여자 배정 둘 — 퇴사자가 가동률 모집단에 남으면 안 된다(C1-4)
+        givenManageOrg(true);
+        Person target = givenActivePerson(TARGET_ID, "에스아이팀원");
+        when(assignmentReleasePort.findLiveAssignments(TARGET_ID)).thenReturn(List.of(
+                new LiveAssignment(11L, "가온아이 그룹웨어", false),
+                new LiveAssignment(12L, "명화공업 MES", false)));
+        when(personRepository.saveAndFlush(target)).thenReturn(target);
+
+        // When
+        PersonDeactivateResult result = service.deactivate(ADMIN_ID, TARGET_ID);
+
+        // Then: 실행은 project가 하고(포트 위임) 안내는 서버가 문구까지 만든다
+        verify(assignmentReleasePort).closeParticipantAssignments(ADMIN_ID, TARGET_ID);
+        assertThat(target.isActive()).isFalse();
+        assertThat(result.closedAssignments()).isEqualTo(2);
+        assertThat(result.projects()).containsExactly("가온아이 그룹웨어", "명화공업 MES");
+        assertThat(result.notice()).contains("배정 2건").contains("가온아이 그룹웨어");
+    }
+
+    @Test
+    @DisplayName("§12 ③ — 배정이 없으면 안내가 없다 (null)")
+    void deactivate_withoutAssignments_hasNoNotice() {
+        // Given
+        givenManageOrg(true);
+        Person target = givenActivePerson(TARGET_ID, "에스아이팀원");
+        when(assignmentReleasePort.findLiveAssignments(TARGET_ID)).thenReturn(List.of());
+        when(personRepository.saveAndFlush(target)).thenReturn(target);
+
+        // When
+        PersonDeactivateResult result = service.deactivate(ADMIN_ID, TARGET_ID);
+
+        // Then: 경고 문구를 만드는 판단을 화면마다 반복하지 않게 서버가 한 번 정한다
+        assertThat(result.closedAssignments()).isZero();
+        assertThat(result.projects()).isEmpty();
+        assertThat(result.notice()).isNull();
+    }
+
+    @Test
+    @DisplayName("§12 ③ — PM으로 물려 있으면 409 IN_USE, 배정도 인원도 그대로다")
+    void deactivate_whileManager_isRejected() {
+        // Given: PM인 채로 사라지면 프로젝트가 PM 공석이 된다(A6-5) — 교체는 사람을
+        // 지정해야 성립하므로 시스템이 대신 고를 수 없다
+        givenManageOrg(true);
+        Person target = givenActivePerson(TARGET_ID, "에스아이팀원");
+        when(assignmentReleasePort.findLiveAssignments(TARGET_ID)).thenReturn(List.of(
+                new LiveAssignment(11L, "가온아이 그룹웨어", true),
+                new LiveAssignment(12L, "명화공업 MES", false)));
+
+        // When · Then
+        assertThatExceptionOfType(ConflictException.class)
+                .isThrownBy(() -> service.deactivate(ADMIN_ID, TARGET_ID))
+                .satisfies(thrown -> {
+                    assertThat(thrown.code()).isEqualTo(ErrorCode.IN_USE);
+                    // 어느 프로젝트인지 알려 주지 않으면 교체하라는 요구가 실행 불가다
+                    assertThat(thrown.getMessage()).contains("가온아이 그룹웨어");
+                    // 참여자 배정은 세지 않는다 — 그건 자동 종료 대상이다
+                    assertThat(thrown.getMessage()).doesNotContain("명화공업 MES");
+                });
+        assertThat(target.isActive()).isTrue();
+        verify(assignmentReleasePort, never()).closeParticipantAssignments(anyLong(), anyLong());
+        verify(personRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    @DisplayName("§12 ③ — PM 프로젝트가 많으면 셋만 적고 나머지는 센다")
+    void deactivate_whileManagerOfMany_summarizesTheList() {
+        // Given: 실측상 한 사람이 PM인 진행 중 프로젝트가 29건까지 나온다(2026-08-26) —
+        // 전부 적으면 §7 오류 메시지가 화면을 넘긴다
+        givenManageOrg(true);
+        givenActivePerson(TARGET_ID, "에스아이팀원");
+        when(assignmentReleasePort.findLiveAssignments(TARGET_ID)).thenReturn(List.of(
+                new LiveAssignment(11L, "프로젝트A", true),
+                new LiveAssignment(12L, "프로젝트B", true),
+                new LiveAssignment(13L, "프로젝트C", true),
+                new LiveAssignment(14L, "프로젝트D", true),
+                new LiveAssignment(15L, "프로젝트E", true)));
+
+        // When · Then
+        assertThatExceptionOfType(ConflictException.class)
+                .isThrownBy(() -> service.deactivate(ADMIN_ID, TARGET_ID))
+                .satisfies(thrown -> assertThat(thrown.getMessage())
+                        .contains("5건")
+                        .contains("프로젝트A, 프로젝트B, 프로젝트C 외 2건")
+                        .doesNotContain("프로젝트D"));
     }
 
     @Test

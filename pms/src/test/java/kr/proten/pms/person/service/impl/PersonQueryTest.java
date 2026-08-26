@@ -55,6 +55,8 @@ class PersonQueryTest {
     private PersonAuditRecorder personAuditRecorder;
     @Mock
     private kr.proten.pms.person.AssignmentCountPort assignmentCountPort;
+    @Mock
+    private kr.proten.pms.person.AssignmentReleasePort assignmentReleasePort;
 
     private PersonServiceImpl service;
 
@@ -71,7 +73,8 @@ class PersonQueryTest {
                 requesterResolver,
                 new PersonRefFactory(orgUnitRepository, gradeRepository),
                 personAuditRecorder,
-                assignmentCountPort);
+                assignmentCountPort,
+                assignmentReleasePort);
     }
 
     @Test

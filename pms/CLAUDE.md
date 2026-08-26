@@ -73,7 +73,7 @@ log). `verify.sh`/CI only look at `pms/gradlew`, so `pms-old/` is not verified.
   | person | `PersonService` · `OrgUnitService` · `GradeService` · `PermissionGroupService` · `AuditViewService` | one per managed resource |
   | person (cross-module) | `PersonDirectoryService` · `OrgVisibilityService` · `OrgPermissionService` · `PersonLookupService` · `WorkforceDirectoryService` | **different consumers** — these earn the split |
   | project (cross-module) | `AssignmentDirectoryService` · `ProjectLookupService` · `ProgressCommandService` · **`HandoverPort`** | one more consumer set (resource · `/mcp`) — 2026-08-23. `HandoverPort` is the odd one out: an **inverted** port that project *defines and calls*, implemented by maintenance (D1, 2026-08-25) |
-  | person (inverted ports) | `AccountPort` (auth) · `AssignmentCountPort` (project) · **`ProjectCountPort`** (project, 2026-08-26) | person *defines*, the owner of the data *implements* — the direct call would be a cycle. **Each port answers one question**: widening one instead of adding the next would drag its consumer into a shape it does not need (conventions §5 ISP) |
+  | person (inverted ports) | `AccountPort` (auth) · `AssignmentCountPort` (project) · **`ProjectCountPort`** (project, 2026-08-26) · **`AssignmentReleasePort`** (project, 2026-08-26 — retirement: list what a person is still tied to, close the participant ones) | person *defines*, the owner of the data *implements* — the direct call would be a cycle. **Each port answers one question**: widening one instead of adding the next would drag its consumer into a shape it does not need (conventions §5 ISP). Two ports in a row now settle that rule — §12 asked for `AssignmentCountPort` to be widened into a list and it was split instead, because that contract's javadoc already carried the reason it was narrow |
   | resource (cross-module) | `UtilizationLookupService` | `/mcp` only — the web takes `?orgUnitId=`, chat takes a `UtilizationScope` (2026-08-24) |
   | maintenance | `MaintenanceQueryService` · `IssueQueryService` · `ContractCommandService` · `IssueCommandService` | **three axes, not two** — reads are company-wide and take no caller (D4-3); contract writes are gated on the "계약 관리" flag (D2-3); **issue writes take a caller but have no gate** (US-D3 = every logged-in user, 2026-08-24). Same read/write split, same reason, as audit's `AuditTrail` / `AuditQueryService` |
 
@@ -89,7 +89,7 @@ log). `verify.sh`/CI only look at `pms/gradlew`, so `pms-old/` is not verified.
   adopted 2026-08-22). Every sub-package (`controller/`, `service/`, `repository/`)
   is internal, so the files sitting *directly* in a module directory **are** the
   contract it offers, and that list is the boundary — measured 2026-08-26:
-  `person` 14 · `project` 13 · `audit` 6 · `maintenance` 7 · `resource` 5 ·
+  `person` 16 · `project` 13 · `audit` 6 · `maintenance` 7 · `resource` 5 ·
   **`notification` 0** (`ls <module>/*.java` is the measurement; four of these numbers
   had once gone stale while the file still said "measured", so re-measure rather than
   trust the line).
@@ -319,7 +319,10 @@ GET  /api/people              visible people (43 seeded, system account hidden) 
                               The group **name** is deliberately absent — see that DTO's javadoc The module-root
                               `PersonRef` stays narrow — `/mcp` shares it (구현_노트 §5)
 GET  /api/people/{id}          404 conceals both absence and out-of-visibility
-DELETE /api/people/{id}       200 {success:true}, soft deactivate — "사용자/조직/권한 관리" flag (E2-3)
+DELETE /api/people/{id}       200 + PersonDeactivateResult, soft deactivate — "사용자/조직/권한 관리" flag (E2-3).
+                              Live PARTICIPANT assignments are closed with it and reported in the body
+                              (E2-3a); a live PM assignment is 409 IN_USE instead (E2-3b, §12 ③).
+                              "Live" = assignment ACTIVE **and** project not COMPLETED/UNDER_MAINTENANCE
 GET  /api/org-units           tree + counts + deletable, same flag. `projectCount` counts
                               projects whose **PM belongs to that node** — direct, not the
                               subtree sum, and it comes over `ProjectCountPort` (2026-08-26)
