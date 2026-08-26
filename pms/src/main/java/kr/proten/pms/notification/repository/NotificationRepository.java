@@ -1,8 +1,7 @@
 package kr.proten.pms.notification.repository;
 
-import kr.proten.pms.notification.NotificationType;
 import kr.proten.pms.notification.service.entity.Notification;
-import java.util.List;
+import kr.proten.pms.notification.service.entity.NotificationType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

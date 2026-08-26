@@ -1,8 +1,9 @@
-package kr.proten.pms.notification;
+package kr.proten.pms.notification.service.dto;
 
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
+import kr.proten.pms.notification.service.entity.NotificationType;
 
 /**
  * 내 알림 설정 (AC H1-4) — 유형별 on/off.

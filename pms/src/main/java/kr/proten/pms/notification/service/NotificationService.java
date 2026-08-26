@@ -1,5 +1,9 @@
-package kr.proten.pms.notification;
+package kr.proten.pms.notification.service;
 
+import kr.proten.pms.notification.service.dto.NotificationPreferences;
+import kr.proten.pms.notification.service.dto.NotificationView;
+import kr.proten.pms.notification.service.dto.NotifyCommand;
+import kr.proten.pms.notification.service.entity.NotificationType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -15,11 +19,16 @@ import org.springframework.data.domain.Pageable;
  * `OverbookingDetected`의 발행자라 notification이 그 타입을 import하는데(구독자 → 발행자),
  * resource가 `notify`를 부르면 반대 간선이 함께 생긴다.
  *
- * <p>2026-08-24 정정: 구 주석은 "알림을 유발하는 모듈(project·resource)이 `notify`를
- * 부르려면 이 넷이 모듈 루트에 있어야 한다"고 적고 있었는데, 바로 다음 문단과 서로
- * 반대되는 말이었다(PRD-pms §3 표도 같은 오류였다 — 함께 정정). 밖에서 쓰는 곳이
- * 0건이므로 루트 배치의 근거도 사라졌다 — 이 넷을 `service/`로 내릴지는 D-b(이슈 등록
- * 알림)가 붙을 때 함께 판단한다(미해결 등재).
+ * <p><b>그래서 이 계약은 모듈 루트에 없다</b>(2026-08-26 이동 — notification의 루트는
+ * 이제 비어 있다). 경위: 2026-08-22 리뷰가 "알림을 유발하는 모듈(project·resource)이
+ * `notify`를 부른다"는 이유로 5종을 루트로 올렸는데, 2026-08-24 §8 이벤트 방향 확정이
+ * 그것을 거짓으로 만들었다. D-b(D3-1 이슈 등록 알림)가 "정말 아무도 안 부르는가"의
+ * 마지막 반증 기회였고 <b>반증되지 않아</b> 판정이 났으며, 이 파일의 자리가 그 실행이다.
+ *
+ * <p><b>되뒤집힐 조건은 없다</b>(§0의 일반 규칙과 다른 점이다): 보통은 밖에서 import하기
+ * 시작하면 루트로 되올리지만, 여기서는 <b>밖에서 부르는 것 자체가 위 순환</b>이라 금지다.
+ * 다른 모듈이 알림을 만들어야 한다면 답은 루트 승격이 아니라 <b>이벤트를 하나 더
+ * 발행하는 것</b>이다(§8).
  */
 public interface NotificationService {
 

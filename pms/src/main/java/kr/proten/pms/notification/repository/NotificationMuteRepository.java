@@ -1,8 +1,8 @@
 package kr.proten.pms.notification.repository;
 
 import java.util.List;
-import kr.proten.pms.notification.NotificationType;
 import kr.proten.pms.notification.service.entity.NotificationMute;
+import kr.proten.pms.notification.service.entity.NotificationType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /** 알림 설정 저장소 — 끈 것만 있다(행이 없으면 켜진 것이다). */

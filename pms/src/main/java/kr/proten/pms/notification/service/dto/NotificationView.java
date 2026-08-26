@@ -1,6 +1,7 @@
-package kr.proten.pms.notification;
+package kr.proten.pms.notification.service.dto;
 
 import java.time.Instant;
+import kr.proten.pms.notification.service.entity.NotificationType;
 
 /**
  * 알림 1건 (AC F1-3).
