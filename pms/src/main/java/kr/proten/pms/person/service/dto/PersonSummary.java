@@ -12,6 +12,14 @@ package kr.proten.pms.person.service.dto;
  * 상세 조회가 따로 없으므로 이 목록이 곧 사용자 관리 화면의 원천인데,
  * {@code PUT /api/people/{id}}(E2-2)는 {@code orgUnitId}·{@code gradeId}·{@code groupId}와
  * {@code version}을 요구한다. 이름만 있는 목록으로는 폼을 채울 수도, 보낼 수도 없었다.
+ * {@code billable}이 2026-08-26에 같은 이유로 늘었다 — E2-2가 그 필드를 받게 됐고(§12 ④),
+ * 체크박스를 채우려면 현재 값이 와야 한다.
+ *
+ * <p><b>{@code billable}은 왜 되고 그룹 <u>이름</u>은 왜 안 되는가</b>(2026-08-26): 그룹 이름은
+ * <b>권한 등급</b>이라 가시성만 있는 사람에게 새로 알려 주는 값이지만, {@code billable}은
+ * 이미 유도되는 값이다 — 같은 가시성으로 열리는 {@code GET /api/utilization?orgUnitId=}이
+ * 집계에서 비집계 인원을 빼므로(C1-5) 팀 명단과 대조하면 누가 false인지 드러난다. 새 누설이
+ * 아니라는 것이 판단의 근거다.
  *
  * <p>권한 그룹은 <b>id만</b> 싣는다 — 이름은 관리 화면이 {@code GET /api/permission-groups}
  * 로 해석한다(그 라우트는 관리 플래그가 있어야 열린다). 그룹 <b>이름</b>을 인력 목록에
@@ -28,5 +36,6 @@ public record PersonSummary(
         Long orgUnitId,
         Long gradeId,
         Long groupId,
+        boolean billable,
         long version) {
 }

@@ -69,6 +69,19 @@ class OrgAdminWritesIntegrationTest extends PostgresTestBase {
     private static final long RENAME_WATCHER_ID = 604L;
     /** 퇴사 표시 전용 인원 — 다른 테스트가 이 사람을 비활성하지 않는다. */
     private static final long LEAVER_ID = 605L;
+    /**
+     * billable 토글 전용 인원 — 다른 테스트가 이 사람을 만들지도 수정하지도 않는다.
+     *
+     * <p><b>같은 함정을 두 번 밟고 골랐다</b>: ①처음엔 {@code IDLE_ID}로 썼다가 위 개명
+     * 테스트와 같은 행의 version을 다퉜고 ②그 다음 606으로 옮겼는데 그것이 E3-5
+     * ({@code moveOrgUnitFlowsThroughToDivision})의 <b>지역 변수 id</b>였다. 상수 선언만
+     * 훑고 메서드 안의 리터럴을 세지 않은 탓이다 — 그때는 실행 순서가 우연히 맞아
+     * <b>통과했고</b>, 순서가 뒤집히면 E3-5가 자기와 무관한 이유로 깨질 참이었다.
+     *
+     * <p>그래서 규칙은 "100단위 블록을 실측한다"가 아니라 <b>"그 파일의 리터럴 id를
+     * 전부 센다"</b>이다 — 이 클래스에서 쓰이는 값은 601~607·611·612·621~623·699다.
+     */
+    private static final long BILLABLE_ID = 607L;
 
     private static final long SENIOR_GRADE_ID = 611L;
     private static final long JUNIOR_GRADE_ID = 612L;
@@ -112,7 +125,9 @@ class OrgAdminWritesIntegrationTest extends PostgresTestBase {
                 PersonFixtures.person(IDLE_ID, "E무배정", RENAME_TARGET_ID, MEMBER_GROUP_ID),
                 PersonFixtures.person(RENAME_WATCHER_ID, "E잔류", RENAME_TARGET_ID,
                         MEMBER_GROUP_ID),
-                PersonFixtures.person(LEAVER_ID, "E퇴사자", RENAME_TARGET_ID, MEMBER_GROUP_ID)));
+                PersonFixtures.person(LEAVER_ID, "E퇴사자", RENAME_TARGET_ID, MEMBER_GROUP_ID),
+                PersonFixtures.person(BILLABLE_ID, "E집계대상", RENAME_TARGET_ID,
+                        MEMBER_GROUP_ID)));
 
         // 이동 경고를 만들려면 진행 중 배정이 있어야 한다 — 그 건수를 project가 세어 준다
         projectCommandService.create(ADMIN_ID, new CreateProjectCommand(
@@ -156,7 +171,8 @@ class OrgAdminWritesIntegrationTest extends PostgresTestBase {
     void updatePersonRecordsOnlyChangedFields() {
         PersonSummary updated = personService.update(ADMIN_ID, new UpdatePersonCommand(
                 IDLE_ID, "E개명됨", PersonFixtures.OTHER_DIVISION_ID, SENIOR_GRADE_ID,
-                MEMBER_GROUP_ID, 0));
+                // billable도 그대로 넘긴다 — 아래 "바뀐 필드만" 단정이 성립해야 한다
+                MEMBER_GROUP_ID, true, 0));
 
         assertThat(updated.name()).isEqualTo("E개명됨");
         assertThat(updated.grade()).isEqualTo("수석");
@@ -165,6 +181,31 @@ class OrgAdminWritesIntegrationTest extends PostgresTestBase {
         // 그룹은 그대로 넘겼으므로 diff에 없어야 한다 — "바뀐 필드만"이 규칙이다
         assertThat(latest.after()).containsKeys("name", "gradeId").doesNotContainKey("groupId");
         assertThat(latest.before()).containsEntry("name", "E무배정");
+    }
+
+    @Test
+    @DisplayName("§12 부록 B — billable을 E2-2로 끌 수 있고 감사에 남는다")
+    void billableCanBeTurnedOffAndIsAudited() {
+        // 시드 적재는 조직 단위지만 부록 B가 "플래그는 운영 중 개인 단위 수정 가능"이라
+        // 적어 뒀는데 쓰기 경로가 하나도 없었다(2026-08-24 §12 등재)
+        PersonSummary before = personService.update(ADMIN_ID, new UpdatePersonCommand(
+                BILLABLE_ID, "E집계대상", RENAME_TARGET_ID, SENIOR_GRADE_ID,
+                MEMBER_GROUP_ID, true, personService.getPerson(ADMIN_ID, BILLABLE_ID).version()));
+
+        PersonSummary off = personService.update(ADMIN_ID, new UpdatePersonCommand(
+                BILLABLE_ID, "E집계대상", RENAME_TARGET_ID, SENIOR_GRADE_ID,
+                MEMBER_GROUP_ID, false, before.version()));
+
+        assertThat(off.billable()).isFalse();
+        // 목록에서도 읽힌다 — 수정 폼이 이 값으로 체크박스를 채운다
+        assertThat(personService.getPerson(ADMIN_ID, BILLABLE_ID).billable()).isFalse();
+
+        // **이 단정이 이 테스트의 요점이다**: 스냅샷에 billable이 없으면 diff가 비어
+        // 감사 행이 0건이 된다(H1-2의 email이 같은 자리였다). 집계 모집단을 바꾸는
+        // 일이 흔적 없이 일어나면 안 된다
+        AuditRecord latest = personAudit(BILLABLE_ID);
+        assertThat(latest.after()).containsEntry("billable", false);
+        assertThat(latest.before()).containsEntry("billable", true);
     }
 
     @Test
@@ -177,7 +218,7 @@ class OrgAdminWritesIntegrationTest extends PostgresTestBase {
         assertThatExceptionOfType(UnprocessableException.class)
                 .isThrownBy(() -> personService.update(ADMIN_ID, new UpdatePersonCommand(
                         systemId, "바꾸기", PersonFixtures.COMPANY_ID, SENIOR_GRADE_ID,
-                        ADMIN_GROUP_ID, 0)));
+                        ADMIN_GROUP_ID, true, 0)));
         assertThatExceptionOfType(UnprocessableException.class)
                 .isThrownBy(() -> personService.moveOrgUnit(
                         ADMIN_ID, systemId, PersonFixtures.OTHER_DIVISION_ID));

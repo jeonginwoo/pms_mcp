@@ -78,6 +78,10 @@ class PersonAuditRecorder {
         state.put("orgUnitId", person.getOrgUnitId());
         state.put("gradeId", person.getGradeId());
         state.put("groupId", person.getGroupId());
+        // 2026-08-26: billable이 E2-2로 수정 가능해졌다. 여기 없으면 그 필드만 바꾼
+        // 요청은 diff가 비어 **감사 행이 0건**이 된다(H1-2의 email이 같은 자리였다) —
+        // 가동률 집계 모집단을 바꾸는 일이라 흔적 없이 일어나면 안 된다
+        state.put("billable", person.isBillable());
 
         return state;
     }

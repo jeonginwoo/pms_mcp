@@ -18,5 +18,6 @@ public record UpdatePersonCommand(
         Long orgUnitId,
         Long gradeId,
         Long groupId,
+        boolean billable,
         long version) {
 }

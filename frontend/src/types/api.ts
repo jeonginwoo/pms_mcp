@@ -41,6 +41,13 @@ export interface PersonSummary extends PersonRef {
   orgUnitId: number
   gradeId: number
   groupId: number
+  /**
+   * 가동률 집계 모집단에 드는가 (부록 B · C1-5).
+   *
+   * 지원 조직(관리·마케팅 · AX사업기획)은 false이고 집계에서 빠진다. 적재는 조직
+   * 단위지만 **운영 중 개인 단위 수정 가능**이라(부록 B) E2-2 수정 폼이 이 값을 다룬다.
+   */
+  billable: boolean
   version: number
 }
 
@@ -536,6 +543,7 @@ export interface UpdatePersonBody {
   orgUnitId: number
   gradeId: number
   groupId: number
+  billable: boolean
   version: number
 }
 

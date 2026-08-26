@@ -21,16 +21,34 @@ import PersonCreateModal from '../components/PersonCreateModal'
 import PersonEditModal from '../components/PersonEditModal'
 import type { PersonSummary } from '../types/api'
 
+/*
+ * 권한 그룹 열은 **관리 권한자에게만** 보인다 (2026-08-26 · 부록 A 요구).
+ *
+ * 서버 DTO를 넓히지 않은 것이 요점이다: `PersonSummary`는 groupId만 싣고 이름은 안
+ * 싣는데, 그 javadoc이 이유를 적어 뒀다 — 이름을 실으면 **가시성만 있으면 남의 권한
+ * 등급이 읽힌다**. 관리 권한자는 이미 `GET /api/permission-groups`를 받아 두므로
+ * 화면이 id → 이름을 해석하면 된다.
+ *
+ * **경계를 지키는 것은 서버다**: 그 라우트가 관리 플래그 없이는 403이라
+ * (`PermissionGroupServiceImpl.list` — `ScaffoldAuthorizationTest`가 잠근다)
+ * 비관리자에게는 이름이 갈 길이 없다. store가 `me.manageOrg`일 때만 부르는 것은
+ * 그 위의 편의일 뿐 방어선이 아니다.
+ */
 const GRID = 'minmax(0,1.2fr) minmax(0,1.4fr) minmax(80px,110px) 116px'
+const GRID_MANAGED = 'minmax(0,1.2fr) minmax(0,1.4fr) minmax(80px,110px) minmax(0,1fr) 116px'
 
 export default function People() {
-  const { me, people, deactivatePerson, showToast } = useStore()
+  const { me, people, permissionGroups, deactivatePerson, showToast } = useStore()
   const [keyword, setKeyword] = useState('')
   const [pending, setPending] = useState<number | null>(null)
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<PersonSummary | null>(null)
   const [error, setError] = useState<{ code: string; message: string } | null>(null)
   const manageable = me?.manageOrg === true
+  const grid = manageable ? GRID_MANAGED : GRID
+  // id → 이름 해석은 화면의 몫이다(위 GRID 주석) — 관리 권한자가 아니면 이 맵이 비어 있다
+  const groupNames = useMemo(
+    () => new Map(permissionGroups.map((group) => [group.id, group.name])), [permissionGroups])
 
   const filtered = useMemo(() => {
     const needle = keyword.trim()
@@ -80,17 +98,27 @@ export default function People() {
           </div>
         </div>
 
-        <div className="thead" style={{ gridTemplateColumns: GRID }}>
+        <div className="thead" style={{ gridTemplateColumns: grid }}>
           <span>이름</span>
           <span>소속</span>
           <span>직급</span>
+          {manageable && <span>권한 그룹</span>}
           <span />
         </div>
         {filtered.map((person) => (
-          <div key={person.id} className="trow" style={{ gridTemplateColumns: GRID }}>
+          <div key={person.id} className="trow" style={{ gridTemplateColumns: grid }}>
             <span style={{ fontWeight: 600 }}>{person.name}</span>
             <span className="muted">{person.orgUnit}</span>
             <span className="muted">{person.grade}</span>
+            {manageable && (
+              <span className="muted">
+                {groupNames.get(person.groupId) ?? '—'}
+                {/* 집계에서 빠지는 인원을 목록에서 바로 구별한다 (부록 B · C1-5) */}
+                {!person.billable && (
+                  <span className="muted2" style={{ fontSize: 11, marginLeft: 6 }}>집계 제외</span>
+                )}
+              </span>
+            )}
             {manageable && (
               pending === person.id ? (
                 <span style={{ display: 'flex', gap: 4 }}>

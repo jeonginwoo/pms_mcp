@@ -115,7 +115,10 @@ class PersonQueryTest {
         assertThat(person.orgUnitId()).isEqualTo(PersonFixtures.SI_TEAM_ID);
         assertThat(person.gradeId()).isEqualTo(1L);
         assertThat(person.groupId()).isEqualTo(4L);
+        // billable도 폼이 채우는 값이다 (2026-08-26 — E2-2가 받게 됐다)
+        assertThat(person.billable()).isTrue();
         assertThat(person.version()).isZero();
+        // 그룹 **이름**은 일부러 없다 — 가시성만 있으면 남의 권한 등급이 읽힌다(이 DTO javadoc)
     }
 
     @Test

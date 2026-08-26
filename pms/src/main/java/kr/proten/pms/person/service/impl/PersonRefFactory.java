@@ -84,6 +84,7 @@ class PersonRefFactory {
                 person.getOrgUnitId(),
                 person.getGradeId(),
                 person.getGroupId(),
+                person.isBillable(),
                 person.getVersion());
     }
 

@@ -13,9 +13,10 @@ public record UpdatePersonRequest(
         @NotNull(message = "소속 조직은 필수입니다") Long orgUnitId,
         @NotNull(message = "직급은 필수입니다") Long gradeId,
         @NotNull(message = "권한 그룹은 필수입니다") Long groupId,
+        @NotNull(message = "집계 대상 여부는 필수입니다") Boolean billable,
         long version) {
 
     public UpdatePersonCommand toCommand(long personId) {
-        return new UpdatePersonCommand(personId, name, orgUnitId, gradeId, groupId, version);
+        return new UpdatePersonCommand(personId, name, orgUnitId, gradeId, groupId, billable, version);
     }
 }

@@ -85,6 +85,20 @@ class ScaffoldAuthorizationTest {
         assertForbidden(() -> permissionGroupService.delete(MEMBER_ID, 4L));
     }
 
+    @Test
+    @DisplayName("권한 그룹 **조회**도 관리 플래그가 없으면 403이다 — 인력 목록 열의 실제 방어선")
+    void permissionGroupList_withoutManageOrg_isForbidden() {
+        givenManageOrg(MEMBER_ID, false);
+
+        /*
+         * 2026-08-26 인력 목록에 권한 그룹 열을 붙이며 이 403이 판단의 근거가 됐다:
+         * 서버 DTO에 그룹 **이름**을 싣지 않고 화면이 이 목록으로 id → 이름을 해석하므로,
+         * 비관리자에게 이름이 가지 않는 이유는 화면 조건이 아니라 **이 거절**이다.
+         * 쓰기 셋만 잠겨 있고 읽기는 안 잠겨 있었다.
+         */
+        assertForbidden(() -> permissionGroupService.list(MEMBER_ID));
+    }
+
     private void givenManageOrg(long callerPersonId, boolean allowed) {
         // 여러 호출을 한 테스트에서 돌리므로 stubbing 사용 횟수는 검증 대상이 아니다
         lenient().when(orgPermissionService.has(callerPersonId, OrgPermission.MANAGE_ORG))
@@ -100,7 +114,7 @@ class ScaffoldAuthorizationTest {
     }
 
     private UpdatePersonCommand updatePersonCommand() {
-        return new UpdatePersonCommand(103L, "홍길동", 5L, 1L, 4L, 0L);
+        return new UpdatePersonCommand(103L, "홍길동", 5L, 1L, 4L, true, 0L);
     }
 
     private GradeCommand gradeCommand() {
