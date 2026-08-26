@@ -87,14 +87,20 @@ log). `verify.sh`/CI only look at `pms/gradlew`, so `pms-old/` is not verified.
 - **A module's public API is its root package** (Modulith's default arrangement —
   adopted 2026-08-22). Every sub-package (`controller/`, `service/`, `repository/`)
   is internal, so the files sitting *directly* in a module directory **are** the
-  contract it offers, and that list is the boundary — measured 2026-08-24:
+  contract it offers, and that list is the boundary — measured 2026-08-26:
   `person` 13 · `project` 13 · `audit` 6 · `maintenance` 7 · `resource` 5 ·
-  `notification` 5 (re-measured 2026-08-24 — four of the six numbers had gone stale
-  while the file still said "measured"; `ls <module>/*.java` is the measurement).
-  `auth` and `mcp` have empty roots: nothing of theirs crosses
-  (`mcp` is the extreme case — it only *consumes*, so deleting it leaves the app
-  running). Entities and repositories therefore cannot leave a module, and links
-  are by id.
+  **`notification` 0** (`ls <module>/*.java` is the measurement; four of these numbers
+  had once gone stale while the file still said "measured", so re-measure rather than
+  trust the line).
+  **`auth`, `mcp` and `notification` have empty roots**: nothing of theirs crosses.
+  `mcp` is the extreme case — it only *consumes*, so deleting it leaves the app running.
+  **`notification` joined them on 2026-08-26**, and that is the interesting one: it began
+  with five root types because a 2026-08-22 review believed other modules called
+  `notify`. Fixing the §8 event direction on 2026-08-24 made that false — subscribers
+  import the *publisher's* event, never the reverse — so the five had **zero** external
+  importers and belonged in `service/`. The rule cuts both ways: a type sits in the root
+  because something outside actually imports it, not because it feels like an API.
+  Entities and repositories therefore cannot leave a module, and links are by id.
   - There are **no `package-info.java` files**. They only ever carried
     `@NamedInterface`, which was needed because the contracts sat in a sub-package
     instead of the root — the framework default removes the need entirely. Before
@@ -169,7 +175,7 @@ disappears, and it now has.
 **Nothing from the M1 pms track is left.** A8 (per-project permission matrix) landed
 2026-08-26 and closed EPIC A; `?phase=` landed 2026-08-25. What remains in this app is the
 registered-gap list in PRD-pms §12 (sales-stage PM removal, person deletion, `billable`
-toggle, per-node project counts, the notification root-contract move), none of which is a
+toggle, per-node project counts), none of which is a
 ROADMAP checklist item yet.
 
 ## Ownership inside this app

@@ -9,7 +9,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
-import kr.proten.pms.notification.NotificationType;
 
 /**
  * 인앱 알림 1건 (PRD-pms §4 notification).

@@ -9,7 +9,6 @@ import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
 import java.io.Serializable;
 import java.util.Objects;
-import kr.proten.pms.notification.NotificationType;
 
 /**
  * 이 사람이 이 유형을 껐다 (AC H1-4 · F1-5).

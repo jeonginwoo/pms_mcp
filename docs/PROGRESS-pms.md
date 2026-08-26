@@ -10,7 +10,21 @@
 3. 구 구현은 `pms-old/`에 참고용 보존 — 게이트 M0 산출물(`/mcp` 어댑터·인증 체인·시드 적재기)이 거기 있다
 
 
-## 현재 상태 (2026-08-26 — A8로 EPIC A가 닫혔다: M1 pms 트랙 체크리스트가 전량 완료다)
+## 현재 상태 (2026-08-26 — notification 루트 계약 이동: 모듈 경계가 실측과 같아졌다)
+
+- **notification 루트 계약 5종을 `service/`로 내렸다** — `NotificationService` → `service/`, `NotifyCommand`·`NotificationView`·`NotificationPreferences` → `service/dto/`, `NotificationType` → `service/entity/`. **그 모듈의 루트가 0**이 됐다(auth·mcp와 같은 모양). §12의 "판정 완료, 실행만"이 닫혔다
+- **순수 리팩터다**: 테스트 **628 불변** · 실패 0 · Flyway 무변경 · 동작 무변경. 옮긴 것은 파일 5개와 import뿐이고 `ModularityTest`·`LayerRuleTest`가 통과한다
+- **착수 전 실측으로 전제를 다시 확인했다**(판정은 2026-08-24에 났지만 그 뒤로 A8·SSE·스케줄러가 들어왔다): notification 밖에서 이 5종을 부르는 자리 **0건**. 이동 뒤에도 0건이다
+- **이 항목이 남긴 규칙이 실은 본론이다**: 2026-08-22 리뷰가 이 넷을 루트로 올린 근거는 *"다른 모듈이 부른다"*였는데, 2026-08-24 §8 이벤트 방향 확정이 그것을 **거짓으로 만들었다** — 구독자가 발행자의 이벤트를 import하지 그 반대가 아니다. **루트에 두는 이유는 "밖에서 실제로 import한다"이지 "API처럼 보인다"가 아니다**. `pms/CLAUDE.md`의 모듈 루트 절에 그 문장을 새로 넣었다
+- **실측 수치 갱신**: person 13 · project 13 · audit 6 · maintenance 7 · resource 5 · **notification 0** · auth 0 · mcp 0. 공용 `현재 상태`와 `pms/CLAUDE.md` 둘 다 옛 값(notification 5)을 들고 있어 함께 고쳤다 — 그 파일 자신이 *"네 숫자가 stale인데 measured라고 적혀 있었다"*를 경고로 남겨 둔 자리다
+- **자동 치환의 함정 1건**(스스로 잡았다): import를 기계적으로 채우다 **javadoc 문장이 오탐**으로 잡혔다(`MaintenanceIssueRegistered`가 *"거꾸로 maintenance가 `NotificationService.notify`를 부르면"*이라고 적고 있다 — 2026-08-24 판정 기록이 *"유일한 grep 히트는 javadoc"*이라고 이미 적어 둔 그것이다). 주석을 걷고 판정하도록 고쳤고, 오탐으로 들어간 import가 없는지 되짚어 확인했다(0건)
+- **다음 작업 후보**: M1 pms 트랙에 체크리스트 항목이 없다. §12 등재분 중 —
+  1. **`billable` 토글** · **노드별 프로젝트 수** · **인력 목록 권한 그룹 컬럼** — 작고 MCP 접점이 없다
+  2. **영업 단계 PM 해제** — 범위 최대 · **MCP 접점**이라 확인이 선행이다
+  3. **`search_projects` 목록 `assigned` 플래그** — **MCP 담당 동의 대기**
+  4. G1은 pms 몫이 아니다(차단 사유 F3는 프롬프트·호스트 쪽)
+
+## 이전 상태 (2026-08-26 — A8로 EPIC A가 닫혔다: M1 pms 트랙 체크리스트가 전량 완료다)
 
 - **US-A8 권한 커스텀 전량 실구현**(Flyway **V16**) — `GET`/`PUT /projects/{id}/permissions` + 부록 A의 **권한 패널**까지. **EPIC A가 닫혔고 M1 pms 트랙의 마지막 체크리스트 항목이었다.** §10에서 "남은 것 없음"인 EPIC이 **A·D·E·F·H 다섯**이 됐다. 테스트 606 → **628**
 - **A8-a/A8-b로 쪼개려던 계획을 접었다** — 저장은 되는데 `require()`가 안 읽으면 매트릭스가 **장식**이 된다. 이 리포가 `ProjectCompleted` 미발행으로 이미 겪은 "능력은 있고 배선이 없는" 그 패턴이라 배선까지 한 번에 갔다

@@ -1,7 +1,5 @@
 package kr.proten.pms.notification.service.dto;
 
-import kr.proten.pms.notification.NotificationView;
-
 /**
  * 알림이 적재됐다 — notification <b>모듈 안에서만</b> 도는 이벤트 (AC F1-4).
  *

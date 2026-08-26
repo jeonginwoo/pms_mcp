@@ -1,5 +1,6 @@
-package kr.proten.pms.notification;
+package kr.proten.pms.notification.service.dto;
 
+import kr.proten.pms.notification.service.entity.NotificationType;
 
 /**
  * 알림 적재 요청 (AC F1-1).

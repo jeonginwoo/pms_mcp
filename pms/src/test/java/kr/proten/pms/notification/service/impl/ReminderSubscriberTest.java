@@ -7,9 +7,9 @@ import static org.mockito.Mockito.verify;
 
 import java.time.LocalDate;
 import java.util.List;
-import kr.proten.pms.notification.NotificationService;
-import kr.proten.pms.notification.NotificationType;
-import kr.proten.pms.notification.NotifyCommand;
+import kr.proten.pms.notification.service.NotificationService;
+import kr.proten.pms.notification.service.dto.NotifyCommand;
+import kr.proten.pms.notification.service.entity.NotificationType;
 import kr.proten.pms.person.OrgPermissionService;
 import kr.proten.pms.person.PersonDirectoryService;
 import kr.proten.pms.project.ProjectLifecycleChanged;
