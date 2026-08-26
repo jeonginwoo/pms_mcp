@@ -12,6 +12,9 @@ import kr.proten.pms.person.repository.GradeRepository;
 import kr.proten.pms.person.repository.OrgUnitRepository;
 import kr.proten.pms.person.repository.PermissionGroupRepository;
 import kr.proten.pms.person.repository.PersonRepository;
+import kr.proten.pms.person.service.PersonService;
+import kr.proten.pms.person.service.dto.PersonSummary;
+import kr.proten.pms.person.service.dto.UpdatePersonCommand;
 import kr.proten.pms.person.service.entity.Grade;
 import kr.proten.pms.person.service.entity.OrgUnit;
 import kr.proten.pms.person.service.entity.Person;
@@ -61,6 +64,13 @@ class UtilizationIntegrationTest extends PostgresTestBase {
     private static final long DIVISION_ID = 41L;
     private static final long TEAM_ID = 42L;
     private static final long OTHER_TEAM_ID = 43L;
+    /**
+     * 쓰기 → 집계 관통 전용 팀 — 이 팀에는 {@code TOGGLE_ID} 한 명뿐이다.
+     *
+     * <p>기존 팀에 사람을 더하면 위 C1-5의 {@code containsExactly} 단정이 깨지고,
+     * 기존 사람의 billable을 끄면 그 사람을 쓰는 단정 11곳이 실행 순서를 탄다.
+     */
+    private static final long TOGGLE_TEAM_ID = 44L;
 
     private static final long ADMIN_GROUP_ID = 41L;
     private static final long MEMBER_GROUP_ID = 42L;
@@ -69,6 +79,8 @@ class UtilizationIntegrationTest extends PostgresTestBase {
     private static final long SUBJECT_ID = 402L;
     private static final long CHANGING_ID = 403L;
     private static final long NON_BILLABLE_ID = 404L;
+    /** E2-2로 billable을 끄는 대상 — 다른 테스트가 이 사람을 건드리지 않는다 */
+    private static final long TOGGLE_ID = 405L;
 
     /** 시드와 같은 계수 — 수석 1.5 (부록 B). */
     private static final double SENIOR_COEFF = 1.5;
@@ -91,6 +103,8 @@ class UtilizationIntegrationTest extends PostgresTestBase {
     private AssignmentService assignmentService;
     @Autowired
     private UtilizationQueryService utilizationQueryService;
+    @Autowired
+    private PersonService personService;
 
     private long changingProjectId;
 
@@ -100,11 +114,14 @@ class UtilizationIntegrationTest extends PostgresTestBase {
         orgUnitRepository.saveAll(List.of(
                 OrgUnit.of(DIVISION_ID, PersonFixtures.COMPANY_ID, "가동률사업부"),
                 OrgUnit.of(TEAM_ID, DIVISION_ID, "가동률팀"),
-                OrgUnit.of(OTHER_TEAM_ID, DIVISION_ID, "가동률2팀")));
+                OrgUnit.of(OTHER_TEAM_ID, DIVISION_ID, "가동률2팀"),
+                OrgUnit.of(TOGGLE_TEAM_ID, DIVISION_ID, "가동률토글팀")));
         gradeRepository.save(Grade.of(1L, "수석", SENIOR_COEFF));
         permissionGroupRepository.saveAll(List.of(
                 PersonFixtures.group(ADMIN_GROUP_ID, "가동률관리자", VisibilityScope.COMPANY,
-                        OrgPermission.CREATE_PROJECT, OrgPermission.MANAGE_ALL_PROJECTS),
+                        // MANAGE_ORG는 아래 쓰기 → 집계 관통 테스트가 E2-2를 부르는 데 쓴다
+                        OrgPermission.CREATE_PROJECT, OrgPermission.MANAGE_ALL_PROJECTS,
+                        OrgPermission.MANAGE_ORG),
                 PersonFixtures.group(MEMBER_GROUP_ID, "가동률팀원", VisibilityScope.TEAM)));
         personRepository.saveAll(List.of(
                 PersonFixtures.person(ADMIN_ID, "가동률관리자", DIVISION_ID, ADMIN_GROUP_ID),
@@ -112,7 +129,9 @@ class UtilizationIntegrationTest extends PostgresTestBase {
                 PersonFixtures.person(CHANGING_ID, "가동률변경", OTHER_TEAM_ID, MEMBER_GROUP_ID),
                 // billable=false — 집계 모집단에서만 빠진다(C1-5)
                 Person.of(NON_BILLABLE_ID, "가동률비집계", TEAM_ID, 1L, MEMBER_GROUP_ID,
-                        1.0, false, false, true)));
+                        1.0, false, false, true),
+                // 쓰기 → 집계 관통 전용 — billable=true로 시작해 E2-2로 끈다
+                PersonFixtures.person(TOGGLE_ID, "가동률토글", TOGGLE_TEAM_ID, MEMBER_GROUP_ID)));
 
         // 같은 사람에게 두 프로젝트를 걸어 둔다 — 분자 합산이 실 질의로 성립하는지가 관건이다
         inProgressProject("가동률 프로젝트 A", SUBJECT_ID, 0.5);
@@ -184,6 +203,33 @@ class UtilizationIntegrationTest extends PostgresTestBase {
         assertThat(team).extracting(UtilizationView::personId).containsExactly(SUBJECT_ID);
         // 개인 지정은 C1-5와 무관하다 — 자기 가동률은 나온다
         assertThat(only(month, NON_BILLABLE_ID).basic()).isEqualTo(100.0);
+    }
+
+    @Test
+    @DisplayName("C1-5 관통 — E2-2로 billable을 끄면 그 사람이 팀 집계에서 실제로 빠진다")
+    void turningOffBillableThroughE2_2RemovesFromAggregate() {
+        YearMonth month = YearMonth.of(2026, 7);
+        UtilizationQuery query = new UtilizationQuery(month, null, TOGGLE_TEAM_ID, false);
+
+        // 끄기 전에는 집계에 있다 — 이 단정이 없으면 뒤의 부재가 무엇 때문인지 모른다
+        assertThat(utilizationQueryService.find(ADMIN_ID, query))
+                .extracting(UtilizationView::personId).containsExactly(TOGGLE_ID);
+
+        /*
+         * 화면(`PersonEditModal`)이 사용자에게 "끄면 팀·부문·전사 집계에서 빠집니다"라고
+         * 약속한다. 그 약속을 지키는 단정이 여기다 — 픽스처에서 false로 만든 인원을 보는
+         * C1-5 테스트는 **쓰기 경로가 집계에 닿는지**를 말해 주지 않는다.
+         */
+        PersonSummary target = personService.getPerson(ADMIN_ID, TOGGLE_ID);
+        personService.update(ADMIN_ID, new UpdatePersonCommand(
+                TOGGLE_ID, target.name(), TOGGLE_TEAM_ID, target.gradeId(), target.groupId(),
+                false, target.version()));
+
+        assertThat(utilizationQueryService.find(ADMIN_ID, query)).isEmpty();
+        // 개인 지정 조회는 C1-5와 무관하다 — 본인 가동률은 그대로 보인다
+        assertThat(utilizationQueryService.find(
+                ADMIN_ID, new UtilizationQuery(month, TOGGLE_ID, null, false)))
+                .extracting(UtilizationView::personId).containsExactly(TOGGLE_ID);
     }
 
     @Test

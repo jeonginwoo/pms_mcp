@@ -30,6 +30,7 @@ export default function PersonEditModal({ person, onClose }: {
     orgUnitId: String(person.orgUnitId),
     gradeId: String(person.gradeId),
     groupId: String(person.groupId),
+    billable: person.billable,
   })
   const [error, setError] = useState<{ code: string; message: string } | null>(null)
   const [warning, setWarning] = useState<string | null>(null)
@@ -40,6 +41,7 @@ export default function PersonEditModal({ person, onClose }: {
   const otherChanged = form.name.trim() !== person.name
     || Number(form.gradeId) !== person.gradeId
     || Number(form.groupId) !== person.groupId
+    || form.billable !== person.billable
 
   const submit = async () => {
     if (!orgUnitChanged && !otherChanged) {
@@ -84,6 +86,7 @@ export default function PersonEditModal({ person, onClose }: {
       orgUnitId: Number(form.orgUnitId),
       gradeId: Number(form.gradeId),
       groupId: Number(form.groupId),
+      billable: form.billable,
       version,
     })
     setBusy(false)
@@ -137,6 +140,20 @@ export default function PersonEditModal({ person, onClose }: {
           </Field>
         </div>
       </div>
+
+      {/*
+        가동률 집계 대상 (부록 B · C1-5) — 적재는 조직 단위지만 "플래그는 운영 중 개인
+        단위 수정 가능"이라 이 폼이 예외를 든다. 끄면 팀·부문·전사 집계의 모집단에서
+        빠지고, 개인 지정 조회(`?personId=`)에는 그대로 나온다.
+      */}
+      <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
+        <input type="checkbox" checked={form.billable} disabled={busy}
+          onChange={(e) => set({ billable: e.target.checked })} />
+        <span style={{ fontSize: 13 }}>가동률 집계 대상</span>
+        <span className="muted2" style={{ fontSize: 11.5 }}>
+          끄면 팀·부문·전사 집계에서 빠집니다 (본인 가동률은 그대로 보입니다)
+        </span>
+      </label>
 
       {warning && (
         <div className="save-msg err" style={{ background: 'var(--warn-soft, rgba(185,130,15,.13))', borderColor: 'rgba(185,130,15,.4)', color: 'var(--warn, #b9820f)' }}>

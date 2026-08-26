@@ -106,7 +106,7 @@ class PersonCommandTest {
         // When · Then
         assertThatExceptionOfType(StaleVersionException.class)
                 .isThrownBy(() -> service.update(ADMIN_ID, new UpdatePersonCommand(
-                        TARGET_ID, "바뀐이름", PersonFixtures.SI_TEAM_ID, 1L, 4L, 2L)));
+                        TARGET_ID, "바뀐이름", PersonFixtures.SI_TEAM_ID, 1L, 4L, true, 2L)));
         assertThat(target.getName()).isEqualTo("팀원");
         verify(personAuditRecorder, never()).personChanged(anyLong(), any(), any());
     }

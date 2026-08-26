@@ -101,16 +101,28 @@ public class Person {
     }
 
     /**
-     * 이름·소속·직급·권한 그룹을 바꾼다 (AC E2-2 — 그룹 부여도 이 경로다, 2026-08-09 ⑦).
+     * 이름·소속·직급·권한 그룹·집계 대상 여부를 바꾼다
+     * (AC E2-2 — 그룹 부여도 이 경로다, 2026-08-09 ⑦ · {@code billable}은 2026-08-26 추가).
      *
-     * <p>{@code capacity}·{@code billable}은 인자에 없다: §7의 수정 폼이 다루지 않고,
-     * 둘은 가동률 모집단·분모라 인력 수정과 다른 판단이다(부록 B가 조직 단위로 정한다).
+     * <p><b>{@code billable}이 늘어난 경위</b>: 구 주석은 "부록 B가 조직 단위로 정한다"를
+     * 근거로 이 필드를 뺐는데, 그것은 부록 B의 <b>시드 적재 기준</b>을 읽은 것이고 같은
+     * 문단이 <b>"플래그는 운영 중 개인 단위 수정 가능"</b>으로 끝난다. 그래서 쓰기 경로가
+     * 하나도 없는 상태였다(§12 등재 — 2026-08-24). 적재는 조직 단위로 하되 운영 중
+     * 개인 예외는 이 경로가 든다.
+     *
+     * <p>{@code capacity}는 여전히 인자에 없다 — 그쪽은 월별 {@code Capacity}가 우선하는
+     * 가동률 <b>분모</b>라 사람 정보 수정과 판단이 다르다(C1 산식).
+     *
+     * <p>판정은 E2-2의 "사용자/조직/권한 관리" 플래그 그대로다. 새 관문을 두지 않는 것이
+     * 맞다: 집계 모집단을 정하는 일은 조직 운영이고, 그 플래그가 이미 그 권한이다.
      */
-    public void update(String name, Long orgUnitId, Long gradeId, Long groupId) {
+    public void update(
+            String name, Long orgUnitId, Long gradeId, Long groupId, boolean billable) {
         this.name = name;
         this.orgUnitId = orgUnitId;
         this.gradeId = gradeId;
         this.groupId = groupId;
+        this.billable = billable;
     }
 
     /**

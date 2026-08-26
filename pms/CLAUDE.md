@@ -313,8 +313,9 @@ PUT  /api/me/password         current + new (≥8). Lives in **auth**, not perso
                               crosses a module boundary (H1-3)
 GET  /api/people              visible people (43 seeded, system account hidden) — returns
                               `PersonSummary`: display names **plus** orgUnitId/gradeId/
-                              groupId/version, because §7 has no person-detail route and this
-                              list is what the E2-2 edit form is filled from. The module-root
+                              groupId/**billable**/version, because §7 has no person-detail
+                              route and this list is what the E2-2 edit form is filled from.
+                              The group **name** is deliberately absent — see that DTO's javadoc The module-root
                               `PersonRef` stays narrow — `/mcp` shares it (구현_노트 §5)
 GET  /api/people/{id}          404 conceals both absence and out-of-visibility
 DELETE /api/people/{id}       200 {success:true}, soft deactivate — "사용자/조직/권한 관리" flag (E2-3)
@@ -330,8 +331,12 @@ GET  /api/permission-groups   `PermissionGroupDetail[]` — scope, 4 flags, syst
                               from that, and §7 gives them no detail route (2026-08-24)
 
 --- all live since 2026-08-24 (these were the last 501 scaffolds) ---
-PUT  /api/people/{id}              edit name·org·grade·group (E2-2) — {version} required,
-                                   409 STALE_VERSION (the check was missing until 2026-08-24)
+PUT  /api/people/{id}              edit name·org·grade·group·**billable** (E2-2) — {version}
+                                   required, 409 STALE_VERSION (the check was missing until
+                                   2026-08-24). `billable` joined 2026-08-26: 부록 B says the
+                                   flag is per-person editable in operation and there was no
+                                   write path at all. `capacity` stays out — the monthly
+                                   `Capacity` overrides it, so it is a different judgement
 PUT  /api/people/{id}/org-unit     move only (E1-1) — 200 carries a **warning** when the
                                    person has live assignments (E1-2, not an error)
 PUT  /api/org-units/{id}           rename (E3-2) — duplicate names under one parent are
@@ -441,7 +446,7 @@ Four routes hang off `/api/me`, and they live in **three different modules**:
   a user changing only their phone number gets a 409 on their own email — hence
   `emailTakenByOther`.
 - **`Person.rename` exists so profile edit cannot touch org/grade/group.** Reusing
-  `update(name, orgUnitId, gradeId, groupId)` (the E2-2 admin path) would open a route for
+  `update(name, orgUnitId, gradeId, groupId, billable)` (the E2-2 admin path) would open a route for
   someone to change their own permission group; passing today's values back is no safer,
   because a new field would then be silently reset by a profile save.
 

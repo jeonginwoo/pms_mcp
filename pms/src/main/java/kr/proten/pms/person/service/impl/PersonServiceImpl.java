@@ -272,7 +272,8 @@ public class PersonServiceImpl implements PersonService {
                 requireName(command.name()),
                 command.orgUnitId(),
                 command.gradeId(),
-                command.groupId());
+                command.groupId(),
+                command.billable());
         // flush 해야 응답의 version이 커밋 뒤 값이 된다 — 안 하면 화면이 옛 version으로
         // 다시 저장하려다 409를 받는다(project·maintenance가 같은 이유로 saveAndFlush)
         Person saved = personRepository.saveAndFlush(target);
