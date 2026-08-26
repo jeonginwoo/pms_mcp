@@ -50,6 +50,20 @@ import org.springframework.data.domain.PageRequest;
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ProjectFlowIntegrationTest extends PostgresTestBase {
+    /**
+     * 가시성 단정은 <b>한 페이지에 다 담아 놓고</b> 본다 (2026-08-26 — CI에서만 깨져서 고쳤다).
+     *
+     * <p>전에는 `PageRequest.of(0, 20)`이었고, 그것은 <b>이 클래스의 프로젝트가 1페이지에
+     * 있다</b>는 가정을 숨기고 있었다. 공유 컨테이너에는 다른 통합 테스트가 만든 프로젝트가
+     * 함께 쌓이므로 그 가정은 <b>클래스 실행 순서</b>에 달려 있다 — 새 IT 하나가 프로젝트를
+     * 다섯 건 더 만들자 이 클래스의 프로젝트가 21번이 되어 COMPANY scope(대표) 목록의
+     * 2페이지로 밀렸고, 로컬(NTFS)에서는 통과하는데 CI(ext4)에서만 깨졌다.
+     *
+     * <p>이 테스트의 주제는 <b>페이징이 아니라 가시성</b>이라 페이지 크기로 답이 갈려서는
+     * 안 된다. 페이징 자체는 {@code ProjectApiIntegrationTest}가 본다.
+     */
+    private static final PageRequest EVERYTHING = PageRequest.of(0, 500);
+
     private static final long ADMIN_GROUP_ID = 1L;
     private static final long TEAM_LEAD_GROUP_ID = 3L;
     private static final long MEMBER_GROUP_ID = 4L;
@@ -165,10 +179,10 @@ class ProjectFlowIntegrationTest extends PostgresTestBase {
     @Test
     @DisplayName("A3-1 — 팀장은 팀 범위, 타부문원은 본인 배정으로 같은 프로젝트를 본다")
     void listVisible_perCaller_appliesUnionOfOrgAndAssignment() {
-        var leadPage = projectQueryService.listVisible(SI_LEAD_ID, null, PageRequest.of(0, 20));
+        var leadPage = projectQueryService.listVisible(SI_LEAD_ID, null, EVERYTHING);
         var outsiderPage =
-                projectQueryService.listVisible(OTHER_DIVISION_MEMBER_ID, null, PageRequest.of(0, 20));
-        var adminPage = projectQueryService.listVisible(ADMIN_ID, null, PageRequest.of(0, 20));
+                projectQueryService.listVisible(OTHER_DIVISION_MEMBER_ID, null, EVERYTHING);
+        var adminPage = projectQueryService.listVisible(ADMIN_ID, null, EVERYTHING);
 
         assertThat(leadPage.getContent()).map(ProjectSummary::id).contains(visibleProjectId);
         assertThat(leadPage.getContent())
@@ -200,13 +214,13 @@ class ProjectFlowIntegrationTest extends PostgresTestBase {
         assertThat(all).contains(visibleProjectId);
 
         assertThat(projectQueryService
-                .listVisible(OTHER_DIVISION_MEMBER_ID, ProjectPhase.SALES, PageRequest.of(0, 20))
+                .listVisible(OTHER_DIVISION_MEMBER_ID, ProjectPhase.SALES, EVERYTHING)
                 .getContent())
                 .allSatisfy(summary -> assertThat(summary.phase()).isEqualTo(ProjectPhase.SALES));
     }
 
     private List<Long> idsOf(long callerPersonId, ProjectPhase phase) {
-        return projectQueryService.listVisible(callerPersonId, phase, PageRequest.of(0, 20))
+        return projectQueryService.listVisible(callerPersonId, phase, EVERYTHING)
                 .getContent().stream()
                 .map(ProjectSummary::id)
                 .toList();
