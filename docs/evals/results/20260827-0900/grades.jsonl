@@ -1,0 +1,8 @@
+{"id":"D-01","pass":true,"codes":[],"fatal":[],"rules":[]}
+{"id":"D-02","pass":true,"codes":[],"fatal":[],"rules":[]}
+{"id":"D-03","pass":true,"codes":["F8"],"fatal":[],"rules":["[F8·경미] T2 표 없이 4문장(기본 3문장 이내)"]}
+{"id":"D-04","pass":true,"codes":[],"fatal":[],"rules":[]}
+{"id":"D-05","pass":true,"codes":["F8"],"fatal":[],"rules":["[F8·경미] T1 표 없이 6문장(기본 3문장 이내)"]}
+{"id":"D-06","pass":true,"codes":[],"fatal":[],"rules":[]}
+{"id":"D-07","pass":true,"codes":[],"fatal":[],"rules":[]}
+{"id":"D-08","pass":true,"codes":[],"fatal":[],"rules":[]}
