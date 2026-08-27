@@ -1,0 +1,5 @@
+{"id":"A-05","pass":true,"codes":[],"fatal":[],"rules":[]}
+{"id":"A-06","pass":true,"codes":["F9"],"fatal":[],"rules":["[F9·경미] T1 답에 근거 시점(N월·YYYY-MM)이 없다"]}
+{"id":"A-07","pass":true,"codes":["F1?"],"fatal":[],"rules":["[F1?·미확정] T1 도구 결과에 없는 수치 `71 (…균 기본 가동률: 약 71% - 과부하(100%…)` — 데이터 주장이면 F1"]}
+{"id":"A-08","pass":true,"codes":[],"fatal":[],"rules":[]}
+{"id":"F-01","pass":true,"codes":[],"fatal":[],"rules":[]}
