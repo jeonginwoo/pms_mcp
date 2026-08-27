@@ -148,9 +148,29 @@ button.trow:hover { background: var(--soft); }
 .chat-head { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border-soft); height: 60px; }
 .chat-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 .chat-input-row { flex: none; display: flex; gap: 8px; padding: 14px; border-top: 1px solid var(--border-soft); }
+.chat-notice { flex: none; padding: 8px 14px 0; font-size: 11.5px; color: var(--danger); }
 .bubble { padding: 10px 13px; border-radius: 14px; white-space: pre-wrap; word-break: break-word; font-size: 13px; line-height: 1.55; }
-.bubble.user { background: var(--primary); color: #fff; border-bottom-right-radius: 4px; }
-.bubble.ai { background: var(--soft); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+.bubble.user { background: var(--primary); color: #fff; border-bottom-right-radius: 4px; align-self: flex-end; max-width: 85%; }
+.bubble.ai { background: var(--soft); border: 1px solid var(--border); border-bottom-left-radius: 4px; align-self: flex-start; max-width: 92%; }
+.bubble.err { background: var(--danger-soft); border-color: var(--danger-border); color: var(--danger); }
+/* 답변의 마크다운 — 말풍선 안이라 블록 여백을 잘게 줄인다. 문단 안의 pre-wrap은 남긴다:
+   마크다운은 홑 줄바꿈을 공백으로 접는데 모델은 그것을 줄로 쓴다 */
+.bubble.md { white-space: normal; }
+.bubble.md > :first-child { margin-top: 0; }
+.bubble.md > :last-child { margin-bottom: 0; }
+.bubble.md p { margin: 0 0 8px; white-space: pre-wrap; }
+.bubble.md ul, .bubble.md ol { margin: 0 0 8px; padding-left: 18px; }
+.bubble.md li { margin: 2px 0; }
+.bubble.md h1, .bubble.md h2, .bubble.md h3, .bubble.md h4 { font-size: 13px; font-weight: 700; margin: 10px 0 4px; }
+.bubble.md a { color: var(--primary); text-decoration: underline; }
+.bubble.md code { background: var(--surface); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; font-size: 11.5px; }
+.bubble.md pre { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin: 0 0 8px; overflow-x: auto; }
+.bubble.md pre code { background: none; border: none; padding: 0; }
+.bubble.md blockquote { margin: 0 0 8px; padding-left: 10px; border-left: 2px solid var(--border); color: var(--muted); }
+/* 표는 400px 패널보다 넓어질 수 있다 — 말풍선이 아니라 표가 가로로 스크롤된다 */
+.bubble.md table { display: block; width: max-content; max-width: 100%; overflow-x: auto; border-collapse: collapse; font-size: 11.5px; margin: 0 0 8px; }
+.bubble.md th, .bubble.md td { border: 1px solid var(--border); padding: 4px 8px; text-align: left; white-space: nowrap; }
+.bubble.md th { background: var(--surface); font-weight: 700; }
 .suggest { background: var(--soft); border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 9px 13px; font-size: 12.5px; text-align: left; }
 .suggest:hover { border-color: var(--primary); }
 .fb-btn { background: none; border: none; padding: 2px 6px; font-size: 13px; opacity: .55; }

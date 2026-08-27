@@ -217,7 +217,11 @@ async function rotate(): Promise<boolean> {
   }
 }
 
-async function send<T>(path: string, options: RequestInit, authenticated: boolean): Promise<T> {
+/**
+ * 호출자를 싣는 헤더. `authenticated=false`(로그인·갱신)면 Content-Type만 간다.
+ * 아래 챗 대역도 이것을 쓴다 — 인증 방식이 갈라지면 두 벌을 맞춰 고쳐야 한다.
+ */
+function headersFor(authenticated: boolean): Record<string, string> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
 
   if (authenticated && session) {
@@ -229,7 +233,11 @@ async function send<T>(path: string, options: RequestInit, authenticated: boolea
     }
   }
 
-  const res = await fetch(path, { ...options, headers })
+  return headers
+}
+
+async function send<T>(path: string, options: RequestInit, authenticated: boolean): Promise<T> {
+  const res = await fetch(path, { ...options, headers: headersFor(authenticated) })
   const text = await res.text()
   const body: unknown = text ? safeJson(text) : null
 
@@ -601,6 +609,74 @@ export const api = {
       { method: 'PUT', body: JSON.stringify(body) }),
   closeAssignment: (assignmentId: number) =>
     request<null>(`/api/assignments/${assignmentId}`, { method: 'DELETE' }),
+}
+
+
+/**
+ * AI 어시스턴트 질의 (FR-AI-01) — **임시 배선이다.**
+ *
+ * 정본은 pms chat BFF `POST /api/chat`(PRD-pms §7 — 상세 계약은 M1 확정)이고, 그 자리에는
+ * 지금 host 앱의 대역 엔드포인트가 서 있다(`ChatController`, 8081). 그래서 **경로는 정본
+ * 그대로 두고 vite 프록시만 8081로 돌린다**(vite.config.ts): BFF가 서면 프록시 한 줄을
+ * 지우는 것으로 끝나고 이 파일은 바뀌지 않는다.
+ *
+ * `request`를 쓰지 않는 것도 대역이기 때문이다 — 대역은 §7 봉투로 감싸지 않고 본문을 그대로
+ * 준다. BFF가 서면 이 함수는 `request<ChatReply>('/api/chat', ...)` 한 줄로 접힌다
+ * (그때 `ChatReply`도 types/api.ts로 옮겨 간다 — 지금은 계약이 아니라 대역의 모양이다).
+ *
+ * **임시 동안 없는 것**(셋 다 BFF의 몫 — 구현_노트 §1-2): 입력 길이 차단(FR-AI-02) ·
+ * 레이트리밋(FR-AI-06) · 만료 5분 위임 토큰. 지금은 로그인 세션 토큰이 그대로 host로 간다.
+ * 그래서 이 배선은 **로컬 개발 전용이며 그대로 노출하면 안 된다**(인증 OFF 모드와 같은 조건).
+ */
+export interface ChatReply {
+  conversationId: string
+  reply: string
+}
+
+export async function chat(conversationId: string, message: string,
+    signal?: AbortSignal): Promise<ChatReply> {
+  if (session?.mode !== 'token') {
+    // 대역은 Bearer 토큰의 sub로만 화자를 읽는다 — 화자 지정 세션에는 실을 것이 없다
+    throw new ApiError(401, 'CHAT_REQUIRES_LOGIN',
+      '어시스턴트는 로그인 세션에서만 동작합니다', null, null)
+  }
+
+  let res = await postChat(conversationId, message, signal)
+
+  if (res.status === 401 && await rotate()) {
+    res = await postChat(conversationId, message, signal)
+  }
+
+  if (!res.ok) {
+    throw chatError(res.status)
+  }
+
+  return await res.json() as ChatReply
+}
+
+function postChat(conversationId: string, message: string,
+    signal?: AbortSignal): Promise<Response> {
+  return fetch('/api/chat', {
+    method: 'POST',
+    headers: headersFor(true),
+    body: JSON.stringify({ conversationId, message }),
+    signal,
+  })
+}
+
+/** 대역은 Boot 기본 오류 본문(message가 빠진다)을 주므로 문구는 상태 코드로 가른다 */
+function chatError(status: number): ApiError {
+  if (status === 401) {
+    return new ApiError(status, 'CHAT_FAILED', '세션이 만료되었습니다 — 다시 로그인해 주세요',
+      null, null)
+  }
+
+  if (status === 400) {
+    return new ApiError(status, 'CHAT_FAILED', '질문이 비어 있습니다', null, null)
+  }
+
+  return new ApiError(status, 'CHAT_FAILED',
+    'AI 호스트가 답하지 못했습니다 — host 앱(8081)과 Anthropic API 키를 확인하세요', null, null)
 }
 
 
