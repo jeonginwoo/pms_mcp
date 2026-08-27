@@ -96,7 +96,11 @@ bash scripts/verify.sh [host|pms] [--quick]
                          # (host/application-local.yml, gitignored, or
                          # ANTHROPIC_API_KEY env var — env wins). Chat:
                          # POST /chat {"message": ...} with Authorization: Bearer <token>
-                         # (real server = a login access token, see pms-token.sh below)
+                         # (real server = a login access token, see pms-token.sh below).
+                         # The web AI assistant panel calls this too (2026-08-27) —
+                         # frontend hits /api/chat and vite proxies that one path to
+                         # 8081, standing in for the pms chat BFF until it exists.
+                         # Changing this request/response shape breaks the screen.
 
 bash host/scripts/pms-token.sh <personId|email>
                          # mint a real login access token for /mcp and /chat

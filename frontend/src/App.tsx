@@ -1,6 +1,9 @@
+import { useState } from 'react'
 import { StoreProvider, useStore } from './store'
+import { useChat } from './chat'
 import { useTheme } from './theme'
 import Sidebar from './components/Sidebar'
+import ChatPanel from './components/ChatPanel'
 import Header from './components/Header'
 import { Toast } from './components/ui'
 import Login from './views/Login'
@@ -17,6 +20,9 @@ import Audit from './views/Audit'
 function Shell() {
   const { phase, bootError, route, detail, contract, toast, reload } = useStore()
   const { theme, toggle } = useTheme()
+  // 대화는 패널보다 오래 산다 — 닫았다 열어도 이어지도록 여기서 들고 있는다(chat.ts)
+  const chat = useChat()
+  const [chatOpen, setChatOpen] = useState(false)
 
   if (phase === 'anon') {
     return <Login theme={theme} onToggleTheme={toggle} />
@@ -55,7 +61,12 @@ function Shell() {
     <div className="layout">
       <Sidebar />
       <div className="main">
-        <Header theme={theme} onToggleTheme={toggle} />
+        <Header
+          theme={theme}
+          onToggleTheme={toggle}
+          chatOpen={chatOpen}
+          onToggleChat={() => setChatOpen((open) => !open)}
+        />
         <main className="content">
           {route === 'home' && <Home />}
           {/*
@@ -73,6 +84,7 @@ function Shell() {
           {route === 'audit' && <Audit />}
         </main>
       </div>
+      {chatOpen && <ChatPanel chat={chat} onClose={() => setChatOpen(false)} />}
       {toast && <Toast message={toast} />}
     </div>
   )
