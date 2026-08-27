@@ -201,6 +201,11 @@ interface Store {
   registerIssue: (body: IssueBody) => Promise<Result<IssueView>>
   processIssue: (issueId: number, body: IssueEditBody) => Promise<Result<IssueView>>
   addIssueComment: (issueId: number, body: CommentBody) => Promise<Result<CommentView>>
+  /** 이슈 삭제 (D3-6) — soft 삭제. 권한은 등록자·담당자·"계약 관리" 플래그다 */
+  deleteIssue: (issueId: number, version: number) => Promise<Result<null>>
+  /** 코멘트 수정·삭제 (D3-7) — 작성자 본인만 */
+  editIssueComment: (commentId: number, body: CommentBody) => Promise<Result<CommentView>>
+  deleteIssueComment: (commentId: number) => Promise<Result<null>>
   /** 통합 감사 로그 (G1-3) — 플래그가 없으면 서버가 403이고 화면이 그대로 보여 준다 */
   loadAudit: (page: number) => Promise<Result<PageResponse<AuditRecord>>>
   /** 프로젝트별 이력 (G2-2) — 가시성 밖은 404 은닉이다 */
@@ -733,6 +738,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       run(() => api.processIssue(issueId, body), { refresh: false }),
     addIssueComment: (issueId, body) =>
       run(() => api.addIssueComment(issueId, body), { refresh: false }),
+    deleteIssue: (issueId, version) =>
+      run(() => api.deleteIssue(issueId, version), { refresh: false }),
+    editIssueComment: (commentId, body) =>
+      run(() => api.editIssueComment(commentId, body), { refresh: false }),
+    deleteIssueComment: (commentId) =>
+      run(() => api.deleteIssueComment(commentId), { refresh: false }),
     createContract: (body) => runContract(() => api.createContract(body)),
     updateContract: (contractId, body) =>
       runContract(() => api.updateContract(contractId, body), contractId),

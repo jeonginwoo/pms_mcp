@@ -1,20 +1,33 @@
 package kr.proten.pms.maintenance.service.dto;
 
 import kr.proten.pms.maintenance.service.entity.IssueStatus;
+import kr.proten.pms.maintenance.service.entity.IssueType;
 
 /**
- * 이슈 처리 입력 (AC D3-2) — 상태 전이와 담당 재배정.
+ * 이슈 수정 — 상태·담당(AC D3-2) + <b>제목·유형·본문</b>(AC D3-5, 2026-08-26 신설).
  *
- * <p><b>{@code null}은 "그대로 둔다"다</b>(PATCH 의미론 — §7). 상태만 바꾸는 요청과
- * 담당만 바꾸는 요청이 둘 다 흔하고, 안 보낸 칸을 기본값으로 덮으면 담당자를 바꾸려는
- * 요청이 상태를 되돌린다.
+ * <p><b>null은 어디서나 "그대로"다.</b> 상태·담당이 이미 그 규약이었고 세 칸을 더할 때도
+ * 지켰다 — 한 요청 안에서 규약이 갈리면 호출자가 칸마다 다른 규칙을 외워야 한다.
+ * 그래서 <b>본문을 지우는 것은 빈 문자열</b>이다(엔티티가 null로 바꿔 저장한다).
  *
- * <p>그래서 <b>담당 해제는 표현할 수 없다</b> — {@code null}이 이미 다른 뜻을 쓰고 있고,
- * AC에 해제 요구가 없어 별도 플래그를 만들지 않았다(저장소의 {@code unassignedOnly}가
- * 같은 이유로 별 파라미터인 것과 대칭이다: 그쪽은 <b>요구가 있었다</b>).
- *
- * <p>둘 다 {@code null}이면 아무것도 바꾸지 않는다 — 오류가 아니다. 감사에 행이 남지
- * 않는 것으로 충분히 표현된다(diff가 비면 기록하지 않는다).
+ * <p>{@code siteId}가 없는 것은 의도다: 이슈가 어느 계약에 속하는지가 사이트에서
+ * 파생되므로 그것을 바꾸는 것은 정정이 아니라 이동이고, AC에 요구가 없다.
  */
-public record IssueEditCommand(IssueStatus status, Long assigneeId) {
+public record IssueEditCommand(
+        IssueStatus status,
+        Long assigneeId,
+        IssueType type,
+        String title,
+        String content) {
+
+    /** 상태·담당만 바꾸는 요청 — D3-2 시절의 두 칸 호출부(테스트 포함)를 위한 좁은 문. */
+    public static IssueEditCommand ofProcess(IssueStatus status, Long assigneeId) {
+        return new IssueEditCommand(status, assigneeId, null, null, null);
+    }
+
+    /** 무엇이든 바꾸려 하는가 — 다섯 칸이 전부 null인 요청은 400이다(변경 없음). */
+    public boolean isEmpty() {
+        return status == null && assigneeId == null && type == null
+                && title == null && content == null;
+    }
 }

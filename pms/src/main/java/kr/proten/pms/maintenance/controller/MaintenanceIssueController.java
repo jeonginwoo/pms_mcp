@@ -16,10 +16,12 @@ import kr.proten.pms.maintenance.service.entity.IssueStatus;
 import kr.proten.pms.maintenance.service.entity.IssueType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -97,7 +99,24 @@ class MaintenanceIssueController {
                 callerPersonId, issueId, request.toCommand(), request.requiredVersion()));
     }
 
-    /** 코멘트 추가 (AC D3-3) — append-only라 수정·삭제 라우트가 없다. */
+    /**
+     * 이슈 삭제 (AC D3-6 — 2026-08-26 신설) — soft 삭제이고 조회에서 빠진다.
+     * 등록자·담당자·"계약 관리" 플래그만 할 수 있고(403), version이 어긋나면 409다.
+     *
+     * <p>{@code version}을 쿼리로 받는다 — {@code DELETE}에 본문을 싣는 것은 스펙상
+     * 정의가 흐리고 클라이언트·프록시가 흘리는 자리가 있다. 프로젝트 삭제(A4)도 같은 모양이다.
+     */
+    @DeleteMapping("/{issueId}")
+    ApiResponse<Void> delete(
+            @CallerPersonId long callerPersonId,
+            @PathVariable long issueId,
+            @RequestParam long version) {
+        issueCommandService.delete(callerPersonId, issueId, version);
+
+        return ApiResponse.ok();
+    }
+
+    /** 코멘트 추가 (AC D3-3) — 로그인 사용자 전체. */
     @PostMapping("/{issueId}/comments")
     @ResponseStatus(HttpStatus.CREATED)
     ApiResponse<CommentView> addComment(
@@ -106,5 +125,32 @@ class MaintenanceIssueController {
             @Valid @RequestBody CommentRequest request) {
         return ApiResponse.ok(
                 issueCommandService.addComment(callerPersonId, issueId, request.content()));
+    }
+
+    /**
+     * 코멘트 수정 (AC D3-7 — 2026-08-26 신설) — <b>작성자 본인만</b>(403).
+     *
+     * <p>경로가 {@code /issues/{issueId}/comments/{commentId}}가 아니라 코멘트 id 하나로
+     * 가는 것은 코멘트 id가 전역 유일하고, 이슈 id를 함께 받으면 <b>둘이 어긋난 요청</b>에
+     * 답을 정해야 하기 때문이다(그 규칙은 AC에 없다). 이슈 존재·삭제 여부는 서비스가
+     * 코멘트에서 되짚어 확인한다.
+     */
+    @PutMapping("/comments/{commentId}")
+    ApiResponse<CommentView> editComment(
+            @CallerPersonId long callerPersonId,
+            @PathVariable long commentId,
+            @Valid @RequestBody CommentRequest request) {
+        return ApiResponse.ok(
+                issueCommandService.editComment(callerPersonId, commentId, request.content()));
+    }
+
+    /** 코멘트 삭제 (AC D3-7 — 2026-08-26 신설) — <b>작성자 본인만</b>(403). */
+    @DeleteMapping("/comments/{commentId}")
+    ApiResponse<Void> deleteComment(
+            @CallerPersonId long callerPersonId,
+            @PathVariable long commentId) {
+        issueCommandService.deleteComment(callerPersonId, commentId);
+
+        return ApiResponse.ok();
     }
 }

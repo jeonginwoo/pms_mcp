@@ -26,6 +26,8 @@ public record IssueView(
         String status,
         IssueStatus statusCode,
         String title,
+        String content,
+        Long reporterId,
         LocalDate receivedAt,
         LocalDate completedAt,
         PersonRef assignee,

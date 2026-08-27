@@ -407,24 +407,40 @@ POST /api/maintenance/contracts/{id}/sites 201 + site view, contacts embedded (D
 PUT  /api/maintenance/sites/{id}           {version}; the contacts list is a full
                                            replacement, not a merge (§7 PUT) (D2-4)
 --- issue writes live since 2026-08-24 (D3) ---
-POST  /api/maintenance/issues              201 — {siteId, type, title} only; the server sets
-                                           status=접수, receivedAt=today and the assignee
-                                           from the site's engineerId (D3-1), then publishes
-                                           `MaintenanceIssueRegistered`
-PATCH /api/maintenance/issues/{id}         {version} + status and/or assigneeId (D3-2).
-                                           PATCH, not PUT: an omitted field means "leave it",
-                                           so **unassigning cannot be expressed** (no AC asks)
-POST  /api/maintenance/issues/{id}/comments  201 — **append-only** (D3-3). No version: adding
-                                           a comment does not modify the issue
+POST  /api/maintenance/issues              201 — {siteId, type, title, content?}; the server
+                                           sets status=접수, receivedAt=today, assignee from
+                                           the site's engineerId and **reporterId = caller**
+                                           (D3-1), then publishes `MaintenanceIssueRegistered`
+PATCH /api/maintenance/issues/{id}         {version} + status/assigneeId (D3-2, no gate) and/or
+                                           **type/title/content (D3-5, gated)**. PATCH, not PUT:
+                                           an omitted field means "leave it", so **unassigning
+                                           cannot be expressed** (no AC asks). Clearing the body
+                                           is the empty string; a blank title is 400
+DELETE /api/maintenance/issues/{id}?version=  200 — **soft delete** (D3-6, gated). Reads drop it
+                                           everywhere (list, detail, contract issue counts);
+                                           afterwards every path answers 404
+POST  /api/maintenance/issues/{id}/comments  201 (D3-3) — no version: adding a comment does not
+                                           modify the issue
+PUT|DELETE /api/maintenance/issues/comments/{commentId}  200 (D3-7) — **author only**, the
+                                           "계약 관리" flag does not reach here. Editing stamps
+                                           `updatedAt`; deleting removes the row
 ```
 
 Maintenance **reads** take no caller (company-wide, D4-3). **Contract writes** take one and are
 gated on the "계약 관리" flag, so `ContractWriteGuard` runs before anything else
-(`MaintenanceWriteAuthorizationTest` locks all four routes). **Issue writes take a caller but
-have no gate at all** (2026-08-24, D3): US-D3 is `[로그인 사용자 전체]`, so `IssueCommandService`
-is the first write contract in this app with no permission guard — the caller id is there for
-the *record* (audit actor, comment author), not for a judgement. Reusing `ContractWriteGuard`
-here would be wrong, not merely redundant: a 팀원 must be able to file the issue they will work.
+(`MaintenanceWriteAuthorizationTest` locks all four routes). **Issue writes gate per action, not
+per route** (2026-08-26, D3-5·D3-6·D3-7 — this replaces the older "no gate at all" line):
+filing, transitioning and commenting stay `[로그인 사용자 전체]` per US-D3, because a 팀원 must be
+able to file and work the issue in front of them. What is gated is **changing or deleting what
+someone else wrote** — `IssueWriteGuard` (reporter · current assignee · "계약 관리" flag) for the
+issue, and author-only for a comment. The board is company-wide (D4-3), so with no gate anyone
+could delete anyone's issue. `ContractWriteGuard` is *not* reused: it demands one flag, whereas
+here the flag is **one of three branches**, and folding them together would blur the fact that
+contract writes require it. The three-branch shape exists because each branch covers a different
+hole — the reporter fixes their own typo (**the gap that started this**: `PATCH` took only
+status·assigneeId, so a title typo could not be fixed at all), the assignee tidies wording while
+working it, and **the 267 seeded issues have `reporterId = null`** (the old board recorded no
+author), so without the flag nobody could touch them.
 **Handover writes take a caller and are gated on the project side** (D1, `ProjectAction.HANDOVER`
 = PM only), so `HandoverAdapter` must not re-gate — reusing `ContractCommandService` there would
 stop a PM without the 계약-관리 flag from handing over their own project. The caller still crosses
@@ -507,9 +523,12 @@ why `projectId` is a filter column filled even when `entityId` is an assignment.
 - **Snapshots round-trip through JSON, so numbers do not come back as `Long`** (measured
   2026-08-24). An id stored in a snapshot reads back as `Integer`, and an assertion written
   as `containsEntry("assigneeId", 902L)` fails against `902`. Compare numerically.
-- **An append-only record does not get an audit row.** Issue comments (D3-3) are already
-  immutable facts carrying author and timestamp; recording them again would put the same
-  fact in two tables, and audit answers "what changed" — the issue did not change.
+- **A comment does not get an audit row.** Issue comments (D3-3) carry their own author and
+  timestamp; recording them again would put the same fact in two tables, and audit answers
+  "what changed" — the issue did not change. (This line used to say "an append-only record":
+  that invariant was **dropped on 2026-08-26** — D3-7 lets the author edit or delete their own
+  comment, and an edit stamps `updatedAt` rather than writing audit. The reason for no audit row
+  is the *subject*, not the immutability.)
 
 - **Seeding leaves no audit rows** (measured 2026-08-24): `audit_logs` is empty on a
   freshly seeded database, so the audit screens show nothing until someone writes.

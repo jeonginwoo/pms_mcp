@@ -16,9 +16,15 @@ public record IssueRequest(
         @NotNull(message = "사이트는 필수입니다") Long siteId,
         @NotNull(message = "이슈 유형은 필수입니다") IssueType type,
         @NotBlank(message = "제목은 필수입니다")
-        @Size(max = 300, message = "제목은 300자를 넘을 수 없습니다") String title) {
+        @Size(max = 300, message = "제목은 300자를 넘을 수 없습니다") String title,
+        /**
+         * 본문 — <b>선택이다</b> (2026-08-26 신설). 안 보내면 제목만 있는 이슈가 되고,
+         * 그것이 시드 267건의 모습이다. 길이 상한을 두지 않는 것은 컬럼이 {@code text}이고
+         * 처리 내용이 얼마나 길어야 하는지 AC가 정하지 않았기 때문이다.
+         */
+        String content) {
 
     public IssueCommand toCommand() {
-        return new IssueCommand(siteId, type, title);
+        return new IssueCommand(siteId, type, title, content);
     }
 }

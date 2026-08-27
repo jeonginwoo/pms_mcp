@@ -575,6 +575,20 @@ export const api = {
     request<IssueView>(`/api/maintenance/issues/${issueId}`,
       { method: 'PATCH', body: JSON.stringify(body) }),
   /** 코멘트 (D3-3) — append-only라 수정·삭제 경로가 없다 */
+  /** 이슈 삭제 (D3-6) — soft 삭제. version은 쿼리로 간다(DELETE 본문을 쓰지 않는다) */
+  deleteIssue: (issueId: number, version: number) =>
+    request<null>(`/api/maintenance/issues/${issueId}?version=${version}`,
+      { method: 'DELETE' }),
+
+  /** 코멘트 수정 (D3-7) — 작성자 본인만. 경로가 코멘트 id 하나인 것은 서버 규약이다 */
+  editIssueComment: (commentId: number, body: CommentBody) =>
+    request<CommentView>(`/api/maintenance/issues/comments/${commentId}`,
+      { method: 'PUT', body: JSON.stringify(body) }),
+
+  /** 코멘트 삭제 (D3-7) — 작성자 본인만. 행이 사라진다 */
+  deleteIssueComment: (commentId: number) =>
+    request<null>(`/api/maintenance/issues/comments/${commentId}`, { method: 'DELETE' }),
+
   addIssueComment: (issueId: number, body: CommentBody) =>
     request<CommentView>(`/api/maintenance/issues/${issueId}/comments`,
       { method: 'POST', body: JSON.stringify(body) }),

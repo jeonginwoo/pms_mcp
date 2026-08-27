@@ -1,23 +1,29 @@
 package kr.proten.pms.maintenance.controller.dto;
 
+import jakarta.validation.constraints.Size;
 import kr.proten.pms.common.exception.ValidationException;
 import kr.proten.pms.maintenance.service.dto.IssueEditCommand;
 import kr.proten.pms.maintenance.service.entity.IssueStatus;
+import kr.proten.pms.maintenance.service.entity.IssueType;
 
 /**
- * 이슈 처리 요청 (AC D3-2) — 상태 전이·담당 재배정.
+ * 이슈 수정 요청 — 상태·담당(AC D3-2) + 제목·유형·본문(AC D3-5, 2026-08-26).
  *
- * <p>{@code status}·{@code assigneeId}에 {@code @NotNull}이 없는 것이 PATCH의 의미다:
- * 안 보낸 칸은 그대로 둔다({@code IssueEditCommand} 주석). 그래서 <b>둘 다 비어도
- * 400이 아니다</b> — 아무것도 바꾸지 않는 요청은 아무것도 바꾸지 않는다.
+ * <p>{@code PATCH}인 이유가 다섯 칸이 되며 더 분명해졌다: <b>칸들이 서로 독립</b>이라
+ * 상태만 바꾸는 요청에 제목을 함께 실으라고 요구할 이유가 없다. null = 그대로다.
  *
- * @param version 필수다 — 계약·사이트와 같은 이유로 애너테이션이 아니라
- *                {@link #requiredVersion()}이 본다
+ * <p>{@code version}만 필수다 — 낙관적 락은 무엇을 바꾸든 필요하다.
  */
-public record IssueEditRequest(IssueStatus status, Long assigneeId, Long version) {
+public record IssueEditRequest(
+        IssueStatus status,
+        Long assigneeId,
+        IssueType type,
+        @Size(max = 300, message = "제목은 300자를 넘을 수 없습니다") String title,
+        String content,
+        Long version) {
 
     public IssueEditCommand toCommand() {
-        return new IssueEditCommand(status, assigneeId);
+        return new IssueEditCommand(status, assigneeId, type, title, content);
     }
 
     /** 없으면 낙관적 락이 조용히 통과해 마지막 쓰기가 이긴다 (AC D3-2). */

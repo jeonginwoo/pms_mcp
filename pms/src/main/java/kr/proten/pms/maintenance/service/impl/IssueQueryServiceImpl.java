@@ -79,7 +79,7 @@ class IssueQueryServiceImpl implements IssueQueryService {
     @Override
     public IssueView getIssue(long issueId) {
         MaintenanceIssue issue =
-                issueRepository.findById(issueId).orElseThrow(NotFoundException::new);
+                issueRepository.findActiveById(issueId).orElseThrow(NotFoundException::new);
 
         return toViews(List.of(issue)).getFirst();
     }
@@ -87,7 +87,7 @@ class IssueQueryServiceImpl implements IssueQueryService {
 
     @Override
     public Optional<IssueView> findIssue(long issueId) {
-        return issueRepository.findById(issueId)
+        return issueRepository.findActiveById(issueId)
                 .map(issue -> toViews(List.of(issue)).getFirst());
     }
 

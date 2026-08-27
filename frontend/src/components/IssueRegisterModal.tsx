@@ -31,10 +31,11 @@ export default function IssueRegisterModal({ contractId, onClose, onRegistered }
   const [keyword, setKeyword] = useState('')
   const [pickedContract, setPickedContract] = useState<number | null>(contractId ?? null)
   const [sites, setSites] = useState<SiteView[]>([])
-  const [form, setForm] = useState<{ siteId: string; type: IssueType; title: string }>({
+  const [form, setForm] = useState<{ siteId: string; type: IssueType; title: string; content: string }>({
     siteId: '',
     type: 'INCIDENT',
     title: '',
+    content: '',
   })
   const [error, setError] = useState<{ code: string; message: string } | null>(null)
   const [busy, setBusy] = useState(false)
@@ -88,6 +89,8 @@ export default function IssueRegisterModal({ contractId, onClose, onRegistered }
       siteId: Number(form.siteId),
       type: form.type,
       title: form.title.trim(),
+      // 본문은 선택이다 — 안 적으면 제목만 있는 이슈가 된다(시드 이슈와 같은 모습)
+      content: form.content.trim() === '' ? null : form.content,
     })
     setBusy(false)
 
@@ -152,6 +155,12 @@ export default function IssueRegisterModal({ contractId, onClose, onRegistered }
       <Field label="제목">
         <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
           placeholder="예: 로그인 지연 현상" />
+      </Field>
+
+      <Field label="본문" hint="선택입니다 — 나중에 수정할 수 있습니다">
+        <textarea value={form.content} rows={4} style={{ width: '100%' }}
+          onChange={(e) => setForm({ ...form, content: e.target.value })}
+          placeholder="증상·재현 절차·요청 내용" />
       </Field>
 
       <div className="muted2" style={{ fontSize: 11.5, marginTop: 4 }}>

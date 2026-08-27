@@ -16,5 +16,5 @@ import kr.proten.pms.maintenance.service.entity.IssueType;
  * <p>{@code siteId}는 필수다 — 엔티티의 nullable은 시드 실데이터(어느 계약에도 붙지
  * 않는 이슈 7건) 때문이고 새 이슈에는 그 사정이 없다.
  */
-public record IssueCommand(Long siteId, IssueType type, String title) {
+public record IssueCommand(Long siteId, IssueType type, String title, String content) {
 }

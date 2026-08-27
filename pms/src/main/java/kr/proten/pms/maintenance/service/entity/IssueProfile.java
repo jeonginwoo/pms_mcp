@@ -12,8 +12,10 @@ public record IssueProfile(
         Long siteId,
         IssueType type,
         String title,
+        String content,
         IssueStatus status,
         Long assigneeId,
+        Long reporterId,
         LocalDate receivedAt,
         LocalDate completedAt) {
 }

@@ -55,6 +55,8 @@ class IssueViewFactory {
                 issue.getStatus().label(),
                 issue.getStatus(),
                 issue.getTitle(),
+                issue.getContent(),
+                issue.getReporterId(),
                 issue.getReceivedAt(),
                 issue.getCompletedAt(),
                 issue.getAssigneeId() == null ? null : people.get(issue.getAssigneeId()),
@@ -72,7 +74,8 @@ class IssueViewFactory {
                         comment.getId(),
                         people.get(comment.getAuthorId()),
                         comment.getContent(),
-                        comment.getCreatedAt()))
+                        comment.getCreatedAt(),
+                        comment.getUpdatedAt()))
                 .toList();
     }
 
